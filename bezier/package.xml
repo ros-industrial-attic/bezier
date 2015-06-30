@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package>
+  <name>bezier</name>
+  <version>0.0.0</version>
+  <description>Package used to generate grinding 3D path for M10ia Fanuc robot using ROS, VTK and PCL</description>
+  <author>Francois Lasson _ Institut Maupertuis</author>
+  <maintainer email="francois.lasson@institutmaupertuis.fr">Francois Lasson</maintainer>
+  <license>All rights reserved</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <run_depend>routing_library</run_depend>
+
+  <export>
+    <metapackage/>
+  </export>
+</package>
