@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<package>
+  <name>bezier_library</name>
+  <version>0.0.0</version>
+  <description>This library contains several function used to generate grinding 3d path for robot</description>
+  <author>Francois Lasson _ Institut Maupertuis</author>
+  <maintainer email="francois.lasson@institutmaupertuis.fr">Francois Lasson</maintainer>
+  <license>All rights reserved</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>roscpp</build_depend>
+  <run_depend>roscpp</run_depend>
+</package>

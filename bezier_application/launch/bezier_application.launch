@@ -1,0 +1,48 @@
+<launch>
+  <rosparam command="load" file="$(find fanuc_m10ia_support)/config/joint_names_m10ia.yaml" />
+ 
+  <!-- the "sim" argument controls whether we connect to a Simulated or Real robot -->
+  <!--  - if sim=false, a robot_ip argument is required -->
+  <arg name="sim" default="true" />
+  <arg name="robot_ip" unless="$(arg sim)" />
+  <arg name="use_bswap" unless="$(arg sim)" default="true" />
+
+  <!-- load PLY file from command line in order to use it in C++ programm  -->
+	<arg name="filename" default="" />  
+	<param name="filename_param" value="$(arg filename)" />
+  <!--  -->
+
+  <!-- load the robot_description parameter before launching ROS-I nodes -->
+  <include file="$(find fanuc_m10ia_moveit_config)/launch/planning_context.launch" >
+    <arg name="load_robot_description" value="true" />
+  </include>
+
+  <!-- run the robot simulator and action interface nodes -->
+  <group if="$(arg sim)">
+    <include file="$(find industrial_robot_simulator)/launch/robot_interface_simulator.launch" />
+  </group>
+
+  <!-- run the "real robot" interface nodes -->
+  <!--   - this typically includes: robot_state, motion_interface, and joint_trajectory_action nodes -->
+  <!--   - replace these calls with appropriate robot-specific calls or launch files -->
+  <group unless="$(arg sim)">
+    <include file="$(find fanuc_m10ia_support)/launch/robot_interface_streaming_m10ia.launch" >
+      <arg name="robot_ip" value="$(arg robot_ip)"/>
+      <arg name="use_bswap"  value="$(arg use_bswap)" />
+    </include>
+  </group>
+
+  <!-- publish the robot state (tf transforms) -->
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+
+  <include file="$(find fanuc_m10ia_moveit_config)/launch/move_group.launch">
+    <arg name="publish_monitored_planning_scene" value="true" />
+  </include>
+
+	<node name="bezier_application" pkg="bezier_application" type="bezier_application" output="screen" required="true" />
+<!--
+  <include file="$(find fanuc_m10ia_support)/launch/load_m10ia.launch" />
+-->
+  <include file="$(find fanuc_m10ia_support)/launch/load_m10ia.launch" />
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find bezier_application)/config/robot_state_visualize.rviz" required="true" />
+</launch>

@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package>
+  <name>bezier_application</name>
+  <version>0.0.0</version>
+  <description>Application of bezier_library for M10ia Fanuc robot using ROS</description>
+  <author>Francois Lasson _ Institut Maupertuis</author>
+  <maintainer email="francois.lasson@institutmaupertuis.fr">Francois Lasson</maintainer>
+  <license>All rights reserved</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>roscpp</build_depend>
+  <build_depend>bezier_library</build_depend>
+  <run_depend>roscpp</run_depend>
+  <run_depend>bezier_library</run_depend>
+</package>
