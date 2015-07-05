@@ -188,7 +188,7 @@ private:
    *  We have to find a solution, perhaps find best parameters in order to resolve this problem
    */
   bool
-  dilatation(double depth, vtkSmartPointer<vtkPolyData> poly_data,
+  dilation(double depth,
              vtkSmartPointer<vtkPolyData> &dilate_poly_data);
 
   /** @brief This function allows to optimize path generation. When passes are generated (dilation), we make an intersection between the

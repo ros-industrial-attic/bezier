@@ -91,14 +91,13 @@ bool Bezier::savePLYPolyData(std::string filename,
   return true;
 }
 
-/** FIXME Dilation problem detected : when depth is to high, dilated mesh has unexpected holes
+/** FIXME Dilation problem : when depth is to high, dilated mesh has unexpected holes
  * These holes are problematic. In fact, when cutting process is called on dilated mesh, slices are divided in some parts due to these holes
  * and this affects the path generation, especially for extrication trajectory. We have to find a solution, perhaps find best parameters
  * in order to resolve this problem.
  */
-bool Bezier::dilatation(double depth,
-                        vtkSmartPointer<vtkPolyData> poly_data,
-                        vtkSmartPointer<vtkPolyData> &dilate_poly_data)
+bool Bezier::dilation(double depth,
+                      vtkSmartPointer<vtkPolyData> &dilate_poly_data)
 {
   // Get maximum length of the sides
   double bounds[6];
@@ -697,7 +696,7 @@ bool Bezier::generateTrajectory(
   while (intersection_flag)
   {
     vtkSmartPointer<vtkPolyData> dilate_polydata = vtkSmartPointer<vtkPolyData>::New();
-    bool flag_dilation = dilatation(depth, this->inputPolyData_, dilate_polydata);
+    bool flag_dilation = dilation(depth, dilate_polydata);
     if (flag_dilation && defaultIntersectionOptimisation(dilate_polydata) && dilate_polydata->GetNumberOfCells() > 10) // FIXME Check intersection between new dilated mesh and default
     {
       this->dilationPolyDataVector_.push_back(dilate_polydata);  // If intersection, consider dilated mesh as a pass
@@ -723,7 +722,7 @@ bool Bezier::generateTrajectory(
       //-> dilated_depth = extrication_coefficient+numberOfPolydataDilated-1-n*frequency)*grind_depth
       double dilated_depth(
           (extrication_coefficient_ + dilationPolyDataVector_.size() - 1 - polydata_index) * this->grind_depth_);
-      dilatation(dilated_depth, this->inputPolyData_, extrication_poly_data);
+      dilation(dilated_depth, extrication_poly_data);
       //dilatation(this->extrication_coefficient_*this->grind_depth_, this->dilationPolyDataVector_[polydata_index], extrication_poly_data);
       generateStripperOnSurface(extrication_poly_data, extrication_lines);
     }
