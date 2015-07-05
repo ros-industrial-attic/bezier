@@ -129,28 +129,30 @@ bool Bezier::dilation(double depth,
   surface->ComputeNormalsOn();
   surface->SetValue(0, depth);
   surface->Update();
-  dilated_polydata = surface->GetOutput();
+  vtkSmartPointer<vtkPolyData> dilated_tmp = vtkSmartPointer<vtkPolyData>::New();
+  dilated_tmp = surface->GetOutput();
 
-  // Resolve under part of dilation (morphological dilation is usually used on volume not on surface. So, we have to adapt result to our process)
+  // Keep only the upper part of the dilation:
+  // morphological dilation is usually used on volumes, not on surfaces so we have to adapt result  // Build a Kdtree
+
   // Build a Kdtree
   vtkSmartPointer<vtkKdTreePointLocator> kDTree = vtkSmartPointer<vtkKdTreePointLocator>::New();
   kDTree->SetDataSet(this->inputPolyData_);
   kDTree->BuildLocator();
   //Build cell and link in dilated_poly_data
-  dilated_polydata->BuildCells();
-  dilated_polydata->BuildLinks();
+  dilated_tmp->BuildCells();
+  dilated_tmp->BuildLinks();
   // Get normal tab
   vtkFloatArray *PointNormalArray = vtkFloatArray::SafeDownCast(this->inputPolyData_->GetPointData()->GetNormals());
   if (!PointNormalArray)
     return false;
   // For each cell in dilated_polydata
-  for (vtkIdType index_cell = 0; index_cell < (dilated_polydata->GetNumberOfCells()); index_cell++)
-  {
+  for (vtkIdType index_cell = 0; index_cell < (dilated_tmp->GetNumberOfCells()); index_cell++)   {
     // Get cell
-    vtkCell* cell = dilated_polydata->GetCell(index_cell);
+    vtkCell* cell = dilated_tmp->GetCell(index_cell);
     // Get center of cell
     double pcoords[3] = {0, 0, 0};
-    double *weights = new double[dilated_polydata->GetMaxCellSize()];
+    double *weights = new double[dilated_tmp->GetMaxCellSize()];
     int subId = cell->GetParametricCenter(pcoords);
     double cellCenter[3] = {0, 0, 0};
     cell->EvaluateLocation(subId, pcoords, cellCenter, weights);
@@ -169,15 +171,20 @@ bool Bezier::dilation(double depth,
     direction_vector.normalize();
     normal_vector.normalize();
 
-    // Test in order to save or remove cell
+    // Keep the cell only if it belongs to the upper part of the mesh
     if (!vtkMath::IsFinite(cellCenter[0]) || !vtkMath::IsFinite(cellCenter[1]) || !vtkMath::IsFinite(cellCenter[2])
         || normal_vector.dot(direction_vector) <= 0)
-      dilated_polydata->DeleteCell(index_cell);
+      dilated_tmp->DeleteCell(index_cell);
   }
 
-  dilated_polydata->RemoveDeletedCells();
-  if (dilated_polydata->GetNumberOfCells() == 0)
+  dilated_tmp->RemoveDeletedCells();
+  if (dilated_tmp->GetNumberOfCells() == 0)
     return false;
+
+  vtkSmartPointer<vtkReverseSense> mesh_reverser = vtkSmartPointer<vtkReverseSense>::New();
+  mesh_reverser->SetInputData(dilated_tmp);
+  mesh_reverser->SetOutput(dilated_polydata);
+  mesh_reverser->Update();
   return true;
 }
 

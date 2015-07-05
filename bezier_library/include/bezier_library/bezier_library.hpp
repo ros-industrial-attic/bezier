@@ -38,6 +38,7 @@
 #include <vtkImplicitModeller.h>
 #include <vtkMarchingCubes.h>
 #include <vtkKdTreePointLocator.h>
+#include <vtkReverseSense.h>
 
 // ROS headers
 #include <ros/ros.h>
