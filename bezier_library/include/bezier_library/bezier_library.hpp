@@ -189,7 +189,7 @@ private:
    */
   bool
   dilation(double depth,
-             vtkSmartPointer<vtkPolyData> &dilate_poly_data);
+             vtkSmartPointer<vtkPolyData> &dilated_polydata);
 
   /** @brief This function allows to optimize path generation. When passes are generated (dilation), we make an intersection between the
    * dilated mesh / default mesh in order to only save useful part of mesh
