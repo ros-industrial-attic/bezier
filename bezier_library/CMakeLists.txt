@@ -26,30 +26,6 @@ install(
     DIRECTORY include/${PROJECT_NAME}/
     DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
 
-option(BUILD_${PROJECT_NAME}_DOCUMENTATION "Create and install the HTML based API documentation (requires Doxygen)" ON)
-IF(BUILD_${PROJECT_NAME}_DOCUMENTATION)
+add_custom_target (bezier_library_doc 
+    rosdoc_lite -o ${CATKIN_DEVEL_PREFIX}/doc/bezier_library ${CATKIN_DEVEL_PREFIX}/../src/bezier/bezier_library)
 
-  find_package(Doxygen)
-  IF(NOT DOXYGEN_FOUND)
-    message(FATAL_ERROR "Doxygen is needed to build the documentation.")
-  ENDIF()
-
-  # Path to the images
-  set(doxy_images            ${PROJECT_SOURCE_DIR}/documentation/images) # PROJECT_LOGO and IMAGE_PATH in doxy.in
-  set(doxy_input             ${PROJECT_SOURCE_DIR}/include/${PROJECT_NAME}/) # INPUT in doxy.in
-
-  set(doxyfile_in          ${CMAKE_CURRENT_SOURCE_DIR}/documentation/${PROJECT_NAME}.doxy.in)
-  set(doxyfile             ${PROJECT_BINARY_DIR}/${PROJECT_NAME}.doxy)
-  set(doxy_html_index_file ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_doc/index.html)
-  set(doxy_output_root     ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_doc) # OUTPUT_DIRECTORY in doxy.in
-
-  configure_file(${doxyfile_in} ${doxyfile} @ONLY)
-
-  add_custom_command(OUTPUT ${doxy_html_index_file}
-                     COMMAND ${DOXYGEN_EXECUTABLE} ${doxyfile}
-                     MAIN_DEPENDENCY ${doxyfile} 
-                     DEPENDS ${PROJECT_NAME}
-                     COMMENT "Generating HTML documentation")
-
-  add_custom_target(${PROJECT_NAME}_doc ALL DEPENDS ${doxy_html_index_file})
-ENDIF()
