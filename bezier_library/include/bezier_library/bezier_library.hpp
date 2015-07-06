@@ -38,6 +38,7 @@
 #include <vtkImplicitModeller.h>
 #include <vtkMarchingCubes.h>
 #include <vtkKdTreePointLocator.h>
+#include <vtkReverseSense.h>
 
 // ROS headers
 #include <ros/ros.h>
@@ -188,8 +189,8 @@ private:
    *  We have to find a solution, perhaps find best parameters in order to resolve this problem
    */
   bool
-  dilatation(double depth, vtkSmartPointer<vtkPolyData> poly_data,
-             vtkSmartPointer<vtkPolyData> &dilate_poly_data);
+  dilation(double depth,
+             vtkSmartPointer<vtkPolyData> &dilated_polydata);
 
   /** @brief This function allows to optimize path generation. When passes are generated (dilation), we make an intersection between the
    * dilated mesh / default mesh in order to only save useful part of mesh

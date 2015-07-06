@@ -91,14 +91,13 @@ bool Bezier::savePLYPolyData(std::string filename,
   return true;
 }
 
-/** FIXME Dilation problem detected : when depth is to high, dilated mesh has unexpected holes
+/** FIXME Dilation problem : when depth is to high, dilated mesh has unexpected holes
  * These holes are problematic. In fact, when cutting process is called on dilated mesh, slices are divided in some parts due to these holes
  * and this affects the path generation, especially for extrication trajectory. We have to find a solution, perhaps find best parameters
  * in order to resolve this problem.
  */
-bool Bezier::dilatation(double depth,
-                        vtkSmartPointer<vtkPolyData> poly_data,
-                        vtkSmartPointer<vtkPolyData> &dilate_poly_data)
+bool Bezier::dilation(double depth,
+                      vtkSmartPointer<vtkPolyData> &dilated_polydata)
 {
   // Get maximum length of the sides
   double bounds[6];
@@ -130,28 +129,30 @@ bool Bezier::dilatation(double depth,
   surface->ComputeNormalsOn();
   surface->SetValue(0, depth);
   surface->Update();
-  dilate_poly_data = surface->GetOutput();
+  vtkSmartPointer<vtkPolyData> dilated_tmp = vtkSmartPointer<vtkPolyData>::New();
+  dilated_tmp = surface->GetOutput();
 
-  // Resolve under part of dilation (morphological dilation is usually used on volume not on surface. So, we have to adapt result to our process)
+  // Keep only the upper part of the dilation:
+  // morphological dilation is usually used on volumes, not on surfaces so we have to adapt result  // Build a Kdtree
+
   // Build a Kdtree
   vtkSmartPointer<vtkKdTreePointLocator> kDTree = vtkSmartPointer<vtkKdTreePointLocator>::New();
   kDTree->SetDataSet(this->inputPolyData_);
   kDTree->BuildLocator();
-  //Build cell and link in dilate_poly_data
-  dilate_poly_data->BuildCells();
-  dilate_poly_data->BuildLinks();
+  //Build cell and link in dilated_poly_data
+  dilated_tmp->BuildCells();
+  dilated_tmp->BuildLinks();
   // Get normal tab
   vtkFloatArray *PointNormalArray = vtkFloatArray::SafeDownCast(this->inputPolyData_->GetPointData()->GetNormals());
   if (!PointNormalArray)
     return false;
-  // For each cell in dilate_polydata
-  for (vtkIdType index_cell = 0; index_cell < (dilate_poly_data->GetNumberOfCells()); index_cell++)
-  {
+  // For each cell in dilated_polydata
+  for (vtkIdType index_cell = 0; index_cell < (dilated_tmp->GetNumberOfCells()); index_cell++)   {
     // Get cell
-    vtkCell* cell = dilate_poly_data->GetCell(index_cell);
+    vtkCell* cell = dilated_tmp->GetCell(index_cell);
     // Get center of cell
     double pcoords[3] = {0, 0, 0};
-    double *weights = new double[dilate_poly_data->GetMaxCellSize()];
+    double *weights = new double[dilated_tmp->GetMaxCellSize()];
     int subId = cell->GetParametricCenter(pcoords);
     double cellCenter[3] = {0, 0, 0};
     cell->EvaluateLocation(subId, pcoords, cellCenter, weights);
@@ -170,15 +171,20 @@ bool Bezier::dilatation(double depth,
     direction_vector.normalize();
     normal_vector.normalize();
 
-    // Test in order to save or remove cell
+    // Keep the cell only if it belongs to the upper part of the mesh
     if (!vtkMath::IsFinite(cellCenter[0]) || !vtkMath::IsFinite(cellCenter[1]) || !vtkMath::IsFinite(cellCenter[2])
         || normal_vector.dot(direction_vector) <= 0)
-      dilate_poly_data->DeleteCell(index_cell);
+      dilated_tmp->DeleteCell(index_cell);
   }
 
-  dilate_poly_data->RemoveDeletedCells();
-  if (dilate_poly_data->GetNumberOfCells() == 0)
+  dilated_tmp->RemoveDeletedCells();
+  if (dilated_tmp->GetNumberOfCells() == 0)
     return false;
+
+  vtkSmartPointer<vtkReverseSense> mesh_reverser = vtkSmartPointer<vtkReverseSense>::New();
+  mesh_reverser->SetInputData(dilated_tmp);
+  mesh_reverser->SetOutput(dilated_polydata);
+  mesh_reverser->Update();
   return true;
 }
 
@@ -696,11 +702,11 @@ bool Bezier::generateTrajectory(
 
   while (intersection_flag)
   {
-    vtkSmartPointer<vtkPolyData> dilate_polydata = vtkSmartPointer<vtkPolyData>::New();
-    bool flag_dilation = dilatation(depth, this->inputPolyData_, dilate_polydata);
-    if (flag_dilation && defaultIntersectionOptimisation(dilate_polydata) && dilate_polydata->GetNumberOfCells() > 10) // FIXME Check intersection between new dilated mesh and default
+    vtkSmartPointer<vtkPolyData> dilated_polydata = vtkSmartPointer<vtkPolyData>::New();
+    bool flag_dilation = dilation(depth, dilated_polydata);
+    if (flag_dilation && defaultIntersectionOptimisation(dilated_polydata) && dilated_polydata->GetNumberOfCells() > 10) // FIXME Check intersection between new dilated mesh and default
     {
-      this->dilationPolyDataVector_.push_back(dilate_polydata);  // If intersection, consider dilated mesh as a pass
+      this->dilationPolyDataVector_.push_back(dilated_polydata);  // If intersection, consider dilated mesh as a pass
       ROS_INFO_STREAM("New pass generated");
     }
     else
@@ -723,7 +729,7 @@ bool Bezier::generateTrajectory(
       //-> dilated_depth = extrication_coefficient+numberOfPolydataDilated-1-n*frequency)*grind_depth
       double dilated_depth(
           (extrication_coefficient_ + dilationPolyDataVector_.size() - 1 - polydata_index) * this->grind_depth_);
-      dilatation(dilated_depth, this->inputPolyData_, extrication_poly_data);
+      dilation(dilated_depth, extrication_poly_data);
       //dilatation(this->extrication_coefficient_*this->grind_depth_, this->dilationPolyDataVector_[polydata_index], extrication_poly_data);
       generateStripperOnSurface(extrication_poly_data, extrication_lines);
     }
