@@ -2,7 +2,7 @@
 
 Bezier::Bezier() :
     grind_depth_(0.05), effector_diameter_(0.02), covering_(0.50), extrication_coefficient_(0.5), extrication_frequency_(
-        1), mesh_normal_vector_(Eigen::Vector3d::Identity()), slicing_dir_(Eigen::Vector3d::Identity())
+        1), mesh_normal_vector_(Eigen::Vector3d::Identity()), slicing_dir_(Eigen::Vector3d::Identity()), number_of_normal_markers_published_(0)
 {
   this->inputPolyData_ = vtkSmartPointer<vtkPolyData>::New();
   this->defaultPolyData_ = vtkSmartPointer<vtkPolyData>::New();
@@ -21,7 +21,8 @@ Bezier::Bezier(std::string filename_inputMesh,
     extrication_coefficient_(extrication_coefficient),
     extrication_frequency_(extrication_frequency),
     mesh_normal_vector_(Eigen::Vector3d::Identity()),
-    slicing_dir_(Eigen::Vector3d::Identity())
+    slicing_dir_(Eigen::Vector3d::Identity()),
+    number_of_normal_markers_published_(0)
 {
   this->inputPolyData_ = vtkSmartPointer<vtkPolyData>::New();
   if (!this->loadPLYPolydata(filename_inputMesh, this->inputPolyData_))
@@ -898,7 +899,22 @@ void Bezier::displayNormal(std::vector<Eigen::Affine3d,
   if (way_points_vector.size() != points_color_viz.size())
     ROS_ERROR_STREAM("Bezier::displayNormal: Trajectory vector and bool vector have different sizes");
 
+  // Delete old markers
   visualization_msgs::MarkerArray markers;
+  for (int k = 0; k < number_of_normal_markers_published_; k++)
+  {
+    visualization_msgs::Marker marker;
+    marker.header.frame_id = "/base_link";
+    marker.header.stamp = ros::Time::now();
+    marker.ns = "basic_shapes";
+    marker.id = k; // It doesn't matter if the marker was published or not (depending on points_color_viz[k])
+    marker.type = visualization_msgs::Marker::ARROW;
+    marker.action = visualization_msgs::Marker::DELETE;
+    markers.markers.push_back(marker);
+  }
+  normal_publisher.publish(markers);
+
+  number_of_normal_markers_published_ = way_points_vector.size(); // Store number of markers drawn
   for (int k = 0; k < way_points_vector.size(); k++)
   {
     if (points_color_viz[k] == true)
