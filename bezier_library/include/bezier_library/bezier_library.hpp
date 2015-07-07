@@ -178,6 +178,9 @@ private:
   /** @brief Vector direction for the slicing operation */
   Eigen::Vector3d slicing_dir_;
 
+  /** @brief Stores the last number of normal markers published. Useful to get them deleted */
+  unsigned int number_of_normal_markers_published_;
+
   /** @brief This function uses vtkImplicitModeller in order to dilate the input vtkPolyData surface
    *  @param[in] depth depth for grind process (pass depth)
    *  @param[in] poly_data input data
