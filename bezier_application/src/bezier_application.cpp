@@ -72,6 +72,9 @@ int main(int argc, char **argv)
   normal_publisher        = node.advertise<visualization_msgs::MarkerArray>("my_normals", 1);
 
   // Generate trajectory
+  double size_of_fsw_tool = 0.45767; //height oh fsw tool
+  double size_of_grind_tool = 0.005; //height of end-mill
+
   double covering_percentage = 0.5; //value between 0.0 & 1.0
   double grind_diameter = 0.1;
   double grind_depth = 0.05;
@@ -118,8 +121,20 @@ int main(int argc, char **argv)
       // Copy the vector of Eigen poses into a vector of ROS poses
       std::vector<geometry_msgs::Pose> way_points_msg;
       way_points_msg.resize(way_points_vector_pass.size());
+      tf::Transform link6_to_tcp_tf;
+      link6_to_tcp_tf = tf::Transform(tf::Matrix3x3::getIdentity(),
+                                      tf::Vector3(0.0, 0.0, -size_of_fsw_tool - size_of_grind_tool));
       for (size_t j = 0; j < way_points_msg.size(); j++)
+      {
         tf::poseEigenToMsg(way_points_vector_pass[j], way_points_msg[j]);
+        tf::Transform world_to_link6_tf, world_to_tcp_tf;
+        geometry_msgs::Pose world_to_link6 = way_points_msg[j];
+        geometry_msgs::Pose world_to_tcp;
+        tf::poseMsgToTF(world_to_link6, world_to_link6_tf);
+        world_to_tcp_tf = world_to_link6_tf * link6_to_tcp_tf;
+        tf::poseTFToMsg(world_to_tcp_tf, world_to_tcp);
+        way_points_msg[j] = world_to_tcp;
+      }
 
       // Execute this trajectory
       moveit_msgs::ExecuteKnownTrajectory srv;
