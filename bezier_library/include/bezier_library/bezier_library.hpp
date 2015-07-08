@@ -39,6 +39,9 @@
 #include <vtkMarchingCubes.h>
 #include <vtkKdTreePointLocator.h>
 #include <vtkReverseSense.h>
+#include <vtkTransform.h>
+#include <vtkTransformPolyDataFilter.h>
+#include <vtkDistancePolyDataFilter.h>
 
 // ROS headers
 #include <ros/ros.h>
@@ -212,6 +215,17 @@ private:
   bool
   dilation(double depth,
              vtkSmartPointer<vtkPolyData> &dilated_polydata);
+
+  /**@brief This function used vtkImplicitModeller in order to translate the inputpolydata surface.
+   * @param[in] depth depth for grind process (passe depth)
+   * @param[in] polydata Polydata we would like to translate
+   * @param[out] translate_poly_data translate_poly_data is the result of input_poly_data (this->inputPolyData) translation.
+   * @return boolean flag reflects the function proceedings.
+   */
+  bool
+  translation(double depth,
+              vtkSmartPointer<vtkPolyData> poly_data,
+              vtkSmartPointer<vtkPolyData> &translation_poly_data);
 
   /** @brief This function allows to optimize path generation. When passes are generated (dilation), we make an intersection between the
    * dilated mesh / default mesh in order to only save useful part of mesh

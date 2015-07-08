@@ -83,7 +83,7 @@ int main(int argc, char **argv)
   int extrication_frequency = 5; // Generate a new extrication mesh each 4 passes generated
   int extrication_coefficient = 1;
   Bezier bezier_planner(mesh_original, mesh_default, grind_depth, grind_diameter, covering_percentage,
-                        extrication_coefficient, extrication_frequency);
+                        extrication_coefficient, extrication_frequency, true);
   std::vector<bool> points_color_viz;
   std::vector<Eigen::Affine3d, Eigen::aligned_allocator<Eigen::Affine3d> > way_points_vector;
   std::vector<int> index_vector;
