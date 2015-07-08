@@ -2,7 +2,8 @@
 
 Bezier::Bezier() :
     grind_depth_(0.05), effector_diameter_(0.02), covering_(0.50), extrication_coefficient_(0.5), extrication_frequency_(
-        1), mesh_normal_vector_(Eigen::Vector3d::Identity()), slicing_dir_(Eigen::Vector3d::Identity()), number_of_normal_markers_published_(0)
+        1), mesh_normal_vector_(Eigen::Vector3d::Identity()), slicing_dir_(Eigen::Vector3d::Identity()), number_of_normal_markers_published_(0),
+        use_translation_mode_ (false)
 {
   this->inputPolyData_ = vtkSmartPointer<vtkPolyData>::New();
   this->defaultPolyData_ = vtkSmartPointer<vtkPolyData>::New();
@@ -14,7 +15,8 @@ Bezier::Bezier(std::string filename_inputMesh,
                double effector_diameter,
                double covering,
                int extrication_coefficient,
-               int extrication_frequency) :
+               int extrication_frequency,
+               bool use_translation_mode):
     grind_depth_(grind_depth),
     effector_diameter_(effector_diameter),
     covering_(covering),
@@ -22,7 +24,8 @@ Bezier::Bezier(std::string filename_inputMesh,
     extrication_frequency_(extrication_frequency),
     mesh_normal_vector_(Eigen::Vector3d::Identity()),
     slicing_dir_(Eigen::Vector3d::Identity()),
-    number_of_normal_markers_published_(0)
+    number_of_normal_markers_published_(0),
+    use_translation_mode_ (use_translation_mode)
 {
   this->inputPolyData_ = vtkSmartPointer<vtkPolyData>::New();
   if (!this->loadPLYPolydata(filename_inputMesh, this->inputPolyData_))
@@ -62,6 +65,16 @@ void Bezier::printBezierParameters(void)
 {
   ROS_INFO_STREAM(
       "Bézier parameters" << std::endl << "Grind depth (in centimeters) : " << this->grind_depth_*100 << std::endl << "Effector diameter (in centimeters) : " << this->effector_diameter_*100 << std::endl << "Covering (in %) : "<< this->covering_*100 << "/100");
+}
+
+void Bezier::setTranslationMode(bool translation_mode)
+{
+  use_translation_mode_ = translation_mode;
+}
+
+bool Bezier::getTranslationMode()
+{
+  return use_translation_mode_;
 }
 
 //////////////////// PRIVATE FUNCTIONS ////////////////////

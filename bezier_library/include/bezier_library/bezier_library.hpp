@@ -86,7 +86,8 @@ public:
          double effector_diameter,
          double covering,
          int extrication_coefficient,
-         int extrication_frequency);
+         int extrication_frequency,
+         bool use_translation_mode = false);
 
   ~Bezier();
 
@@ -149,6 +150,18 @@ public:
   void
   printBezierParameters();
 
+  /** @brief Use translation mode (see @ref use_translation_mode_)
+   *  @param[in] use_translation
+   */
+  void
+  setTranslationMode(bool use_translation);
+
+  /** @brief Get @ref use_translation_mode_
+   *  @return True if using translation mode, false otherwise
+   */
+  bool
+  getTranslationMode();
+
 private:
   /** @brief Input mesh */
   vtkSmartPointer<vtkPolyData> inputPolyData_;
@@ -182,6 +195,9 @@ private:
 
   /** @brief Stores the last number of normal markers published. Useful to get them deleted */
   unsigned int number_of_normal_markers_published_;
+
+  /** @brief If true, uses a translation expansion instead of a dilation. False by default */
+  bool use_translation_mode_;
 
   /** @brief This function uses vtkImplicitModeller in order to dilate the input vtkPolyData surface
    *  @param[in] depth depth for grind process (pass depth)
