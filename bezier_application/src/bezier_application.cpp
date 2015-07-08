@@ -64,12 +64,14 @@ int main(int argc, char **argv)
 
   // Create publishers for point clouds and markers
   ros::Publisher trajectory_publisher, input_mesh_publisher, default_mesh_publisher, dilated_mesh_publisher,
-                 normal_publisher;
+                 normal_publisher, fix_table_mesh_publisher, fsw_table_mesh_publisher;
   trajectory_publisher    = node.advertise<visualization_msgs::Marker>("my_trajectory", 1);
   input_mesh_publisher    = node.advertise<visualization_msgs::Marker>("my_input_mesh", 1);
   default_mesh_publisher  = node.advertise<visualization_msgs::Marker>("my_default_mesh", 1);
   dilated_mesh_publisher  = node.advertise<visualization_msgs::Marker>("my_dilated_mesh", 1);
   normal_publisher        = node.advertise<visualization_msgs::MarkerArray>("my_normals", 1);
+  fix_table_mesh_publisher = node.advertise<visualization_msgs::Marker>("my_fix_table", 1);
+  fsw_table_mesh_publisher = node.advertise<visualization_msgs::Marker>("my_fsw_table", 1);
 
   // Generate trajectory
   double size_of_fsw_tool = 0.45767; //height oh fsw tool
@@ -87,6 +89,8 @@ int main(int argc, char **argv)
   std::vector<int> index_vector;
 
   // Display in RVIZ
+  bezier_planner.displayMesh(fix_table_mesh_publisher, mesh_ressource + "TableFix.ply", .1, .4, .1);
+  bezier_planner.displayMesh(fsw_table_mesh_publisher, mesh_ressource + "TableFSW.ply");
   bezier_planner.displayMesh(input_mesh_publisher, mesh_ressource + input_mesh_filename);
   bezier_planner.displayMesh(default_mesh_publisher, mesh_ressource + default_mesh_filename);
   bezier_planner.generateTrajectory(way_points_vector, points_color_viz, index_vector);

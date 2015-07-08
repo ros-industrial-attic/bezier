@@ -141,7 +141,9 @@ public:
    *  @param[in] mesh_path path of mesh
    **/
   void
-  displayMesh(ros::Publisher &mesh_publisher, std::string mesh_path);
+  displayMesh(ros::Publisher &mesh_publisher,
+              std::string mesh_path,
+              float r = 0.6, float g = 0.6, float b = 0.6);
 
   /** @brief Function used to display some Bezier library's parameters (effector diameter, grind depth and covering) */
   void
