@@ -45,3 +45,9 @@ qtcreator-*
 
 # Catkin custom files
 CATKIN_IGNORE
+
+# Output meshes
+bezier_application/meshes/dilatedMeshes/*.ply
+
+# RVIZ config
+bezier_application/config/robot_state_visualize.rviz
