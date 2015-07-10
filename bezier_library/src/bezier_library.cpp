@@ -890,15 +890,18 @@ bool Bezier::generateTrajectory(
           extrication_lines[index_of_closest_line].begin() + index_of_closest_start_point,
           extrication_lines[index_of_closest_line].begin() + index_of_closest_end_point);
       // Generate pose on this vector (line)
-      Eigen::Affine3d pose(end_pose);
+      Eigen::Affine3d pose(start_pose);
       Eigen::Vector3d point(Eigen::Vector3d::Identity());
       std::vector<Eigen::Affine3d, Eigen::aligned_allocator<Eigen::Affine3d> > extrication_poses;
       for (int index_point = 0; index_point < extrication_line.size(); index_point++)
       {
-        point = extrication_line[index_point].first;
-        pose.translation() << point[0], point[1], point[2];
-        extrication_poses.push_back(pose);
-        color_vector.push_back(false);
+        if(index_point==0 || index_point==(extrication_line.size()-1) || index_point%5==0)
+        {
+          point = extrication_line[index_point].first;
+          pose.translation() << point[0], point[1], point[2];
+          extrication_poses.push_back(pose);
+          color_vector.push_back(false);
+        }
       }
       // Reverse extrication pose
       std::reverse(extrication_poses.begin(), extrication_poses.end());
@@ -1022,11 +1025,11 @@ void Bezier::displayNormal(std::vector<Eigen::Affine3d,
       marker.action = visualization_msgs::Marker::ADD;
 
       // Set the scale of the marker - 1x1x1 here means 1m on a side
-      marker.scale.x = 0.002;  // Radius
-      marker.scale.y = 0.004;  // Radius
+      marker.scale.x = 0.001;  // Radius
+      marker.scale.y = 0.002;  // Radius
       //marker.scale.z = 0.001;
 
-      double length = 0.015;  // Length for normal markers
+      double length = 0.01;  // Length for normal markers
       geometry_msgs::Point start_point;
       geometry_msgs::Point end_point;
       end_point.x = way_points_vector[k].translation()[0];
@@ -1075,7 +1078,7 @@ void Bezier::displayTrajectory(
   marker.type = visualization_msgs::Marker::LINE_STRIP;
   marker.action = visualization_msgs::Marker::ADD;
   marker.lifetime = ros::Duration();
-  marker.scale.x = 0.003;  // Set scale of our new marker : Diameter in our case.
+  marker.scale.x = 0.001;  // Set scale of our new marker : Diameter in our case.
   // Set marker orientation. Here, there is no rotation : (v1,v2,v3)=(0,0,0) angle=0
   marker.pose.orientation.x = 0.0;      // v1* sin(angle/2)
   marker.pose.orientation.y = 0.0;      // v2* sin(angle/2)

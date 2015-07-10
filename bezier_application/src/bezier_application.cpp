@@ -79,7 +79,7 @@ int main(int argc, char **argv)
 
   double covering_percentage = 0.25; //value between 0.0 & 1.0
   double grind_diameter = 0.014;
-  double grind_depth = 0.01;
+  double grind_depth = 0.015;
   int extrication_frequency = 5; // Generate a new extrication mesh each 4 passes generated
   int extrication_coefficient = 5;
   Bezier bezier_planner(mesh_original, mesh_default, grind_depth, grind_diameter, covering_percentage,
@@ -89,8 +89,8 @@ int main(int argc, char **argv)
   std::vector<int> index_vector;
 
   // Display in RVIZ
-  bezier_planner.displayMesh(fix_table_mesh_publisher, mesh_ressource + "TableFix.ply", .1, .4, .1);
-  bezier_planner.displayMesh(fsw_table_mesh_publisher, mesh_ressource + "TableFSW.ply");
+  bezier_planner.displayMesh(fix_table_mesh_publisher, mesh_ressource + "environment/TableFix.ply", .1, .4, .1);
+  bezier_planner.displayMesh(fsw_table_mesh_publisher, mesh_ressource + "environment/TableFSW.ply");
   bezier_planner.displayMesh(input_mesh_publisher, mesh_ressource + input_mesh_filename);
   bezier_planner.displayMesh(default_mesh_publisher, mesh_ressource + default_mesh_filename);
   bezier_planner.generateTrajectory(way_points_vector, points_color_viz, index_vector);
