@@ -75,13 +75,13 @@ int main(int argc, char **argv)
 
   // Generate trajectory
   double size_of_fsw_tool = 0.45767; //height oh fsw tool
-  double size_of_grind_tool = 0.005; //height of end-mill
+  double size_of_grind_tool = 0.04; //height of end-mill
 
-  double covering_percentage = 0.5; //value between 0.0 & 1.0
-  double grind_diameter = 0.1;
-  double grind_depth = 0.05;
+  double covering_percentage = 0.25; //value between 0.0 & 1.0
+  double grind_diameter = 0.014;
+  double grind_depth = 0.01;
   int extrication_frequency = 5; // Generate a new extrication mesh each 4 passes generated
-  int extrication_coefficient = 1;
+  int extrication_coefficient = 5;
   Bezier bezier_planner(mesh_original, mesh_default, grind_depth, grind_diameter, covering_percentage,
                         extrication_coefficient, extrication_frequency, true);
   std::vector<bool> points_color_viz;
@@ -120,8 +120,12 @@ int main(int argc, char **argv)
 
       // Add offset BASE/BASE_LINK
       for (int j = 0; j < way_points_vector_pass.size(); j++)
-        way_points_vector_pass[j].translation().z() -= 0.45; // In order to face Z robot offset
-
+      {
+        way_points_vector_pass[j].translation().z() -= 0.950;
+        //reverse tool orientation for cables (Specific to institut maupertuis' robot)
+        way_points_vector_pass[j].linear().col(0) = - way_points_vector_pass[j].linear().col(0);
+        way_points_vector_pass[j].linear().col(1) = - way_points_vector_pass[j].linear().col(1);
+      }
       // Copy the vector of Eigen poses into a vector of ROS poses
       std::vector<geometry_msgs::Pose> way_points_msg;
       way_points_msg.resize(way_points_vector_pass.size());

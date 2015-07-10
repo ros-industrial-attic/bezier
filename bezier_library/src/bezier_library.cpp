@@ -223,7 +223,7 @@ bool Bezier::translation(double depth,
   if (depth - distanceFilter->GetOutput()->GetPointData()->GetScalars()->GetRange()[0] <= 0)
   {
     printf("ERROR IN MESH TRANSLATION : DEPTH WRONG\n");
-    return false;
+    //return false;
   }
   return true;
 }
