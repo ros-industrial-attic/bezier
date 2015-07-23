@@ -4,7 +4,7 @@ project(bezier_library)
 
 find_package(catkin REQUIRED COMPONENTS roscpp)
 find_package(PCL 1.8.0 REQUIRED)
-find_package(VTK 6.3 REQUIRED)
+find_package(VTK 6.3 REQUIRED) # You need https://gitlab.kitware.com/vtk/vtk/merge_requests/213
 #include(${VTK_USE_FILE})
 
 catkin_package(
