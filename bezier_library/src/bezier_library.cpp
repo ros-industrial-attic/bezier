@@ -553,6 +553,7 @@ Bezier::generateStripperOnSurface (vtkSmartPointer<vtkPolyData> PolyData,
   unsigned int slice_number_expected = this->determineSliceNumberExpected(PolyData);
   // Cut mesh
   vtkSmartPointer<vtkStripper> stripper = vtkSmartPointer<vtkStripper>::New();
+  stripper->SetJoinContiguousSegments(true);
   cutMesh(PolyData, this->slicing_dir_, slice_number_expected, stripper);  // Fill this stripper with cutMesh function
 
   // FIXME At the moment we use vector to reorganize data from stripper
@@ -840,6 +841,8 @@ bool Bezier::generateTrajectory(
     extrication_cut_dir.normalize();
     // Cut this dilated mesh to determine extrication pass trajectory
     vtkSmartPointer<vtkStripper> extrication_stripper = vtkSmartPointer<vtkStripper>::New();
+    extrication_stripper->SetJoinContiguousSegments(true);
+
     cutMesh(extrication_poly_data, extrication_cut_dir, 1, extrication_stripper);
     // Get last pose
     Eigen::Affine3d extrication_pose(Eigen::Affine3d::Identity());
