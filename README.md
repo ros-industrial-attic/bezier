@@ -21,7 +21,7 @@ Dependencies
 ------------
 
 - ROS indigo version (with the [Fanuc package](https://github.com/ros-industrial/fanuc))
-- VTK 6.3 or later, you need ([this patch](https://gitlab.kitware.com/vtk/vtk/merge_requests/213))
+- VTK 7.0 or later, you need ([this patch](https://gitlab.kitware.com/vtk/vtk/merge_requests/213)), using the `master` branch is fine.
 - The [Point Cloud Library](https://github.com/PointCloudLibrary/pcl) version 1.8 or trunk
 
 Bezier has been tested with ROS Indigo under Ubuntu 14.04.
