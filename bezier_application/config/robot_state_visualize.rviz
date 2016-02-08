@@ -14,6 +14,8 @@ Panels:
         - /Marker3
         - /MarkerArray1
         - /Marker4
+        - /Marker5
+        - /Marker6
       Splitter Ratio: 0.5
     Tree Height: 815
   - Class: rviz/Selection
@@ -108,6 +110,7 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
+          Value: true
       Name: RobotModel
       Robot Description: robot_description
       TF Prefix: ""
@@ -162,7 +165,7 @@ Visualization Manager:
       Marker Topic: /my_trajectory
       Name: Marker
       Namespaces:
-        trajectory: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -178,7 +181,7 @@ Visualization Manager:
       Marker Topic: /my_default_mesh
       Name: Marker
       Namespaces:
-        {}
+        "": true
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -186,12 +189,28 @@ Visualization Manager:
       Marker Topic: /my_normals
       Name: MarkerArray
       Namespaces:
-        basic_shapes: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
       Enabled: true
       Marker Topic: /my_dilated_mesh
+      Name: Marker
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /my_fix_table
+      Name: Marker
+      Namespaces:
+        "": true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /my_fsw_table
       Name: Marker
       Namespaces:
         "": true
@@ -217,7 +236,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 1.89752
+      Distance: 5.89341
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
@@ -229,10 +248,10 @@ Visualization Manager:
         Z: 0.650289
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 0.225204
+      Pitch: 0.585204
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 0.723141
+      Yaw: 0.408141
     Saved: ~
 Window Geometry:
   Displays:

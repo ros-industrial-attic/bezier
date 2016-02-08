@@ -2,7 +2,8 @@
 
 Bezier::Bezier() :
     grind_depth_(0.05), effector_diameter_(0.02), covering_(0.50), extrication_coefficient_(0.5), extrication_frequency_(
-        1), mesh_normal_vector_(Eigen::Vector3d::Identity()), slicing_dir_(Eigen::Vector3d::Identity()), number_of_normal_markers_published_(0)
+        1), mesh_normal_vector_(Eigen::Vector3d::Identity()), slicing_dir_(Eigen::Vector3d::Identity()), number_of_normal_markers_published_(0),
+        use_translation_mode_ (false)
 {
   this->inputPolyData_ = vtkSmartPointer<vtkPolyData>::New();
   this->defaultPolyData_ = vtkSmartPointer<vtkPolyData>::New();
@@ -14,7 +15,8 @@ Bezier::Bezier(std::string filename_inputMesh,
                double effector_diameter,
                double covering,
                int extrication_coefficient,
-               int extrication_frequency) :
+               int extrication_frequency,
+               bool use_translation_mode):
     grind_depth_(grind_depth),
     effector_diameter_(effector_diameter),
     covering_(covering),
@@ -22,7 +24,8 @@ Bezier::Bezier(std::string filename_inputMesh,
     extrication_frequency_(extrication_frequency),
     mesh_normal_vector_(Eigen::Vector3d::Identity()),
     slicing_dir_(Eigen::Vector3d::Identity()),
-    number_of_normal_markers_published_(0)
+    number_of_normal_markers_published_(0),
+    use_translation_mode_ (use_translation_mode)
 {
   this->inputPolyData_ = vtkSmartPointer<vtkPolyData>::New();
   if (!this->loadPLYPolydata(filename_inputMesh, this->inputPolyData_))
@@ -62,6 +65,16 @@ void Bezier::printBezierParameters(void)
 {
   ROS_INFO_STREAM(
       "Bézier parameters" << std::endl << "Grind depth (in centimeters) : " << this->grind_depth_*100 << std::endl << "Effector diameter (in centimeters) : " << this->effector_diameter_*100 << std::endl << "Covering (in %) : "<< this->covering_*100 << "/100");
+}
+
+void Bezier::setTranslationMode(bool translation_mode)
+{
+  use_translation_mode_ = translation_mode;
+}
+
+bool Bezier::getTranslationMode()
+{
+  return use_translation_mode_;
 }
 
 //////////////////// PRIVATE FUNCTIONS ////////////////////
@@ -186,6 +199,32 @@ bool Bezier::dilation(double depth,
   mesh_reverser->SetInputData(dilated_tmp);
   mesh_reverser->SetOutput(dilated_polydata);
   mesh_reverser->Update();
+  return true;
+}
+
+bool Bezier::translation(double depth,
+                         vtkSmartPointer<vtkPolyData> poly_data,
+                         vtkSmartPointer<vtkPolyData> &translation_poly_data)
+{
+  vtkSmartPointer<vtkTransform> translation = vtkSmartPointer<vtkTransform>::New();
+  Eigen::Vector3d translate_vector = depth * this->mesh_normal_vector_;
+  double translate_tab[3] = {translate_vector[0], translate_vector[1], translate_vector[2]};
+  translation->Translate(translate_tab[0], translate_tab[1], translate_tab[2]);
+  vtkSmartPointer<vtkTransformPolyDataFilter> transformFilter = vtkSmartPointer<vtkTransformPolyDataFilter>::New();
+  transformFilter->SetInputData(poly_data);
+  transformFilter->SetTransform(translation);
+  transformFilter->Update();
+  translation_poly_data = transformFilter->GetOutput();
+  //check depth
+  vtkSmartPointer<vtkDistancePolyDataFilter> distanceFilter = vtkSmartPointer<vtkDistancePolyDataFilter>::New();
+  distanceFilter->SetInputData(1, poly_data);
+  distanceFilter->SetInputData(0, translation_poly_data);
+  distanceFilter->Update();
+  if (depth - distanceFilter->GetOutput()->GetPointData()->GetScalars()->GetRange()[0] <= 0)
+  {
+    printf("ERROR IN MESH TRANSLATION : DEPTH WRONG\n");
+    //return false;
+  }
   return true;
 }
 
@@ -584,9 +623,13 @@ Bezier::generateStripperOnSurface (vtkSmartPointer<vtkPolyData> PolyData,
       double normal[3];
       PointNormalArray->GetTuple(indices[i], normal);
       Eigen::Vector3d normal_vector(normal[0], normal[1], normal[2]);
-      if (PolyData == this->inputPolyData_)
+      if (use_translation_mode_)
         normal_vector *= -1;
-
+      else
+      {
+        if (PolyData == this->inputPolyData_)
+          normal_vector *= -1;
+      }
       line.push_back(std::make_pair(point_vector, normal_vector));
     }
     lines.push_back(line);
@@ -697,25 +740,41 @@ bool Bezier::generateTrajectory(
   // Find cut direction thanks to the mesh normal
   this->generateSlicingDirection();
   // Dilate mesh to generate different passes
-  ROS_INFO_STREAM("Please wait : dilation in progress");
+  if(use_translation_mode_)
+    ROS_INFO_STREAM("Please wait : translation in progress");
+  else
+    ROS_INFO_STREAM("Please wait : dilation in progress");
   this->dilationPolyDataVector_.push_back(this->inputPolyData_);
   bool intersection_flag = true;  // Flag variable : dilate while dilated mesh intersect default mesh
   double depth = this->grind_depth_;  // Depth between input mesh and dilated mesh
 
   while (intersection_flag)
   {
-    vtkSmartPointer<vtkPolyData> dilated_polydata = vtkSmartPointer<vtkPolyData>::New();
-    bool flag_dilation = dilation(depth, dilated_polydata);
-    if (flag_dilation && defaultIntersectionOptimisation(dilated_polydata) && dilated_polydata->GetNumberOfCells() > 10) // FIXME Check intersection between new dilated mesh and default
+    vtkSmartPointer<vtkPolyData> expanded_polydata = vtkSmartPointer<vtkPolyData>::New();
+    bool flag_expansion(false);
+    if(use_translation_mode_)
+      flag_expansion = translation(depth, inputPolyData_, expanded_polydata);
+    else
+     flag_expansion = dilation(depth, expanded_polydata);
+    vtkSmartPointer<vtkPolyData> temp_polydata = vtkSmartPointer<vtkPolyData>::New(); //Ignore collision in translation process fixme
+    temp_polydata->ShallowCopy(expanded_polydata);
+    if (flag_expansion && defaultIntersectionOptimisation(expanded_polydata) && expanded_polydata->GetNumberOfCells() > 10) // FIXME Check intersection between new dilated mesh and default
     {
-      this->dilationPolyDataVector_.push_back(dilated_polydata);  // If intersection, consider dilated mesh as a pass
+      if (use_translation_mode_)
+        this->dilationPolyDataVector_.push_back(temp_polydata);  // If intersection, consider dilated mesh as a pass
+      else
+        this->dilationPolyDataVector_.push_back(expanded_polydata);
+
       ROS_INFO_STREAM("New pass generated");
     }
     else
       intersection_flag = false;  // No intersection : end of dilation
     depth += this->grind_depth_;
   }
-  ROS_INFO_STREAM("Dilation process done");
+  if(use_translation_mode_)
+    ROS_INFO_STREAM("Translation process done");
+  else
+    ROS_INFO_STREAM("Dilation process done");
   // Reverse pass vector: grind from upper (last) pass
   std::reverse(this->dilationPolyDataVector_.begin(), this->dilationPolyDataVector_.end());
   // Generate extrication mesh data
@@ -726,16 +785,27 @@ bool Bezier::generateTrajectory(
   for (int polydata_index = 0; polydata_index < this->dilationPolyDataVector_.size(); polydata_index++)
   {  // For each polydata (passes)
      // Generate extrication mesh
+    double dist_to_extrication_mesh(0);
     if (polydata_index % extrication_frequency_ == 0)
     {
-      //-> dilated_depth = extrication_coefficient+numberOfPolydataDilated-1-n*frequency)*grind_depth
-      double dilated_depth(
-          (extrication_coefficient_ + dilationPolyDataVector_.size() - 1 - polydata_index) * this->grind_depth_);
-      dilation(dilated_depth, extrication_poly_data);
-      //dilatation(this->extrication_coefficient_*this->grind_depth_, this->dilationPolyDataVector_[polydata_index], extrication_poly_data);
+      if (use_translation_mode_)
+      {
+        dist_to_extrication_mesh = this->extrication_coefficient_ * this->grind_depth_;
+        translation(dist_to_extrication_mesh, this->dilationPolyDataVector_[polydata_index], extrication_poly_data);
+      }
+      else
+      {
+        //-> dilated_depth = extrication_coefficient+numberOfPolydataDilated-1-n*frequency)*grind_depth
+        double dilated_depth(
+            (extrication_coefficient_ + dilationPolyDataVector_.size() - 1 - polydata_index) * this->grind_depth_);
+        dilation(dilated_depth, extrication_poly_data);
+        //dilatation(this->extrication_coefficient_*this->grind_depth_, this->dilationPolyDataVector_[polydata_index], extrication_poly_data);
+        double dist_to_extrication_mesh((this->extrication_coefficient_ + polydata_index) * this->grind_depth_); //distance between dilationPolyDataVector_[index_polydata] and extrication polydata
+      }
       generateStripperOnSurface(extrication_poly_data, extrication_lines);
     }
-    double dist_to_extrication_mesh((this->extrication_coefficient_ + polydata_index) * this->grind_depth_); //distance between dilationPolyDataVector_[index_polydata] and extrication polydata
+    else
+      dist_to_extrication_mesh += this->grind_depth_;
     // Generate trajectory on mesh (polydata)
     std::vector<std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d> > > lines;
     this->generateStripperOnSurface(this->dilationPolyDataVector_[polydata_index], lines);
@@ -801,24 +871,37 @@ bool Bezier::generateTrajectory(
       // Seek closest line in extrication lines
       int index_of_closest_line = seekClosestLine(end_point, extrication_lines);
       // Seek for dilated_end_point neighbor in extrication line
-      int index_of_closest_end_point = seekClosestPoint(dilated_end_point, extrication_lines[index_of_closest_line]);
+      int index_of_closest_end_point;
       // Seek for dilated_start_point neighbor in extrication line
-      int index_of_closest_start_point = seekClosestPoint(dilated_start_point,
-                                                          extrication_lines[index_of_closest_line]);
+      int index_of_closest_start_point;
+
+      if (use_translation_mode_)
+      {
+        index_of_closest_end_point = lines[index_line].size()-1;
+        index_of_closest_start_point = 0;
+      }
+      else
+      {
+        index_of_closest_end_point = seekClosestPoint(dilated_end_point, extrication_lines[index_of_closest_line]);
+        index_of_closest_start_point = seekClosestPoint(dilated_start_point,extrication_lines[index_of_closest_line]);
+      }
       // Get vector between these indexes
       std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d> > extrication_line(
           extrication_lines[index_of_closest_line].begin() + index_of_closest_start_point,
           extrication_lines[index_of_closest_line].begin() + index_of_closest_end_point);
       // Generate pose on this vector (line)
-      Eigen::Affine3d pose(end_pose);
+      Eigen::Affine3d pose(start_pose);
       Eigen::Vector3d point(Eigen::Vector3d::Identity());
       std::vector<Eigen::Affine3d, Eigen::aligned_allocator<Eigen::Affine3d> > extrication_poses;
       for (int index_point = 0; index_point < extrication_line.size(); index_point++)
       {
-        point = extrication_line[index_point].first;
-        pose.translation() << point[0], point[1], point[2];
-        extrication_poses.push_back(pose);
-        color_vector.push_back(false);
+        if(index_point==0 || index_point==(extrication_line.size()-1) || index_point%5==0)
+        {
+          point = extrication_line[index_point].first;
+          pose.translation() << point[0], point[1], point[2];
+          extrication_poses.push_back(pose);
+          color_vector.push_back(false);
+        }
       }
       // Reverse extrication pose
       std::reverse(extrication_poses.begin(), extrication_poses.end());
@@ -827,8 +910,8 @@ bool Bezier::generateTrajectory(
     //////////// EXTRICATION FROM LAST LINE TO FIRST ONE ////////////
     Eigen::Vector3d start_point_pass(lines[0][0].first);
     Eigen::Vector3d start_normal_pass(lines[0][0].second);
-    Eigen::Vector3d end_point_pass(lines[lines.size() - 1][lines[lines.size() - 1].size()].first);
-    Eigen::Vector3d end_normal_pass(lines[lines.size() - 1][lines[lines.size() - 1].size()].second);
+    Eigen::Vector3d end_point_pass(lines[lines.size() - 1][lines[lines.size() - 1].size()-1].first);
+    Eigen::Vector3d end_normal_pass(lines[lines.size() - 1][lines[lines.size() - 1].size()-1].second);
     // Get vector from last point of last line and first point of first line
     Eigen::Vector3d extrication_pass_dir(end_point_pass - start_point_pass);
     extrication_pass_dir.normalize();
@@ -876,16 +959,27 @@ bool Bezier::generateTrajectory(
     // Check orientation
     if (orientation.dot(extrication_pass_dir) > 0)
       std::reverse(extrication_poses.begin(), extrication_poses.end());
-    // Seek for closest start pass point index
-    int index_end_point_pass = seekClosestExtricationPassPoint(
-        end_point_pass - dist_to_extrication_mesh * end_normal_pass, extrication_poses);
     // Seek for closest end pass point index
-    int index_start_point_pass = seekClosestExtricationPassPoint(
-        start_point_pass - dist_to_extrication_mesh * start_normal_pass, extrication_poses);
+    int index_start_extrication_path;
+    // Seek for closest start pass point index
+    int index_end_extrication_path;
+    if (use_translation_mode_)
+    {
+      index_start_extrication_path = 0;
+      index_end_extrication_path = extrication_poses.size() - 1;
+    }
+    else
+    {
+      index_start_extrication_path = seekClosestExtricationPassPoint(
+          end_point_pass - dist_to_extrication_mesh * end_normal_pass, extrication_poses);
+      //seek for closest end pass point index
+      index_end_extrication_path = seekClosestExtricationPassPoint(
+          start_point_pass - dist_to_extrication_mesh * start_normal_pass, extrication_poses);
+    }
     // Get indice of close points
-    way_points_vector.insert(way_points_vector.end(), extrication_poses.begin() + index_end_point_pass,
-                             extrication_poses.begin() + index_start_point_pass);
-    for (size_t i = 0; i < (index_start_point_pass - index_end_point_pass); i++)
+    way_points_vector.insert(way_points_vector.end(), extrication_poses.begin() + index_start_extrication_path,
+                             extrication_poses.begin() + index_end_extrication_path);
+    for (size_t i = 0; i < (index_end_extrication_path - index_start_extrication_path); i++)
     {
       color_vector.push_back(false);
     }
@@ -931,11 +1025,11 @@ void Bezier::displayNormal(std::vector<Eigen::Affine3d,
       marker.action = visualization_msgs::Marker::ADD;
 
       // Set the scale of the marker - 1x1x1 here means 1m on a side
-      marker.scale.x = 0.002;  // Radius
-      marker.scale.y = 0.004;  // Radius
+      marker.scale.x = 0.001;  // Radius
+      marker.scale.y = 0.002;  // Radius
       //marker.scale.z = 0.001;
 
-      double length = 0.015;  // Length for normal markers
+      double length = 0.01;  // Length for normal markers
       geometry_msgs::Point start_point;
       geometry_msgs::Point end_point;
       end_point.x = way_points_vector[k].translation()[0];
@@ -984,7 +1078,7 @@ void Bezier::displayTrajectory(
   marker.type = visualization_msgs::Marker::LINE_STRIP;
   marker.action = visualization_msgs::Marker::ADD;
   marker.lifetime = ros::Duration();
-  marker.scale.x = 0.003;  // Set scale of our new marker : Diameter in our case.
+  marker.scale.x = 0.001;  // Set scale of our new marker : Diameter in our case.
   // Set marker orientation. Here, there is no rotation : (v1,v2,v3)=(0,0,0) angle=0
   marker.pose.orientation.x = 0.0;      // v1* sin(angle/2)
   marker.pose.orientation.y = 0.0;      // v2* sin(angle/2)
@@ -1027,7 +1121,8 @@ void Bezier::displayTrajectory(
 }
 
 void Bezier::displayMesh(ros::Publisher &mesh_publisher,
-                         std::string mesh_path)
+                         std::string mesh_path,
+                         float r, float g, float b)
 {
   // Create a mesh marker from ply files
   visualization_msgs::Marker mesh_marker;
@@ -1038,10 +1133,9 @@ void Bezier::displayMesh(ros::Publisher &mesh_publisher,
   mesh_marker.mesh_resource = mesh_path;
   mesh_marker.action = visualization_msgs::Marker::ADD;
   mesh_marker.scale.x = mesh_marker.scale.y = mesh_marker.scale.z = 1;
-
-  mesh_marker.color.r = 0.6f;
-  mesh_marker.color.g = 0.6f;
-  mesh_marker.color.b = 0.6f;
+  mesh_marker.color.r = r;
+  mesh_marker.color.g = g;
+  mesh_marker.color.b = b;
   mesh_marker.color.a = 1.0;
   mesh_marker.lifetime = ros::Duration();
 

@@ -39,6 +39,9 @@
 #include <vtkMarchingCubes.h>
 #include <vtkKdTreePointLocator.h>
 #include <vtkReverseSense.h>
+#include <vtkTransform.h>
+#include <vtkTransformPolyDataFilter.h>
+#include <vtkDistancePolyDataFilter.h>
 
 // ROS headers
 #include <ros/ros.h>
@@ -86,7 +89,8 @@ public:
          double effector_diameter,
          double covering,
          int extrication_coefficient,
-         int extrication_frequency);
+         int extrication_frequency,
+         bool use_translation_mode = false);
 
   ~Bezier();
 
@@ -141,11 +145,25 @@ public:
    *  @param[in] mesh_path path of mesh
    **/
   void
-  displayMesh(ros::Publisher &mesh_publisher, std::string mesh_path);
+  displayMesh(ros::Publisher &mesh_publisher,
+              std::string mesh_path,
+              float r = 0.6, float g = 0.6, float b = 0.6);
 
   /** @brief Function used to display some Bezier library's parameters (effector diameter, grind depth and covering) */
   void
   printBezierParameters();
+
+  /** @brief Use translation mode (see @ref use_translation_mode_)
+   *  @param[in] use_translation
+   */
+  void
+  setTranslationMode(bool use_translation);
+
+  /** @brief Get @ref use_translation_mode_
+   *  @return True if using translation mode, false otherwise
+   */
+  bool
+  getTranslationMode();
 
 private:
   /** @brief Input mesh */
@@ -181,6 +199,9 @@ private:
   /** @brief Stores the last number of normal markers published. Useful to get them deleted */
   unsigned int number_of_normal_markers_published_;
 
+  /** @brief If true, uses a translation expansion instead of a dilation. False by default */
+  bool use_translation_mode_;
+
   /** @brief This function uses vtkImplicitModeller in order to dilate the input vtkPolyData surface
    *  @param[in] depth depth for grind process (pass depth)
    *  @param[in] poly_data input data
@@ -194,6 +215,17 @@ private:
   bool
   dilation(double depth,
              vtkSmartPointer<vtkPolyData> &dilated_polydata);
+
+  /**@brief This function used vtkImplicitModeller in order to translate the inputpolydata surface.
+   * @param[in] depth depth for grind process (passe depth)
+   * @param[in] polydata Polydata we would like to translate
+   * @param[out] translate_poly_data translate_poly_data is the result of input_poly_data (this->inputPolyData) translation.
+   * @return boolean flag reflects the function proceedings.
+   */
+  bool
+  translation(double depth,
+              vtkSmartPointer<vtkPolyData> poly_data,
+              vtkSmartPointer<vtkPolyData> &translation_poly_data);
 
   /** @brief This function allows to optimize path generation. When passes are generated (dilation), we make an intersection between the
    * dilated mesh / default mesh in order to only save useful part of mesh

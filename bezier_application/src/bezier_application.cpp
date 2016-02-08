@@ -64,26 +64,33 @@ int main(int argc, char **argv)
 
   // Create publishers for point clouds and markers
   ros::Publisher trajectory_publisher, input_mesh_publisher, default_mesh_publisher, dilated_mesh_publisher,
-                 normal_publisher;
+                 normal_publisher, fix_table_mesh_publisher, fsw_table_mesh_publisher;
   trajectory_publisher    = node.advertise<visualization_msgs::Marker>("my_trajectory", 1);
   input_mesh_publisher    = node.advertise<visualization_msgs::Marker>("my_input_mesh", 1);
   default_mesh_publisher  = node.advertise<visualization_msgs::Marker>("my_default_mesh", 1);
   dilated_mesh_publisher  = node.advertise<visualization_msgs::Marker>("my_dilated_mesh", 1);
   normal_publisher        = node.advertise<visualization_msgs::MarkerArray>("my_normals", 1);
+  fix_table_mesh_publisher = node.advertise<visualization_msgs::Marker>("my_fix_table", 1);
+  fsw_table_mesh_publisher = node.advertise<visualization_msgs::Marker>("my_fsw_table", 1);
 
   // Generate trajectory
-  double covering_percentage = 0.5; //value between 0.0 & 1.0
-  double grind_diameter = 0.1;
-  double grind_depth = 0.05;
+  double size_of_fsw_tool = 0.45767; //height oh fsw tool
+  double size_of_grind_tool = 0.04; //height of end-mill
+
+  double covering_percentage = 0.25; //value between 0.0 & 1.0
+  double grind_diameter = 0.014;
+  double grind_depth = 0.015;
   int extrication_frequency = 5; // Generate a new extrication mesh each 4 passes generated
-  int extrication_coefficient = 1;
+  int extrication_coefficient = 5;
   Bezier bezier_planner(mesh_original, mesh_default, grind_depth, grind_diameter, covering_percentage,
-                        extrication_coefficient, extrication_frequency);
+                        extrication_coefficient, extrication_frequency, true);
   std::vector<bool> points_color_viz;
   std::vector<Eigen::Affine3d, Eigen::aligned_allocator<Eigen::Affine3d> > way_points_vector;
   std::vector<int> index_vector;
 
   // Display in RVIZ
+  bezier_planner.displayMesh(fix_table_mesh_publisher, mesh_ressource + "environment/TableFix.ply", .1, .4, .1);
+  bezier_planner.displayMesh(fsw_table_mesh_publisher, mesh_ressource + "environment/TableFSW.ply");
   bezier_planner.displayMesh(input_mesh_publisher, mesh_ressource + input_mesh_filename);
   bezier_planner.displayMesh(default_mesh_publisher, mesh_ressource + default_mesh_filename);
   bezier_planner.generateTrajectory(way_points_vector, points_color_viz, index_vector);
@@ -113,13 +120,29 @@ int main(int argc, char **argv)
 
       // Add offset BASE/BASE_LINK
       for (int j = 0; j < way_points_vector_pass.size(); j++)
-        way_points_vector_pass[j].translation().z() -= 0.45; // In order to face Z robot offset
-
+      {
+        way_points_vector_pass[j].translation().z() -= 0.950;
+        //reverse tool orientation for cables (Specific to institut maupertuis' robot)
+        way_points_vector_pass[j].linear().col(0) = - way_points_vector_pass[j].linear().col(0);
+        way_points_vector_pass[j].linear().col(1) = - way_points_vector_pass[j].linear().col(1);
+      }
       // Copy the vector of Eigen poses into a vector of ROS poses
       std::vector<geometry_msgs::Pose> way_points_msg;
       way_points_msg.resize(way_points_vector_pass.size());
+      tf::Transform link6_to_tcp_tf;
+      link6_to_tcp_tf = tf::Transform(tf::Matrix3x3::getIdentity(),
+                                      tf::Vector3(0.0, 0.0, -size_of_fsw_tool - size_of_grind_tool));
       for (size_t j = 0; j < way_points_msg.size(); j++)
+      {
         tf::poseEigenToMsg(way_points_vector_pass[j], way_points_msg[j]);
+        tf::Transform world_to_link6_tf, world_to_tcp_tf;
+        geometry_msgs::Pose world_to_link6 = way_points_msg[j];
+        geometry_msgs::Pose world_to_tcp;
+        tf::poseMsgToTF(world_to_link6, world_to_link6_tf);
+        world_to_tcp_tf = world_to_link6_tf * link6_to_tcp_tf;
+        tf::poseTFToMsg(world_to_tcp_tf, world_to_tcp);
+        way_points_msg[j] = world_to_tcp;
+      }
 
       // Execute this trajectory
       moveit_msgs::ExecuteKnownTrajectory srv;
