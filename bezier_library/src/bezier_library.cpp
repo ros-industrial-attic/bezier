@@ -5,8 +5,8 @@ Bezier::Bezier() :
         1), mesh_normal_vector_(Eigen::Vector3d::Identity()), slicing_dir_(Eigen::Vector3d::Identity()), number_of_normal_markers_published_(0),
         use_translation_mode_ (false)
 {
-  this->inputPolyData_ = vtkSmartPointer<vtkPolyData>::New();
-  this->defaultPolyData_ = vtkSmartPointer<vtkPolyData>::New();
+  inputPolyData_ = vtkSmartPointer<vtkPolyData>::New();
+  defaultPolyData_ = vtkSmartPointer<vtkPolyData>::New();
 }
 
 Bezier::Bezier(std::string filename_inputMesh,
@@ -27,11 +27,11 @@ Bezier::Bezier(std::string filename_inputMesh,
     number_of_normal_markers_published_(0),
     use_translation_mode_ (use_translation_mode)
 {
-  this->inputPolyData_ = vtkSmartPointer<vtkPolyData>::New();
-  if (!this->loadPLYPolydata(filename_inputMesh, this->inputPolyData_))
+  inputPolyData_ = vtkSmartPointer<vtkPolyData>::New();
+  if (!loadPLYPolydata(filename_inputMesh, inputPolyData_))
     ROS_ERROR_STREAM("Can't load input mesh");
-  this->defaultPolyData_ = vtkSmartPointer<vtkPolyData>::New();
-  if (!this->loadPLYPolydata(filename_defaultMesh, this->defaultPolyData_))
+  defaultPolyData_ = vtkSmartPointer<vtkPolyData>::New();
+  if (!loadPLYPolydata(filename_defaultMesh, defaultPolyData_))
     ROS_ERROR_STREAM("Can't load default mesh");
 }
 
@@ -64,7 +64,7 @@ struct lineOrganizerStruct
 void Bezier::printBezierParameters(void)
 {
   ROS_INFO_STREAM(
-      "Bézier parameters" << std::endl << "Grind depth (in centimeters) : " << this->grind_depth_*100 << std::endl << "Effector diameter (in centimeters) : " << this->effector_diameter_*100 << std::endl << "Covering (in %) : "<< this->covering_*100 << "/100");
+      "Bézier parameters" << std::endl << "Grind depth (in centimeters) : " << grind_depth_*100 << std::endl << "Effector diameter (in centimeters) : " << effector_diameter_*100 << std::endl << "Covering (in %) : "<< covering_*100 << "/100");
 }
 
 void Bezier::setTranslationMode(bool translation_mode)
@@ -80,7 +80,7 @@ bool Bezier::getTranslationMode()
 //////////////////// PRIVATE FUNCTIONS ////////////////////
 Eigen::Vector3d Bezier::getSlicingDirection()
 {
-  return this->slicing_dir_;
+  return slicing_dir_;
 }
 
 bool Bezier::loadPLYPolydata(std::string filename,
@@ -115,7 +115,7 @@ bool Bezier::dilation(double depth,
 {
   // Get maximum length of the sides
   double bounds[6];
-  this->inputPolyData_->GetBounds(bounds);
+  inputPolyData_->GetBounds(bounds);
   double max_side_length = std::max(bounds[1] - bounds[0], bounds[3] - bounds[2]);
   max_side_length = std::max(max_side_length, bounds[5] - bounds[4]);
   double threshold = depth / max_side_length;
@@ -125,9 +125,9 @@ bool Bezier::dilation(double depth,
   implicitModeller->SetProcessModeToPerVoxel();  // Optimize process -> per voxel and not per cell
   implicitModeller->SetSampleDimensions(50, 50, 50);
 #if VTK_MAJOR_VERSION <= 5
-  implicitModeller->SetInput(this->inputPolyData_);
+  implicitModeller->SetInput(inputPolyData_);
 #else
-  implicitModeller->SetInputData(this->inputPolyData_);
+  implicitModeller->SetInputData(inputPolyData_);
 #endif
   implicitModeller->AdjustBoundsOn();
   implicitModeller->SetAdjustDistance(threshold);  // Adjust by 10%
@@ -135,7 +135,7 @@ bool Bezier::dilation(double depth,
     implicitModeller->SetMaximumDistance(1.0);
   else
     implicitModeller->SetMaximumDistance(2 * threshold); // 2*threshold in order to be sure -> long time but smoothed dilation
-  implicitModeller->ComputeModelBounds(this->inputPolyData_);
+  implicitModeller->ComputeModelBounds(inputPolyData_);
   implicitModeller->Update();
 
   vtkSmartPointer<vtkMarchingCubes> surface = vtkSmartPointer<vtkMarchingCubes>::New();
@@ -151,13 +151,13 @@ bool Bezier::dilation(double depth,
 
   // Build a Kdtree
   vtkSmartPointer<vtkKdTreePointLocator> kDTree = vtkSmartPointer<vtkKdTreePointLocator>::New();
-  kDTree->SetDataSet(this->inputPolyData_);
+  kDTree->SetDataSet(inputPolyData_);
   kDTree->BuildLocator();
   //Build cell and link in dilated_poly_data
   dilated_tmp->BuildCells();
   dilated_tmp->BuildLinks();
   // Get normal tab
-  vtkFloatArray *PointNormalArray = vtkFloatArray::SafeDownCast(this->inputPolyData_->GetPointData()->GetNormals());
+  vtkFloatArray *PointNormalArray = vtkFloatArray::SafeDownCast(inputPolyData_->GetPointData()->GetNormals());
   if (!PointNormalArray)
     return false;
   // For each cell in dilated_polydata
@@ -173,7 +173,7 @@ bool Bezier::dilation(double depth,
     // Get closest point (in input_polydata)
     vtkIdType iD = kDTree->FindClosestPoint(cellCenter);
     double closestPoint[3];
-    this->inputPolyData_->GetPoint(iD, closestPoint);
+    inputPolyData_->GetPoint(iD, closestPoint);
     // Get direction vector
     Eigen::Vector3d direction_vector = Eigen::Vector3d(cellCenter[0] - closestPoint[0], cellCenter[1] - closestPoint[1],
                                                        cellCenter[2] - closestPoint[2]);
@@ -207,7 +207,7 @@ bool Bezier::translation(double depth,
                          vtkSmartPointer<vtkPolyData> &translation_poly_data)
 {
   vtkSmartPointer<vtkTransform> translation = vtkSmartPointer<vtkTransform>::New();
-  Eigen::Vector3d translate_vector = depth * this->mesh_normal_vector_;
+  Eigen::Vector3d translate_vector = depth * mesh_normal_vector_;
   double translate_tab[3] = {translate_vector[0], translate_vector[1], translate_vector[2]};
   translation->Translate(translate_tab[0], translate_tab[1], translate_tab[2]);
   vtkSmartPointer<vtkTransformPolyDataFilter> transformFilter = vtkSmartPointer<vtkTransformPolyDataFilter>::New();
@@ -233,10 +233,10 @@ bool Bezier::defaultIntersectionOptimisation(vtkSmartPointer<vtkPolyData> &poly_
   bool intersection_flag = false;
   // Build a Kdtree on default
   vtkSmartPointer<vtkKdTreePointLocator> kDTreeDefault = vtkSmartPointer<vtkKdTreePointLocator>::New();
-  kDTreeDefault->SetDataSet(this->defaultPolyData_);
+  kDTreeDefault->SetDataSet(defaultPolyData_);
   kDTreeDefault->BuildLocator();
   vtkFloatArray *defaultPointNormalArray = vtkFloatArray::SafeDownCast(
-      this->defaultPolyData_->GetPointData()->GetNormals());
+      defaultPolyData_->GetPointData()->GetNormals());
   // For each cell in dilate polydata
   for (vtkIdType index_cell = 0; index_cell < (poly_data->GetNumberOfCells()); index_cell++)
   {
@@ -254,7 +254,7 @@ bool Bezier::defaultIntersectionOptimisation(vtkSmartPointer<vtkPolyData> &poly_
       // Get closest point (in defautPolyData)
       vtkIdType iD = kDTreeDefault->FindClosestPoint(pt);
       double closestPoint[3];
-      this->defaultPolyData_->GetPoint(iD, closestPoint);
+      defaultPolyData_->GetPoint(iD, closestPoint);
       // Get direction vector
       Eigen::Vector3d direction_vector = Eigen::Vector3d(closestPoint[0] - pt[0], closestPoint[1] - pt[1],
                                                          closestPoint[2] - pt[2]);
@@ -321,14 +321,14 @@ void Bezier::ransacPlaneSegmentation()
 {
   //Get polydata point cloud (PCL)
   pcl::PolygonMesh mesh;
-  pcl::VTKUtils::vtk2mesh(this->inputPolyData_, mesh);
+  pcl::VTKUtils::vtk2mesh(inputPolyData_, mesh);
   PointCloudT::Ptr input_cloud(new PointCloudT);
   pcl::fromPCLPointCloud2(mesh.cloud, *input_cloud);
 
   // Get polydata dimensions
-  double x_size = this->inputPolyData_->GetBounds()[1] - this->inputPolyData_->GetBounds()[0];
-  double y_size = this->inputPolyData_->GetBounds()[3] - this->inputPolyData_->GetBounds()[2];
-  double z_size = this->inputPolyData_->GetBounds()[5] - this->inputPolyData_->GetBounds()[4];
+  double x_size = inputPolyData_->GetBounds()[1] - inputPolyData_->GetBounds()[0];
+  double y_size = inputPolyData_->GetBounds()[3] - inputPolyData_->GetBounds()[2];
+  double z_size = inputPolyData_->GetBounds()[5] - inputPolyData_->GetBounds()[4];
 
   // Apply RANSAC
   pcl::SACSegmentation<PointT> seg;
@@ -346,7 +346,7 @@ void Bezier::ransacPlaneSegmentation()
   seg.segment(inliers, model_coefficients);
 
   // Set Mesh normal vector
-  this->mesh_normal_vector_ = Eigen::Vector3d(model_coefficients.values[0],
+  mesh_normal_vector_ = Eigen::Vector3d(model_coefficients.values[0],
                                               model_coefficients.values[1],
                                               model_coefficients.values[2]);
 }
@@ -354,11 +354,11 @@ void Bezier::ransacPlaneSegmentation()
 void Bezier::generateSlicingDirection()
 {
   // Find two simple orthogonal vectors to mesh_normal
-  Eigen::Vector3d x_vector = Eigen::Vector3d(this->mesh_normal_vector_[2], 0, -this->mesh_normal_vector_[0]);
-  Eigen::Vector3d y_vector = Eigen::Vector3d(0, this->mesh_normal_vector_[2], -this->mesh_normal_vector_[1]);
+  Eigen::Vector3d x_vector = Eigen::Vector3d(mesh_normal_vector_[2], 0, -mesh_normal_vector_[0]);
+  Eigen::Vector3d y_vector = Eigen::Vector3d(0, mesh_normal_vector_[2], -mesh_normal_vector_[1]);
   // By default, we chose x_vector. But another vector in this plan could be choosen.
   x_vector.normalize();
-  this->slicing_dir_ = x_vector;
+  slicing_dir_ = x_vector;
 }
 
 unsigned int Bezier::determineSliceNumberExpected(vtkSmartPointer<vtkPolyData> poly_data)
@@ -388,7 +388,7 @@ unsigned int Bezier::determineSliceNumberExpected(vtkSmartPointer<vtkPolyData> p
   }
   // Virtual effector size = effector size * (1- covering%)
   // Distance we have to cut = max_value - min_value
-  double virtual_effector_diameter = this->effector_diameter_ * (1 - this->covering_);
+  double virtual_effector_diameter = effector_diameter_ * (1 - covering_);
   double distance = max_value - min_value;
   return std::ceil(distance / virtual_effector_diameter);
 }
@@ -423,7 +423,7 @@ unsigned int Bezier::getRealSliceNumber(vtkSmartPointer<vtkStripper> stripper, E
   std::sort(dot_vector.begin(), dot_vector.end());
   // Remove duplicated value or too close values
   int index = 0;
-  double value = (this->effector_diameter_ * (1 - this->covering_)) / (2 * 10); //2 to get radius, 10 to get 10% of virtual radius as threshold
+  double value = (effector_diameter_ * (1 - covering_)) / (2 * 10); //2 to get radius, 10 to get 10% of virtual radius as threshold
   while (index < (dot_vector.size() - 1))
   {
     if (std::abs(dot_vector[index] - dot_vector[index + 1]) < value)
@@ -495,7 +495,7 @@ bool Bezier::cutMesh(vtkSmartPointer<vtkPolyData> poly_data,
     stripper->SetInputConnection(triangleFilter->GetOutputPort());
     stripper->Update();
 
-    line_number_real = this->getRealSliceNumber(stripper, cut_dir);
+    line_number_real = getRealSliceNumber(stripper, cut_dir);
     if (line_number_real < line_number_expected)
       temp++;
 
@@ -545,7 +545,7 @@ void Bezier::harmonizeLinesOrientation(std::vector<std::vector<std::pair<Eigen::
                                        Eigen::Vector3d> > > &lines)
 {
   // Get vector reference
-  Eigen::Vector3d reference = this->slicing_dir_.cross(this->mesh_normal_vector_);
+  Eigen::Vector3d reference = slicing_dir_.cross(mesh_normal_vector_);
   reference.normalize();
 
   // Compare orientation of lines with reference
@@ -589,11 +589,11 @@ Bezier::generateStripperOnSurface (vtkSmartPointer<vtkPolyData> PolyData,
                                    std::vector<std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d> > > &lines)
 {
   // Set slice number (With covering)
-  unsigned int slice_number_expected = this->determineSliceNumberExpected(PolyData);
+  unsigned int slice_number_expected = determineSliceNumberExpected(PolyData);
   // Cut mesh
   vtkSmartPointer<vtkStripper> stripper = vtkSmartPointer<vtkStripper>::New();
   stripper->SetJoinContiguousSegments(true);
-  cutMesh(PolyData, this->slicing_dir_, slice_number_expected, stripper);  // Fill this stripper with cutMesh function
+  cutMesh(PolyData, slicing_dir_, slice_number_expected, stripper);  // Fill this stripper with cutMesh function
 
   // FIXME At the moment we use vector to reorganize data from stripper
   //       In the future, we must change that in order to use stripper only
@@ -627,7 +627,7 @@ Bezier::generateStripperOnSurface (vtkSmartPointer<vtkPolyData> PolyData,
         normal_vector *= -1;
       else
       {
-        if (PolyData == this->inputPolyData_)
+        if (PolyData == inputPolyData_)
           normal_vector *= -1;
       }
       line.push_back(std::make_pair(point_vector, normal_vector));
@@ -734,19 +734,19 @@ bool Bezier::generateTrajectory(
 {
   way_points_vector.clear();
   color_vector.clear();
-  this->generatePointNormals(this->inputPolyData_);
+  generatePointNormals(inputPolyData_);
   // Generate global mesh normal
-  this->ransacPlaneSegmentation();
+  ransacPlaneSegmentation();
   // Find cut direction thanks to the mesh normal
-  this->generateSlicingDirection();
+  generateSlicingDirection();
   // Dilate mesh to generate different passes
   if(use_translation_mode_)
     ROS_INFO_STREAM("Please wait : translation in progress");
   else
     ROS_INFO_STREAM("Please wait : dilation in progress");
-  this->dilationPolyDataVector_.push_back(this->inputPolyData_);
+  dilationPolyDataVector_.push_back(inputPolyData_);
   bool intersection_flag = true;  // Flag variable : dilate while dilated mesh intersect default mesh
-  double depth = this->grind_depth_;  // Depth between input mesh and dilated mesh
+  double depth = grind_depth_;  // Depth between input mesh and dilated mesh
 
   while (intersection_flag)
   {
@@ -761,28 +761,28 @@ bool Bezier::generateTrajectory(
     if (flag_expansion && defaultIntersectionOptimisation(expanded_polydata) && expanded_polydata->GetNumberOfCells() > 10) // FIXME Check intersection between new dilated mesh and default
     {
       if (use_translation_mode_)
-        this->dilationPolyDataVector_.push_back(temp_polydata);  // If intersection, consider dilated mesh as a pass
+        dilationPolyDataVector_.push_back(temp_polydata);  // If intersection, consider dilated mesh as a pass
       else
-        this->dilationPolyDataVector_.push_back(expanded_polydata);
+        dilationPolyDataVector_.push_back(expanded_polydata);
 
       ROS_INFO_STREAM("New pass generated");
     }
     else
       intersection_flag = false;  // No intersection : end of dilation
-    depth += this->grind_depth_;
+    depth += grind_depth_;
   }
   if(use_translation_mode_)
     ROS_INFO_STREAM("Translation process done");
   else
     ROS_INFO_STREAM("Dilation process done");
   // Reverse pass vector: grind from upper (last) pass
-  std::reverse(this->dilationPolyDataVector_.begin(), this->dilationPolyDataVector_.end());
+  std::reverse(dilationPolyDataVector_.begin(), dilationPolyDataVector_.end());
   // Generate extrication mesh data
   vtkSmartPointer<vtkPolyData> extrication_poly_data = vtkSmartPointer<vtkPolyData>::New();
   std::vector<std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d> > > extrication_lines;
   index_vector.push_back(way_points_vector.size() - 1);  // Push back index of last pose in pass
   // Generate trajectory
-  for (int polydata_index = 0; polydata_index < this->dilationPolyDataVector_.size(); polydata_index++)
+  for (int polydata_index = 0; polydata_index < dilationPolyDataVector_.size(); polydata_index++)
   {  // For each polydata (passes)
      // Generate extrication mesh
     double dist_to_extrication_mesh(0);
@@ -790,25 +790,25 @@ bool Bezier::generateTrajectory(
     {
       if (use_translation_mode_)
       {
-        dist_to_extrication_mesh = this->extrication_coefficient_ * this->grind_depth_;
-        translation(dist_to_extrication_mesh, this->dilationPolyDataVector_[polydata_index], extrication_poly_data);
+        dist_to_extrication_mesh = extrication_coefficient_ * grind_depth_;
+        translation(dist_to_extrication_mesh, dilationPolyDataVector_[polydata_index], extrication_poly_data);
       }
       else
       {
         //-> dilated_depth = extrication_coefficient+numberOfPolydataDilated-1-n*frequency)*grind_depth
         double dilated_depth(
-            (extrication_coefficient_ + dilationPolyDataVector_.size() - 1 - polydata_index) * this->grind_depth_);
+            (extrication_coefficient_ + dilationPolyDataVector_.size() - 1 - polydata_index) * grind_depth_);
         dilation(dilated_depth, extrication_poly_data);
-        //dilatation(this->extrication_coefficient_*this->grind_depth_, this->dilationPolyDataVector_[polydata_index], extrication_poly_data);
-        double dist_to_extrication_mesh((this->extrication_coefficient_ + polydata_index) * this->grind_depth_); //distance between dilationPolyDataVector_[index_polydata] and extrication polydata
+        //dilatation(extrication_coefficient_*grind_depth_, dilationPolyDataVector_[polydata_index], extrication_poly_data);
+        double dist_to_extrication_mesh((extrication_coefficient_ + polydata_index) * grind_depth_); //distance between dilationPolyDataVector_[index_polydata] and extrication polydata
       }
       generateStripperOnSurface(extrication_poly_data, extrication_lines);
     }
     else
-      dist_to_extrication_mesh += this->grind_depth_;
+      dist_to_extrication_mesh += grind_depth_;
     // Generate trajectory on mesh (polydata)
     std::vector<std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d> > > lines;
-    this->generateStripperOnSurface(this->dilationPolyDataVector_[polydata_index], lines);
+    generateStripperOnSurface(dilationPolyDataVector_[polydata_index], lines);
     for (int index_line = 0; index_line < lines.size(); index_line++)
     {
       // Variable use to store pose : used for extrication paths
@@ -832,14 +832,14 @@ bool Bezier::generateTrajectory(
           point = lines[index_line][index_point].first;
           next_point = lines[index_line][index_point + 1].first;
           normal = lines[index_line][index_point].second;
-          flag_isFinite = this->generateRobotPoses(point, next_point, normal, pose);
+          flag_isFinite = generateRobotPoses(point, next_point, normal, pose);
         }
         else
         {
           point = lines[index_line][index_point - 1].first;
           next_point = lines[index_line][index_point].first;
           normal = lines[index_line][index_point - 1].second;
-          flag_isFinite = this->generateRobotPoses(point, next_point, normal, pose);
+          flag_isFinite = generateRobotPoses(point, next_point, normal, pose);
           pose.translation() << next_point[0], next_point[1], next_point[2];
         }
         if (index_point == 0)
@@ -918,9 +918,9 @@ bool Bezier::generateTrajectory(
     // Get his orthogonal vector to use vtkCutter
     // First step : take his projection on the Ransac plan model
     Eigen::Vector3d extrication_cut_dir(
-        extrication_pass_dir - (extrication_pass_dir.dot(this->mesh_normal_vector_)) * this->mesh_normal_vector_);
+        extrication_pass_dir - (extrication_pass_dir.dot(mesh_normal_vector_)) * mesh_normal_vector_);
     // Second step : cross product with mesh normal
-    extrication_cut_dir = extrication_cut_dir.cross(this->mesh_normal_vector_);
+    extrication_cut_dir = extrication_cut_dir.cross(mesh_normal_vector_);
     extrication_cut_dir.normalize();
     // Cut this dilated mesh to determine extrication pass trajectory
     vtkSmartPointer<vtkStripper> extrication_stripper = vtkSmartPointer<vtkStripper>::New();
