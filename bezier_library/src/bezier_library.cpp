@@ -28,10 +28,10 @@ Bezier::Bezier(std::string filename_inputMesh,
     use_translation_mode_ (use_translation_mode)
 {
   inputPolyData_ = vtkSmartPointer<vtkPolyData>::New();
-  if (!loadPLYPolydata(filename_inputMesh, inputPolyData_))
+  if(!loadPLYPolydata(filename_inputMesh, inputPolyData_))
     ROS_ERROR_STREAM("Bezier::Bezier: Can't load input mesh given: " << filename_inputMesh);
   defaultPolyData_ = vtkSmartPointer<vtkPolyData>::New();
-  if (!loadPLYPolydata(filename_defaultMesh, defaultPolyData_))
+  if(!loadPLYPolydata(filename_defaultMesh, defaultPolyData_))
     ROS_ERROR_STREAM("Bezier::Bezier: Can't load defect mesh given: " << filename_defaultMesh);
 }
 
@@ -100,7 +100,7 @@ bool Bezier::savePLYPolyData(std::string filename,
   plyWriter->SetFileName(filename.c_str());
   plyWriter->SetInputData(poly_data);
   plyWriter->Update();
-  if (!plyWriter->Write())
+  if(!plyWriter->Write())
     return false;
   return true;
 }
@@ -131,7 +131,7 @@ bool Bezier::dilation(double depth,
 #endif
   implicitModeller->AdjustBoundsOn();
   implicitModeller->SetAdjustDistance(threshold);  // Adjust by 10%
-  if (2 * threshold > 1.0)
+  if(2 * threshold > 1.0)
     implicitModeller->SetMaximumDistance(1.0);
   else
     implicitModeller->SetMaximumDistance(2 * threshold); // 2*threshold in order to be sure -> long time but smoothed dilation
@@ -158,10 +158,11 @@ bool Bezier::dilation(double depth,
   dilated_tmp->BuildLinks();
   // Get normal tab
   vtkFloatArray *PointNormalArray = vtkFloatArray::SafeDownCast(inputPolyData_->GetPointData()->GetNormals());
-  if (!PointNormalArray)
+  if(!PointNormalArray)
     return false;
   // For each cell in dilated_polydata
-  for (vtkIdType index_cell = 0; index_cell < (dilated_tmp->GetNumberOfCells()); index_cell++)   {
+  for(vtkIdType index_cell = 0; index_cell < (dilated_tmp->GetNumberOfCells()); index_cell++)
+  {
     // Get cell
     vtkCell* cell = dilated_tmp->GetCell(index_cell);
     // Get center of cell
@@ -175,7 +176,8 @@ bool Bezier::dilation(double depth,
     double closestPoint[3];
     inputPolyData_->GetPoint(iD, closestPoint);
     // Get direction vector
-    Eigen::Vector3d direction_vector = Eigen::Vector3d(cellCenter[0] - closestPoint[0], cellCenter[1] - closestPoint[1],
+    Eigen::Vector3d direction_vector = Eigen::Vector3d(cellCenter[0] - closestPoint[0],
+                                                       cellCenter[1] - closestPoint[1],
                                                        cellCenter[2] - closestPoint[2]);
 
     // Get closest point normal
@@ -186,13 +188,13 @@ bool Bezier::dilation(double depth,
     normal_vector.normalize();
 
     // Keep the cell only if it belongs to the upper part of the mesh
-    if (!vtkMath::IsFinite(cellCenter[0]) || !vtkMath::IsFinite(cellCenter[1]) || !vtkMath::IsFinite(cellCenter[2])
+    if(!vtkMath::IsFinite(cellCenter[0]) || !vtkMath::IsFinite(cellCenter[1]) || !vtkMath::IsFinite(cellCenter[2])
         || normal_vector.dot(direction_vector) <= 0)
       dilated_tmp->DeleteCell(index_cell);
   }
 
   dilated_tmp->RemoveDeletedCells();
-  if (dilated_tmp->GetNumberOfCells() == 0)
+  if(dilated_tmp->GetNumberOfCells() == 0)
     return false;
 
   vtkSmartPointer<vtkReverseSense> mesh_reverser = vtkSmartPointer<vtkReverseSense>::New();
@@ -220,7 +222,7 @@ bool Bezier::translation(double depth,
   distanceFilter->SetInputData(1, poly_data);
   distanceFilter->SetInputData(0, translation_poly_data);
   distanceFilter->Update();
-  if (depth - distanceFilter->GetOutput()->GetPointData()->GetScalars()->GetRange()[0] <= 0)
+  if(depth - distanceFilter->GetOutput()->GetPointData()->GetScalars()->GetRange()[0] <= 0)
   {
     printf("ERROR IN MESH TRANSLATION : DEPTH WRONG\n");
     //return false;
@@ -238,7 +240,7 @@ bool Bezier::defaultIntersectionOptimisation(vtkSmartPointer<vtkPolyData> &poly_
   vtkFloatArray *defaultPointNormalArray = vtkFloatArray::SafeDownCast(
       defaultPolyData_->GetPointData()->GetNormals());
   // For each cell in dilate polydata
-  for (vtkIdType index_cell = 0; index_cell < (poly_data->GetNumberOfCells()); index_cell++)
+  for(vtkIdType index_cell = 0; index_cell < (poly_data->GetNumberOfCells()); index_cell++)
   {
     // Get cell
     vtkCell* cell = poly_data->GetCell(index_cell);
@@ -246,7 +248,7 @@ bool Bezier::defaultIntersectionOptimisation(vtkSmartPointer<vtkPolyData> &poly_
     vtkPoints * pts = cell->GetPoints();
     // Variable test use to know points position
     bool inside = false;
-    for (int index_pt = 0; index_pt < pts->GetNumberOfPoints(); index_pt++)
+    for(int index_pt = 0; index_pt < pts->GetNumberOfPoints(); index_pt++)
     {
       // Get point
       double pt[3];
@@ -256,7 +258,8 @@ bool Bezier::defaultIntersectionOptimisation(vtkSmartPointer<vtkPolyData> &poly_
       double closestPoint[3];
       defaultPolyData_->GetPoint(iD, closestPoint);
       // Get direction vector
-      Eigen::Vector3d direction_vector = Eigen::Vector3d(closestPoint[0] - pt[0], closestPoint[1] - pt[1],
+      Eigen::Vector3d direction_vector = Eigen::Vector3d(closestPoint[0] - pt[0],
+                                                         closestPoint[1] - pt[1],
                                                          closestPoint[2] - pt[2]);
       // Get closest point normal
       double normal[3];
@@ -266,7 +269,7 @@ bool Bezier::defaultIntersectionOptimisation(vtkSmartPointer<vtkPolyData> &poly_
       direction_vector.normalize();
       normal_vector.normalize();
       // Test in order to save or remove cell
-      if (vtkMath::IsFinite(pt[0]) && vtkMath::IsFinite(pt[1]) && vtkMath::IsFinite(pt[2])
+      if(vtkMath::IsFinite(pt[0]) && vtkMath::IsFinite(pt[1]) && vtkMath::IsFinite(pt[2])
           && normal_vector.dot(direction_vector) > 0.1) //FIXME threshold use for corner (90° angle) : It resolves problem with neighbor and dot product
       {
         inside = true;
@@ -274,7 +277,7 @@ bool Bezier::defaultIntersectionOptimisation(vtkSmartPointer<vtkPolyData> &poly_
         break;
       }
     }
-    if (!inside)
+    if(!inside)
       poly_data->DeleteCell(index_cell);
 
   }
@@ -295,7 +298,7 @@ bool Bezier::generateCellNormals(vtkSmartPointer<vtkPolyData> &poly_data)
   poly_data = normals->GetOutput();
   vtkFloatArray* CellNormalArray = vtkFloatArray::SafeDownCast(poly_data->GetCellData()->GetArray("Normals"));
 
-  if (!CellNormalArray)
+  if(!CellNormalArray)
     return false;
 
   return true;
@@ -311,7 +314,7 @@ bool Bezier::generatePointNormals(vtkSmartPointer<vtkPolyData> &poly_data)
   poly_data = normals->GetOutput();
   vtkFloatArray *PointNormalArray = vtkFloatArray::SafeDownCast(poly_data->GetPointData()->GetNormals());
 
-  if (!PointNormalArray)
+  if(!PointNormalArray)
     return false;
 
   return true;
@@ -347,8 +350,8 @@ void Bezier::ransacPlaneSegmentation()
 
   // Set Mesh normal vector
   mesh_normal_vector_ = Eigen::Vector3d(model_coefficients.values[0],
-                                              model_coefficients.values[1],
-                                              model_coefficients.values[2]);
+                                        model_coefficients.values[1],
+                                        model_coefficients.values[2]);
 }
 
 void Bezier::generateSlicingDirection()
@@ -368,21 +371,21 @@ unsigned int Bezier::determineSliceNumberExpected(vtkSmartPointer<vtkPolyData> p
   double max_value = DBL_MIN;
   // Get point cloud from polydata : We have to use points of cells and not point cloud directly.
   // In fact, in dilation process, several cells have been deleted. Yet, none of points has been deleted.
-  for (vtkIdType index_cell = 0; index_cell < (poly_data->GetNumberOfCells()); index_cell++)
+  for(vtkIdType index_cell = 0; index_cell < (poly_data->GetNumberOfCells()); index_cell++)
   {
     // Get cell
     vtkCell* cell = poly_data->GetCell(index_cell);
     // Get points of cell
     vtkPoints * pts = cell->GetPoints();
-    for (int i = 0; i < pts->GetNumberOfPoints(); i++)
+    for(int i = 0; i < pts->GetNumberOfPoints(); i++)
     {
       double p[3];
       pts->GetPoint(i, p);
       Eigen::Vector3d point(p[0], p[1], p[2]);
       double value = point.dot(slicing_dir_);
-      if (value > max_value)
+      if(value > max_value)
         max_value = value;
-      if (value < min_value)
+      if(value < min_value)
         min_value = value;
     }
   }
@@ -403,11 +406,11 @@ unsigned int Bezier::getRealSliceNumber(vtkSmartPointer<vtkStripper> stripper, E
   unsigned int lineCount = 0;
   std::vector<double> dot_vector;
   // For all lines
-  for (cells->InitTraversal(); cells->GetNextCell(numberOfPoints, indices); lineCount++)
+  for(cells->InitTraversal(); cells->GetNextCell(numberOfPoints, indices); lineCount++)
   {
     double point[3];
     int indice = ceil(numberOfPoints / 2);  // Get a point in line : we have chosen center point
-    if (numberOfPoints <= 1)  // Yet, if number of points is to small, get 0 as indice.
+    if(numberOfPoints <= 1)  // Yet, if number of points is to small, get 0 as indice.
       indice = 0;
     // Get point
     points->GetPoint(indices[indice], point);
@@ -417,7 +420,7 @@ unsigned int Bezier::getRealSliceNumber(vtkSmartPointer<vtkStripper> stripper, E
     // For each scalar products, push back to a vector
     dot_vector.push_back(dot);
   }
-  if (dot_vector.size() == 0)  // If vector size is null return 0
+  if(dot_vector.size() == 0)  // If vector size is null return 0
     return 0;
   // Else sort vector
   std::sort(dot_vector.begin(), dot_vector.end());
@@ -426,12 +429,12 @@ unsigned int Bezier::getRealSliceNumber(vtkSmartPointer<vtkStripper> stripper, E
   double value = (effector_diameter_ * (1 - covering_percentage_)) / (2 * 10); //2 to get radius, 10 to get 10% of virtual radius as threshold
   while (index < (dot_vector.size() - 1))
   {
-    if (std::abs(dot_vector[index] - dot_vector[index + 1]) < value)
+    if(std::abs(dot_vector[index] - dot_vector[index + 1]) < value)
     {
       dot_vector.erase(dot_vector.begin() + index + 1);
     }
     // Witout threshold :
-    /*if (dot_vector[index] == dot_vector[index + 1])
+    /*if(dot_vector[index] == dot_vector[index + 1])
      dot_vector.erase(dot_vector.begin() + index + 1);*/
     else
       index++;
@@ -496,7 +499,7 @@ bool Bezier::cutMesh(vtkSmartPointer<vtkPolyData> poly_data,
     stripper->Update();
 
     line_number_real = getRealSliceNumber(stripper, cut_dir);
-    if (line_number_real < line_number_expected)
+    if(line_number_real < line_number_expected)
       temp++;
 
     //ROS_INFO_STREAM("Expected : " << line_number_expected << ", returned : " << stripper->GetOutput()->GetNumberOfLines() <<
@@ -514,7 +517,7 @@ bool Bezier::generateRobotPoses(Eigen::Vector3d point,
   Eigen::Vector3d normal_y(Eigen::Vector3d().Identity());
   Eigen::Vector3d normal_z = Eigen::Vector3d(normal[0], normal[1], normal[2]);
   normal_x = point_next - point;  // Next point direction
-  if (normal_x == Eigen::Vector3d::Zero())
+  if(normal_x == Eigen::Vector3d::Zero())
   {
     ROS_ERROR_STREAM("Bezier::generateRobotPoses: X normal = 0, mesh is too dense or duplicate points in the line!");
     return false;
@@ -526,7 +529,7 @@ bool Bezier::generateRobotPoses(Eigen::Vector3d point,
   normal_z.normalize();
 
   // Check if pose has NAN values
-  if (!vtkMath::IsFinite((float)normal_y[0]) ||
+  if(!vtkMath::IsFinite((float)normal_y[0]) ||
       !vtkMath::IsFinite((float)normal_y[1]) ||
       !vtkMath::IsFinite((float)normal_y[2]))
     return false;
@@ -549,14 +552,14 @@ void Bezier::harmonizeLinesOrientation(std::vector<std::vector<std::pair<Eigen::
   reference.normalize();
 
   // Compare orientation of lines with reference
-  for (int line_index = 0; line_index < lines.size(); line_index++)
+  for(int line_index = 0; line_index < lines.size(); line_index++)
   {
     // Get line orientation
     int point_number = lines[line_index].size();
     Eigen::Vector3d vector_orientation = lines[line_index][point_number - 1].first - lines[line_index][0].first;
     vector_orientation.normalize();
     // Compare (Check orientation)
-    if (reference.dot(vector_orientation) < 0)  // Dot product<0 so, vectors have opposite orientation
+    if(reference.dot(vector_orientation) < 0)  // Dot product<0 so, vectors have opposite orientation
       std::reverse(lines[line_index].begin(), lines[line_index].end());  // Change orientation of line
   }
 }
@@ -565,17 +568,21 @@ void Bezier::removeNearNeighborPoints(std::vector<std::vector<std::pair<Eigen::V
                                       Eigen::Vector3d> > > &lines)
 {
   // For each points
-  for (int index_line = 0; index_line < lines.size(); index_line++)
+  for(int index_line = 0; index_line < lines.size(); index_line++)
   {
-    for (int index_point = 0; index_point < (lines[index_line].size() - 1); index_point++)
+    for(int index_point = 0; index_point < (lines[index_line].size() - 1); index_point++)
     {
       Eigen::Vector3d point_vector = lines[index_line][index_point].first;  // Get point position
       Eigen::Vector3d next_point_vector = lines[index_line][index_point + 1].first;  // Get next point position
-      double point[3] = {point_vector[0], point_vector[1], point_vector[2]};
-      double next_point[3] = {next_point_vector[0], next_point_vector[1], next_point_vector[2]};
-      if (sqrt(vtkMath::Distance2BetweenPoints(point, next_point)) < 0.001)
+      double point[3] = {point_vector[0],
+                         point_vector[1],
+                         point_vector[2]};
+      double next_point[3] = {next_point_vector[0],
+                              next_point_vector[1],
+                              next_point_vector[2]};
+      if(sqrt(vtkMath::Distance2BetweenPoints(point, next_point)) < 0.001)
       {  // FIXME Arbitrary value
-        if (index_point < (lines[index_line].size() - 2))
+        if(index_point < (lines[index_line].size() - 2))
           lines[index_line].erase(lines[index_line].begin() + index_point + 1);
         else
           lines[index_line].erase(lines[index_line].begin() + index_point);
@@ -608,26 +615,30 @@ Bezier::generateStripperOnSurface (vtkSmartPointer<vtkPolyData> PolyData,
 
   // Get normal array of stripper
   vtkFloatArray *PointNormalArray = vtkFloatArray::SafeDownCast(stripper->GetOutput()->GetPointData()->GetNormals());
-  if (!PointNormalArray)
+  if(!PointNormalArray)
     return false;
-  for (cells->InitTraversal(); cells->GetNextCell(numberOfPoints, indices); lineCount++)  // For each line : iterator
+  for(cells->InitTraversal(); cells->GetNextCell(numberOfPoints, indices); lineCount++)  // For each line : iterator
   {
-    std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d> > line; // line.first : point position, line.second : point normal
-    for (vtkIdType i = 0; i < numberOfPoints; i++)
+    std::vector < std::pair<Eigen::Vector3d, Eigen::Vector3d> > line; // line.first : point position, line.second : point normal
+    for(vtkIdType i = 0; i < numberOfPoints; i++)
     {
       //Get points
       double point[3];
       points->GetPoint(indices[i], point);
-      Eigen::Vector3d point_vector(point[0], point[1], point[2]);
+      Eigen::Vector3d point_vector(point[0],
+                                   point[1],
+                                   point[2]);
       //Get Z normal
       double normal[3];
       PointNormalArray->GetTuple(indices[i], normal);
-      Eigen::Vector3d normal_vector(normal[0], normal[1], normal[2]);
-      if (use_translation_mode_)
+      Eigen::Vector3d normal_vector(normal[0],
+                                    normal[1],
+                                    normal[2]);
+      if(use_translation_mode_)
         normal_vector *= -1;
       else
       {
-        if (PolyData == inputPolyData_)
+        if(PolyData == inputPolyData_)
           normal_vector *= -1;
       }
       line.push_back(std::make_pair(point_vector, normal_vector));
@@ -648,16 +659,18 @@ int Bezier::seekClosestLine(Eigen::Vector3d point_vector,
 {
   int index_of_closest_line(0);
   double distance(DBL_MAX);
-  for (size_t index_line = 0; index_line < extrication_lines.size(); index_line++)
+  for(size_t index_line = 0; index_line < extrication_lines.size(); index_line++)
   {
     double number_of_point = extrication_lines[index_line].size();
     Eigen::Vector3d end_extrication_point_vector = extrication_lines[index_line][number_of_point - 1].first;
     //get distance
-    double point[3] = {point_vector[0], point_vector[1], point_vector[2]};
+    double point[3] = {point_vector[0],
+                       point_vector[1],
+                       point_vector[2]};
     double extrication_point[3] = {end_extrication_point_vector[0],
                                    end_extrication_point_vector[1],
                                    end_extrication_point_vector[2]};
-    if (distance > vtkMath::Distance2BetweenPoints(point, extrication_point))
+    if(distance > vtkMath::Distance2BetweenPoints(point, extrication_point))
     {
       distance = vtkMath::Distance2BetweenPoints(point, extrication_point);
       index_of_closest_line = index_line;
@@ -672,14 +685,16 @@ int Bezier::seekClosestPoint(Eigen::Vector3d point_vector,
 {
   int index(0);
   double distance(DBL_MAX);
-  for (size_t index_point = 0; index_point < extrication_line.size(); index_point++)
+  for(size_t index_point = 0; index_point < extrication_line.size(); index_point++)
   {
     Eigen::Vector3d extrication_point_vector = extrication_line[index_point].first;
-    double point[3] = {point_vector[0], point_vector[1], point_vector[2]};
+    double point[3] = {point_vector[0],
+                       point_vector[1],
+                       point_vector[2]};
     double extrication_point[3] = {extrication_point_vector[0],
                                    extrication_point_vector[1],
                                    extrication_point_vector[2]};
-    if (distance > vtkMath::Distance2BetweenPoints(point, extrication_point))
+    if(distance > vtkMath::Distance2BetweenPoints(point, extrication_point))
     {
       distance = vtkMath::Distance2BetweenPoints(point, extrication_point);
       index = index_point;
@@ -695,12 +710,14 @@ int Bezier::seekClosestExtricationPassPoint(
 {
   int index(0);
   double distance(DBL_MAX);
-  for (size_t index_point = 0; index_point < extrication_poses.size(); index_point++)
+  for(size_t index_point = 0; index_point < extrication_poses.size(); index_point++)
   {
     Eigen::Vector3d closest_point_vector = extrication_poses[index_point].translation();
-    double point[3] = {point_vector[0], point_vector[1], point_vector[2]};
+    double point[3] = {point_vector[0],
+                       point_vector[1],
+                       point_vector[2]};
     double closest_point[3] = {closest_point_vector[0], closest_point_vector[1], closest_point_vector[2]};
-    if (distance > vtkMath::Distance2BetweenPoints(point, closest_point))
+    if(distance > vtkMath::Distance2BetweenPoints(point, closest_point))
     {
       distance = vtkMath::Distance2BetweenPoints(point, closest_point);
       index = index_point;
@@ -711,14 +728,14 @@ int Bezier::seekClosestExtricationPassPoint(
 
 bool Bezier::saveDilatedMeshes(std::string path)
 {
-  if (dilationPolyDataVector_.empty())
+  if(dilationPolyDataVector_.empty())
     return false;
 
-  for (size_t i = 0; i < dilationPolyDataVector_.size(); ++i)
+  for(size_t i = 0; i < dilationPolyDataVector_.size(); ++i)
   {
     std::string number(boost::lexical_cast<std::string>(i));
     std::string file(path + "/mesh_" + number + ".ply");
-    if (!savePLYPolyData(file, dilationPolyDataVector_[i]))
+    if(!savePLYPolyData(file, dilationPolyDataVector_[i]))
       return false;
     ROS_INFO_STREAM(file << " saved successfully");
   }
@@ -758,9 +775,10 @@ bool Bezier::generateTrajectory(
      flag_expansion = dilation(depth, expanded_polydata);
     vtkSmartPointer<vtkPolyData> temp_polydata = vtkSmartPointer<vtkPolyData>::New(); //Ignore collision in translation process fixme
     temp_polydata->ShallowCopy(expanded_polydata);
-    if (flag_expansion && defaultIntersectionOptimisation(expanded_polydata) && expanded_polydata->GetNumberOfCells() > 10) // FIXME Check intersection between new dilated mesh and default
+    if(flag_expansion && defaultIntersectionOptimisation(expanded_polydata)
+        && expanded_polydata->GetNumberOfCells() > 10) // FIXME Check intersection between new dilated mesh and default
     {
-      if (use_translation_mode_)
+      if(use_translation_mode_)
         dilationPolyDataVector_.push_back(temp_polydata);  // If intersection, consider dilated mesh as a pass
       else
         dilationPolyDataVector_.push_back(expanded_polydata);
@@ -779,16 +797,16 @@ bool Bezier::generateTrajectory(
   std::reverse(dilationPolyDataVector_.begin(), dilationPolyDataVector_.end());
   // Generate extrication mesh data
   vtkSmartPointer<vtkPolyData> extrication_poly_data = vtkSmartPointer<vtkPolyData>::New();
-  std::vector<std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d> > > extrication_lines;
+  std::vector < std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d> > > extrication_lines;
   index_vector.push_back(way_points_vector.size() - 1);  // Push back index of last pose in pass
   // Generate trajectory
-  for (int polydata_index = 0; polydata_index < dilationPolyDataVector_.size(); polydata_index++)
+  for(int polydata_index = 0; polydata_index < dilationPolyDataVector_.size(); polydata_index++)
   {  // For each polydata (passes)
      // Generate extrication mesh
     double dist_to_extrication_mesh(0);
-    if (polydata_index % extrication_frequency_ == 0)
+    if(polydata_index % extrication_frequency_ == 0)
     {
-      if (use_translation_mode_)
+      if(use_translation_mode_)
       {
         dist_to_extrication_mesh = extrication_coefficient_ * maximum_depth_of_path_;
         translation(dist_to_extrication_mesh, dilationPolyDataVector_[polydata_index], extrication_poly_data);
@@ -809,16 +827,16 @@ bool Bezier::generateTrajectory(
     // Generate trajectory on mesh (polydata)
     std::vector<std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d> > > lines;
     generateStripperOnSurface(dilationPolyDataVector_[polydata_index], lines);
-    for (int index_line = 0; index_line < lines.size(); index_line++)
+    for(int index_line = 0; index_line < lines.size(); index_line++)
     {
       // Variable use to store pose : used for extrication paths
       Eigen::Affine3d start_pose(Eigen::Affine3d::Identity());  // Start line pose
       Eigen::Affine3d end_pose(Eigen::Affine3d::Identity());  // End line pose
 
       // Generate poses on a line
-      for (int index_point = 0; index_point < lines[index_line].size(); index_point++) // For each point
+      for(int index_point = 0; index_point < lines[index_line].size(); index_point++) // For each point
       {
-        if (lines[index_line].size() < 2)
+        if(lines[index_line].size() < 2)
         {
           ROS_WARN_STREAM("Line path is too small (number of points on the line < 2)");
           break;
@@ -827,7 +845,7 @@ bool Bezier::generateTrajectory(
         Eigen::Vector3d point, next_point, normal;
         Eigen::Affine3d pose(Eigen::Affine3d::Identity());
         bool flag_isFinite = true;  //check generated pose for NAN value
-        if (index_point < (lines[index_line].size() - 1))
+        if(index_point < (lines[index_line].size() - 1))
         {
           point = lines[index_line][index_point].first;
           next_point = lines[index_line][index_point + 1].first;
@@ -842,19 +860,19 @@ bool Bezier::generateTrajectory(
           flag_isFinite = generateRobotPoses(point, next_point, normal, pose);
           pose.translation() << next_point[0], next_point[1], next_point[2];
         }
-        if (index_point == 0)
+        if(index_point == 0)
         {  // First point in line
           start_pose = pose;  // Save start pose
           way_points_vector.push_back(pose);  // Add pose with false color flag (out of line)
           color_vector.push_back(false);
         }
-        if (flag_isFinite)
+        if(flag_isFinite)
         {
           // Push robot pose into vector
           way_points_vector.push_back(pose);
           color_vector.push_back(true);
         }
-        if (index_point == (lines[index_line].size() - 1))
+        if(index_point == (lines[index_line].size() - 1))
         {  // Last point in line
           end_pose = pose;
           way_points_vector.push_back(pose);  // Add pose with false color flag (out of line)
@@ -862,7 +880,7 @@ bool Bezier::generateTrajectory(
         }
       }
       // End of line: Generate extrication to the next line
-      if (index_line == (lines.size() - 1))  // No simple extrication for the last line of mesh
+      if(index_line == (lines.size() - 1))  // No simple extrication for the last line of mesh
         break;
       Eigen::Vector3d end_point(end_pose.translation() + dist_to_extrication_mesh * end_pose.linear().col(0));
       Eigen::Vector3d dilated_end_point(end_pose.translation() - dist_to_extrication_mesh * end_pose.linear().col(2));
@@ -875,15 +893,15 @@ bool Bezier::generateTrajectory(
       // Seek for dilated_start_point neighbor in extrication line
       int index_of_closest_start_point;
 
-      if (use_translation_mode_)
+      if(use_translation_mode_)
       {
-        index_of_closest_end_point = lines[index_line].size()-1;
+        index_of_closest_end_point = lines[index_line].size() - 1;
         index_of_closest_start_point = 0;
       }
       else
       {
         index_of_closest_end_point = seekClosestPoint(dilated_end_point, extrication_lines[index_of_closest_line]);
-        index_of_closest_start_point = seekClosestPoint(dilated_start_point,extrication_lines[index_of_closest_line]);
+        index_of_closest_start_point = seekClosestPoint(dilated_start_point, extrication_lines[index_of_closest_line]);
       }
       // Get vector between these indexes
       std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d> > extrication_line(
@@ -893,9 +911,9 @@ bool Bezier::generateTrajectory(
       Eigen::Affine3d pose(start_pose);
       Eigen::Vector3d point(Eigen::Vector3d::Identity());
       std::vector<Eigen::Affine3d, Eigen::aligned_allocator<Eigen::Affine3d> > extrication_poses;
-      for (int index_point = 0; index_point < extrication_line.size(); index_point++)
+      for(int index_point = 0; index_point < extrication_line.size(); index_point++)
       {
-        if(index_point==0 || index_point==(extrication_line.size()-1) || index_point%5==0)
+        if(index_point == 0 || index_point == (extrication_line.size() - 1) || index_point % 5 == 0)
         {
           point = extrication_line[index_point].first;
           pose.translation() << point[0], point[1], point[2];
@@ -910,8 +928,8 @@ bool Bezier::generateTrajectory(
     //////////// EXTRICATION FROM LAST LINE TO FIRST ONE ////////////
     Eigen::Vector3d start_point_pass(lines[0][0].first);
     Eigen::Vector3d start_normal_pass(lines[0][0].second);
-    Eigen::Vector3d end_point_pass(lines[lines.size() - 1][lines[lines.size() - 1].size()-1].first);
-    Eigen::Vector3d end_normal_pass(lines[lines.size() - 1][lines[lines.size() - 1].size()-1].second);
+    Eigen::Vector3d end_point_pass(lines[lines.size() - 1][lines[lines.size() - 1].size() - 1].first);
+    Eigen::Vector3d end_normal_pass(lines[lines.size() - 1][lines[lines.size() - 1].size() - 1].second);
     // Get vector from last point of last line and first point of first line
     Eigen::Vector3d extrication_pass_dir(end_point_pass - start_point_pass);
     extrication_pass_dir.normalize();
@@ -941,12 +959,12 @@ bool Bezier::generateTrajectory(
     std::vector<Eigen::Affine3d, Eigen::aligned_allocator<Eigen::Affine3d> > extrication_poses;
     Eigen::Vector3d orientation = Eigen::Vector3d::Identity();
 
-    for (cells->InitTraversal(); cells->GetNextCell(numberOfPoints, indices); lineCount++)
+    for(cells->InitTraversal(); cells->GetNextCell(numberOfPoints, indices); lineCount++)
     {  // In case where more than one slice has been cut
-      if (numberOfPoints > lastnumberOfPoints)
+      if(numberOfPoints > lastnumberOfPoints)
       {  // Get the max length stripper
         extrication_poses.clear();
-        for (vtkIdType i = 0; i < numberOfPoints; i++)
+        for(vtkIdType i = 0; i < numberOfPoints; i++)
         {
           double point[3];
           points->GetPoint(indices[i], point);
@@ -957,13 +975,13 @@ bool Bezier::generateTrajectory(
     }
     orientation = extrication_pose.translation() - extrication_poses[0].translation();
     // Check orientation
-    if (orientation.dot(extrication_pass_dir) > 0)
+    if(orientation.dot(extrication_pass_dir) > 0)
       std::reverse(extrication_poses.begin(), extrication_poses.end());
     // Seek for closest end pass point index
     int index_start_extrication_path;
     // Seek for closest start pass point index
     int index_end_extrication_path;
-    if (use_translation_mode_)
+    if(use_translation_mode_)
     {
       index_start_extrication_path = 0;
       index_end_extrication_path = extrication_poses.size() - 1;
@@ -979,7 +997,7 @@ bool Bezier::generateTrajectory(
     // Get indice of close points
     way_points_vector.insert(way_points_vector.end(), extrication_poses.begin() + index_start_extrication_path,
                              extrication_poses.begin() + index_end_extrication_path);
-    for (size_t i = 0; i < (index_end_extrication_path - index_start_extrication_path); i++)
+    for(size_t i = 0; i < (index_end_extrication_path - index_start_extrication_path); i++)
     {
       color_vector.push_back(false);
     }
@@ -993,12 +1011,12 @@ void Bezier::displayNormal(std::vector<Eigen::Affine3d,
                            std::vector<bool> points_color_viz,
                            ros::Publisher &normal_publisher)
 {
-  if (way_points_vector.size() != points_color_viz.size())
+  if(way_points_vector.size() != points_color_viz.size())
     ROS_ERROR_STREAM("Bezier::displayNormal: Path vector and bool vector have different sizes");
 
   // Delete old markers
   visualization_msgs::MarkerArray markers;
-  for (int k = 0; k < number_of_normal_markers_published_; k++)
+  for(int k = 0; k < number_of_normal_markers_published_; k++)
   {
     visualization_msgs::Marker marker;
     marker.header.frame_id = "/base_link";
@@ -1012,9 +1030,9 @@ void Bezier::displayNormal(std::vector<Eigen::Affine3d,
   normal_publisher.publish(markers);
 
   number_of_normal_markers_published_ = way_points_vector.size(); // Store number of markers drawn
-  for (int k = 0; k < way_points_vector.size(); k++)
+  for(int k = 0; k < way_points_vector.size(); k++)
   {
-    if (points_color_viz[k] == true)
+    if(points_color_viz[k] == true)
     {
       visualization_msgs::Marker marker;
       marker.header.frame_id = "/base_link";
@@ -1065,7 +1083,7 @@ void Bezier::displayTrajectory(
     ros::Publisher &trajectory_publisher)
 {
   //check possible error
-  if (way_points_vector.size() != points_color_viz.size())
+  if(way_points_vector.size() != points_color_viz.size())
   {
     ROS_ERROR_STREAM("Bezier::displayTrajectory: Path vector and bool vector have different sizes");
   }
@@ -1088,14 +1106,14 @@ void Bezier::displayTrajectory(
   // Set the pose and color of marker from parameter[in]
   geometry_msgs::Point p;  // Temporary point
   std_msgs::ColorRGBA color;  // Temporary color
-  for (int k = 1; k < way_points_vector.size(); k++)
+  for(int k = 1; k < way_points_vector.size(); k++)
   {
     // For each index of trajectory vector, store coordinates in a temporary point p;
     p.x = way_points_vector[k].translation()[0];
     p.y = way_points_vector[k].translation()[1];
     p.z = way_points_vector[k].translation()[2];
     // For each index of boolean vector, check membership of point;
-    if (points_color_viz[k] == true)
+    if(points_color_viz[k] == true)
     {
       color.r = 0.0f;
       color.g = 1.0f;  // If points is from grindstone path : Color is green
