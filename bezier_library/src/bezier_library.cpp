@@ -1,7 +1,7 @@
 #include "bezier_library/bezier_library.hpp"
 
 Bezier::Bezier() :
-    grind_depth_(0.05), effector_diameter_(0.02), covering_(0.50), extrication_coefficient_(0.5), extrication_frequency_(
+    maximum_depth_of_path_(0.05), effector_diameter_(0.02), covering_percentage_(0.50), extrication_coefficient_(0.5), extrication_frequency_(
         1), mesh_normal_vector_(Eigen::Vector3d::Identity()), slicing_dir_(Eigen::Vector3d::Identity()), number_of_normal_markers_published_(0),
         use_translation_mode_ (false)
 {
@@ -11,15 +11,15 @@ Bezier::Bezier() :
 
 Bezier::Bezier(std::string filename_inputMesh,
                std::string filename_defaultMesh,
-               double grind_depth,
+               double maximum_depth_of_path,
                double effector_diameter,
-               double covering,
+               double covering_percentage,
                int extrication_coefficient,
                int extrication_frequency,
                bool use_translation_mode):
-    grind_depth_(grind_depth),
+    maximum_depth_of_path_(maximum_depth_of_path),
     effector_diameter_(effector_diameter),
-    covering_(covering),
+    covering_percentage_(covering_percentage),
     extrication_coefficient_(extrication_coefficient),
     extrication_frequency_(extrication_frequency),
     mesh_normal_vector_(Eigen::Vector3d::Identity()),
@@ -64,7 +64,7 @@ struct lineOrganizerStruct
 void Bezier::printBezierParameters(void)
 {
   ROS_INFO_STREAM(
-      "Bézier parameters" << std::endl << "Grind depth (in centimeters) : " << grind_depth_*100 << std::endl << "Effector diameter (in centimeters) : " << effector_diameter_*100 << std::endl << "Covering (in %) : "<< covering_*100 << "/100");
+      "Bézier parameters" << std::endl << "maximum_depth_of_path (in centimeters) : " << maximum_depth_of_path_*100 << std::endl << "Effector diameter (in centimeters) : " << effector_diameter_*100 << std::endl << "covering_percentage (in %) : "<< covering_percentage_*100 << "/100");
 }
 
 void Bezier::setTranslationMode(bool translation_mode)
@@ -386,9 +386,9 @@ unsigned int Bezier::determineSliceNumberExpected(vtkSmartPointer<vtkPolyData> p
         min_value = value;
     }
   }
-  // Virtual effector size = effector size * (1- covering%)
+  // Virtual effector size = effector size * (1- covering_percentage%)
   // Distance we have to cut = max_value - min_value
-  double virtual_effector_diameter = effector_diameter_ * (1 - covering_);
+  double virtual_effector_diameter = effector_diameter_ * (1 - covering_percentage_);
   double distance = max_value - min_value;
   return std::ceil(distance / virtual_effector_diameter);
 }
@@ -423,7 +423,7 @@ unsigned int Bezier::getRealSliceNumber(vtkSmartPointer<vtkStripper> stripper, E
   std::sort(dot_vector.begin(), dot_vector.end());
   // Remove duplicated value or too close values
   int index = 0;
-  double value = (effector_diameter_ * (1 - covering_)) / (2 * 10); //2 to get radius, 10 to get 10% of virtual radius as threshold
+  double value = (effector_diameter_ * (1 - covering_percentage_)) / (2 * 10); //2 to get radius, 10 to get 10% of virtual radius as threshold
   while (index < (dot_vector.size() - 1))
   {
     if (std::abs(dot_vector[index] - dot_vector[index + 1]) < value)
@@ -588,7 +588,7 @@ bool
 Bezier::generateStripperOnSurface (vtkSmartPointer<vtkPolyData> PolyData,
                                    std::vector<std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d> > > &lines)
 {
-  // Set slice number (With covering)
+  // Set slice number (With covering_percentage)
   unsigned int slice_number_expected = determineSliceNumberExpected(PolyData);
   // Cut mesh
   vtkSmartPointer<vtkStripper> stripper = vtkSmartPointer<vtkStripper>::New();
@@ -746,7 +746,7 @@ bool Bezier::generateTrajectory(
     ROS_INFO_STREAM("Please wait : dilation in progress");
   dilationPolyDataVector_.push_back(inputPolyData_);
   bool intersection_flag = true;  // Flag variable : dilate while dilated mesh intersect default mesh
-  double depth = grind_depth_;  // Depth between input mesh and dilated mesh
+  double depth = maximum_depth_of_path_;  // Depth between input mesh and dilated mesh
 
   while (intersection_flag)
   {
@@ -769,7 +769,7 @@ bool Bezier::generateTrajectory(
     }
     else
       intersection_flag = false;  // No intersection : end of dilation
-    depth += grind_depth_;
+    depth += maximum_depth_of_path_;
   }
   if(use_translation_mode_)
     ROS_INFO_STREAM("Translation process done");
@@ -790,22 +790,22 @@ bool Bezier::generateTrajectory(
     {
       if (use_translation_mode_)
       {
-        dist_to_extrication_mesh = extrication_coefficient_ * grind_depth_;
+        dist_to_extrication_mesh = extrication_coefficient_ * maximum_depth_of_path_;
         translation(dist_to_extrication_mesh, dilationPolyDataVector_[polydata_index], extrication_poly_data);
       }
       else
       {
-        //-> dilated_depth = extrication_coefficient+numberOfPolydataDilated-1-n*frequency)*grind_depth
+        //-> dilated_depth = extrication_coefficient+numberOfPolydataDilated-1-n*frequency)*maximum_depth_of_path
         double dilated_depth(
-            (extrication_coefficient_ + dilationPolyDataVector_.size() - 1 - polydata_index) * grind_depth_);
+            (extrication_coefficient_ + dilationPolyDataVector_.size() - 1 - polydata_index) * maximum_depth_of_path_);
         dilation(dilated_depth, extrication_poly_data);
-        //dilatation(extrication_coefficient_*grind_depth_, dilationPolyDataVector_[polydata_index], extrication_poly_data);
-        double dist_to_extrication_mesh((extrication_coefficient_ + polydata_index) * grind_depth_); //distance between dilationPolyDataVector_[index_polydata] and extrication polydata
+        //dilatation(extrication_coefficient_*maximum_depth_of_path_, dilationPolyDataVector_[polydata_index], extrication_poly_data);
+        double dist_to_extrication_mesh((extrication_coefficient_ + polydata_index) * maximum_depth_of_path_); //distance between dilationPolyDataVector_[index_polydata] and extrication polydata
       }
       generateStripperOnSurface(extrication_poly_data, extrication_lines);
     }
     else
-      dist_to_extrication_mesh += grind_depth_;
+      dist_to_extrication_mesh += maximum_depth_of_path_;
     // Generate trajectory on mesh (polydata)
     std::vector<std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d> > > lines;
     generateStripperOnSurface(dilationPolyDataVector_[polydata_index], lines);

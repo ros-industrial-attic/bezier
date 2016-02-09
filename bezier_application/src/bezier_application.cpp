@@ -79,10 +79,10 @@ int main(int argc, char **argv)
 
   double covering_percentage = 0.25; //value between 0.0 & 1.0
   double grind_diameter = 0.014;
-  double grind_depth = 0.015;
+  double maximum_depth_of_path = 0.015;
   int extrication_frequency = 5; // Generate a new extrication mesh each 4 passes generated
   int extrication_coefficient = 5;
-  Bezier bezier_planner(mesh_original, mesh_default, grind_depth, grind_diameter, covering_percentage,
+  Bezier bezier_planner(mesh_original, mesh_default, maximum_depth_of_path, grind_diameter, covering_percentage,
                         extrication_coefficient, extrication_frequency, true);
   std::vector<bool> points_color_viz;
   std::vector<Eigen::Affine3d, Eigen::aligned_allocator<Eigen::Affine3d> > way_points_vector;

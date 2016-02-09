@@ -77,17 +77,17 @@ public:
   /** @brief Initialized constructor
    *  @param[in] filename_inputMesh filename of input poly data (input mesh)
    *  @param[in] filename_defaultMesh filename of default poly data (default mesh)
-   *  @param[in] grind_depth grinding depth (in meters)
+   *  @param[in] maximum_depth_of_path grinding depth (in meters)
    *  @param[in] effector_diameter diameter of effector (in meters)
-   *  @param[in] covering Percentage of covering (decimal value)
-   *  @param[in] extrication_coefficient extrication depth equal of how many grind_depth (coefficient)
+   *  @param[in] covering_percentage Percentage of covering (decimal value)
+   *  @param[in] extrication_coefficient extrication depth equal of how many maximum_depth_of_path (coefficient)
    *  @param[in] extrication_frequency new extrication mesh generated each 1/extrication_frequency times
    */
   Bezier(std::string filename_inputMesh,
          std::string filename_defaultMesh,
-         double grind_depth,
+         double maximum_depth_of_path,
          double effector_diameter,
-         double covering,
+         double covering_percentage,
          int extrication_coefficient,
          int extrication_frequency,
          bool use_translation_mode = false);
@@ -149,7 +149,7 @@ public:
               std::string mesh_path,
               float r = 0.6, float g = 0.6, float b = 0.6);
 
-  /** @brief Function used to display some Bezier library's parameters (effector diameter, grind depth and covering) */
+  /** @brief Function used to display some Bezier library's parameters (effector diameter, grind depth and covering_percentage) */
   void
   printBezierParameters();
 
@@ -176,9 +176,9 @@ private:
   std::vector<vtkSmartPointer<vtkPolyData> > dilationPolyDataVector_;
 
   /** @brief Grinding depth (in meters) */
-  double grind_depth_;
+  double maximum_depth_of_path_;
 
-  /** @brief Extrication depth equal of how many @ref grind_depth_ (coefficient) should be used to generate extrication paths */
+  /** @brief Extrication depth equal of how many @ref maximum_depth_of_path_ (coefficient) should be used to generate extrication paths */
   int extrication_coefficient_;
 
   /** @brief New extrication mesh generated each 1/extrication_frequency times */
@@ -188,7 +188,7 @@ private:
   double effector_diameter_;
 
   /** @brief Percentage of covering (decimal value) */
-  double covering_;
+  double covering_percentage_;
 
   /** @brief Mesh global normal vector */
   Eigen::Vector3d mesh_normal_vector_;
@@ -282,7 +282,7 @@ private:
   /** @brief Compute scalar product between @ref slicing_dir_ and all points of the vtkPolyData point cloud
    *  to to determine the number of lines that should be sliced into the mesh
    *  @param[in] poly_data mesh to be sliced
-   *  @return Number of lines that should be sliced in order to respect the covering constraint
+   *  @return Number of lines that should be sliced in order to respect the covering_percentage constraint
    */
   unsigned int
   determineSliceNumberExpected(vtkSmartPointer<vtkPolyData> poly_data);
