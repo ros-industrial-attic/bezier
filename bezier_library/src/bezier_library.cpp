@@ -29,10 +29,10 @@ Bezier::Bezier(std::string filename_inputMesh,
 {
   inputPolyData_ = vtkSmartPointer<vtkPolyData>::New();
   if (!loadPLYPolydata(filename_inputMesh, inputPolyData_))
-    ROS_ERROR_STREAM("Can't load input mesh");
+    ROS_ERROR_STREAM("Bezier::Bezier: Can't load input mesh given: " << filename_inputMesh);
   defaultPolyData_ = vtkSmartPointer<vtkPolyData>::New();
   if (!loadPLYPolydata(filename_defaultMesh, defaultPolyData_))
-    ROS_ERROR_STREAM("Can't load default mesh");
+    ROS_ERROR_STREAM("Bezier::Bezier: Can't load defect mesh given: " << filename_defaultMesh);
 }
 
 Bezier::~Bezier()
@@ -516,7 +516,7 @@ bool Bezier::generateRobotPoses(Eigen::Vector3d point,
   normal_x = point_next - point;  // Next point direction
   if (normal_x == Eigen::Vector3d::Zero())
   {
-    ROS_ERROR_STREAM("Bezier::generateRobotPoses: X normal = 0, mesh is too dense or duplicate points in the line!\n");
+    ROS_ERROR_STREAM("Bezier::generateRobotPoses: X normal = 0, mesh is too dense or duplicate points in the line!");
     return false;
   }
   normal_y = normal_z.cross(normal_x);
@@ -820,7 +820,7 @@ bool Bezier::generateTrajectory(
       {
         if (lines[index_line].size() < 2)
         {
-          ROS_WARN_STREAM("Line is too small (number_of_points < 2)");
+          ROS_WARN_STREAM("Line path is too small (number of points on the line < 2)");
           break;
         }
         // Get points, normal and generate pose
@@ -994,7 +994,7 @@ void Bezier::displayNormal(std::vector<Eigen::Affine3d,
                            ros::Publisher &normal_publisher)
 {
   if (way_points_vector.size() != points_color_viz.size())
-    ROS_ERROR_STREAM("Bezier::displayNormal: Trajectory vector and bool vector have different sizes");
+    ROS_ERROR_STREAM("Bezier::displayNormal: Path vector and bool vector have different sizes");
 
   // Delete old markers
   visualization_msgs::MarkerArray markers;
@@ -1067,7 +1067,7 @@ void Bezier::displayTrajectory(
   //check possible error
   if (way_points_vector.size() != points_color_viz.size())
   {
-    ROS_ERROR_STREAM("Bezier::displayTrajectory: Trajectory vector and bool vector have differents sizes");
+    ROS_ERROR_STREAM("Bezier::displayTrajectory: Path vector and bool vector have different sizes");
   }
   double diffRepz = 0.45;               // z offset between "/base" and "/base_link"
   visualization_msgs::Marker marker;
