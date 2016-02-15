@@ -6,11 +6,11 @@ Bezier::Bezier() :
         use_translation_mode_ (false)
 {
   inputPolyData_ = vtkSmartPointer<vtkPolyData>::New();
-  defaultPolyData_ = vtkSmartPointer<vtkPolyData>::New();
+  defectPolyData_ = vtkSmartPointer<vtkPolyData>::New();
 }
 
 Bezier::Bezier(std::string filename_inputMesh,
-               std::string filename_defaultMesh,
+               std::string filename_defectMesh,
                double maximum_depth_of_path,
                double effector_diameter,
                double covering_percentage,
@@ -30,9 +30,9 @@ Bezier::Bezier(std::string filename_inputMesh,
   inputPolyData_ = vtkSmartPointer<vtkPolyData>::New();
   if(!loadPLYPolydata(filename_inputMesh, inputPolyData_))
     ROS_ERROR_STREAM("Bezier::Bezier: Can't load input mesh given: " << filename_inputMesh);
-  defaultPolyData_ = vtkSmartPointer<vtkPolyData>::New();
-  if(!loadPLYPolydata(filename_defaultMesh, defaultPolyData_))
-    ROS_ERROR_STREAM("Bezier::Bezier: Can't load defect mesh given: " << filename_defaultMesh);
+  defectPolyData_ = vtkSmartPointer<vtkPolyData>::New();
+  if(!loadPLYPolydata(filename_defectMesh, defectPolyData_))
+    ROS_ERROR_STREAM("Bezier::Bezier: Can't load defect mesh given: " << filename_defectMesh);
 }
 
 Bezier::~Bezier()
@@ -105,11 +105,10 @@ bool Bezier::savePLYPolyData(std::string filename,
   return true;
 }
 
-/** FIXME Dilation problem : when depth is to high, dilated mesh has unexpected holes
- * These holes are problematic. In fact, when cutting process is called on dilated mesh, slices are divided in some parts due to these holes
- * and this affects the path generation, especially for extrication trajectory. We have to find a solution, perhaps find best parameters
- * in order to resolve this problem.
- */
+// FIXME Dilation problem : when depth is to high, dilated mesh has unexpected holes
+// These holes are problematic. In fact, when cutting process is called on dilated mesh, slices are divided in some parts due to these holes
+// and this affects the path generation, especially for extrication trajectory. We have to find a solution, perhaps find best parameters
+// in order to resolve this problem.
 bool Bezier::dilation(double depth,
                       vtkSmartPointer<vtkPolyData> &dilated_polydata)
 {
@@ -230,15 +229,15 @@ bool Bezier::translation(double depth,
   return true;
 }
 
-bool Bezier::defaultIntersectionOptimisation(vtkSmartPointer<vtkPolyData> &poly_data)
+bool Bezier::defectIntersectionOptimisation(vtkSmartPointer<vtkPolyData> &poly_data)
 {
   bool intersection_flag = false;
-  // Build a Kdtree on default
-  vtkSmartPointer<vtkKdTreePointLocator> kDTreeDefault = vtkSmartPointer<vtkKdTreePointLocator>::New();
-  kDTreeDefault->SetDataSet(defaultPolyData_);
-  kDTreeDefault->BuildLocator();
-  vtkFloatArray *defaultPointNormalArray = vtkFloatArray::SafeDownCast(
-      defaultPolyData_->GetPointData()->GetNormals());
+  // Build a Kdtree on defect
+  vtkSmartPointer<vtkKdTreePointLocator> kDTreeDefect = vtkSmartPointer<vtkKdTreePointLocator>::New();
+  kDTreeDefect->SetDataSet(defectPolyData_);
+  kDTreeDefect->BuildLocator();
+  vtkFloatArray *defectPointNormalArray = vtkFloatArray::SafeDownCast(
+      defectPolyData_->GetPointData()->GetNormals());
   // For each cell in dilate polydata
   for(vtkIdType index_cell = 0; index_cell < (poly_data->GetNumberOfCells()); index_cell++)
   {
@@ -254,16 +253,16 @@ bool Bezier::defaultIntersectionOptimisation(vtkSmartPointer<vtkPolyData> &poly_
       double pt[3];
       pts->GetPoint(index_pt, pt);
       // Get closest point (in defautPolyData)
-      vtkIdType iD = kDTreeDefault->FindClosestPoint(pt);
+      vtkIdType iD = kDTreeDefect->FindClosestPoint(pt);
       double closestPoint[3];
-      defaultPolyData_->GetPoint(iD, closestPoint);
+      defectPolyData_->GetPoint(iD, closestPoint);
       // Get direction vector
       Eigen::Vector3d direction_vector = Eigen::Vector3d(closestPoint[0] - pt[0],
                                                          closestPoint[1] - pt[1],
                                                          closestPoint[2] - pt[2]);
       // Get closest point normal
       double normal[3];
-      defaultPointNormalArray->GetTuple(iD, normal);
+      defectPointNormalArray->GetTuple(iD, normal);
       Eigen::Vector3d normal_vector(normal[0], normal[1], normal[2]);
       // Normalize vectors
       direction_vector.normalize();
@@ -762,7 +761,7 @@ bool Bezier::generateTrajectory(
   else
     ROS_INFO_STREAM("Please wait : dilation in progress");
   dilationPolyDataVector_.push_back(inputPolyData_);
-  bool intersection_flag = true;  // Flag variable : dilate while dilated mesh intersect default mesh
+  bool intersection_flag = true;  // Flag variable : dilate while dilated mesh intersect defect mesh
   double depth = maximum_depth_of_path_;  // Depth between input mesh and dilated mesh
 
   while (intersection_flag)
@@ -775,8 +774,8 @@ bool Bezier::generateTrajectory(
      flag_expansion = dilation(depth, expanded_polydata);
     vtkSmartPointer<vtkPolyData> temp_polydata = vtkSmartPointer<vtkPolyData>::New(); //Ignore collision in translation process fixme
     temp_polydata->ShallowCopy(expanded_polydata);
-    if(flag_expansion && defaultIntersectionOptimisation(expanded_polydata)
-        && expanded_polydata->GetNumberOfCells() > 10) // FIXME Check intersection between new dilated mesh and default
+    if(flag_expansion && defectIntersectionOptimisation(expanded_polydata)
+        && expanded_polydata->GetNumberOfCells() > 10) // FIXME Check intersection between new dilated mesh and defect
     {
       if(use_translation_mode_)
         dilationPolyDataVector_.push_back(temp_polydata);  // If intersection, consider dilated mesh as a pass

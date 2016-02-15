@@ -18,7 +18,7 @@
 /**
  * @file bezier_application.hpp
  * @brief This is an application using bezier_library.
- * @author Francois Lasson - Institut Maupertuis (France)
+ * @author Francois Lasson, Kévin Bolloré - Institut Maupertuis (France)
  * @date Project started in February 2015
  */
 /**@mainpage This application is a test of bezier_library.
@@ -46,7 +46,7 @@ int main(int argc, char **argv)
 
   // Get PLY file name from command line
   std::string input_mesh_filename;
-  std::string default_mesh_filename;
+  std::string defect_mesh_filename;
   node.getParam("filename_param", input_mesh_filename); //filename_param is a parameter defined in launch file
   if (input_mesh_filename.size() > 4) // size>".ply"
     ROS_INFO_STREAM("Mesh file imported :" << input_mesh_filename);
@@ -57,17 +57,17 @@ int main(int argc, char **argv)
     return -1;
   }
   std::string mesh_original = meshes_path + input_mesh_filename;
-  std::string mesh_default;
+  std::string mesh_defect;
 
-  default_mesh_filename = input_mesh_filename.substr(0, input_mesh_filename.size() - 4) + "_default.ply";
-  mesh_default = meshes_path + default_mesh_filename;
+  defect_mesh_filename = input_mesh_filename.substr(0, input_mesh_filename.size() - 4) + "_defect.ply";
+  mesh_defect = meshes_path + defect_mesh_filename;
 
   // Create publishers for point clouds and markers
-  ros::Publisher trajectory_publisher, input_mesh_publisher, default_mesh_publisher, dilated_mesh_publisher,
+  ros::Publisher trajectory_publisher, input_mesh_publisher, defect_mesh_publisher, dilated_mesh_publisher,
                  normal_publisher, fix_table_mesh_publisher, fsw_table_mesh_publisher;
   trajectory_publisher    = node.advertise<visualization_msgs::Marker>("my_trajectory", 1);
   input_mesh_publisher    = node.advertise<visualization_msgs::Marker>("my_input_mesh", 1);
-  default_mesh_publisher  = node.advertise<visualization_msgs::Marker>("my_default_mesh", 1);
+  defect_mesh_publisher  = node.advertise<visualization_msgs::Marker>("my_defect_mesh", 1);
   dilated_mesh_publisher  = node.advertise<visualization_msgs::Marker>("my_dilated_mesh", 1);
   normal_publisher        = node.advertise<visualization_msgs::MarkerArray>("my_normals", 1);
   fix_table_mesh_publisher = node.advertise<visualization_msgs::Marker>("my_fix_table", 1);
@@ -82,7 +82,7 @@ int main(int argc, char **argv)
   double maximum_depth_of_path = 0.015;
   int extrication_frequency = 5; // Generate a new extrication mesh each 4 passes generated
   int extrication_coefficient = 5;
-  Bezier bezier_planner(mesh_original, mesh_default, maximum_depth_of_path, grind_diameter, covering_percentage,
+  Bezier bezier_planner(mesh_original, mesh_defect, maximum_depth_of_path, grind_diameter, covering_percentage,
                         extrication_coefficient, extrication_frequency, true);
   std::vector<bool> points_color_viz;
   std::vector<Eigen::Affine3d, Eigen::aligned_allocator<Eigen::Affine3d> > way_points_vector;
@@ -92,7 +92,7 @@ int main(int argc, char **argv)
   bezier_planner.displayMesh(fix_table_mesh_publisher, mesh_ressource + "environment/TableFix.ply", .1, .4, .1);
   bezier_planner.displayMesh(fsw_table_mesh_publisher, mesh_ressource + "environment/TableFSW.ply");
   bezier_planner.displayMesh(input_mesh_publisher, mesh_ressource + input_mesh_filename);
-  bezier_planner.displayMesh(default_mesh_publisher, mesh_ressource + default_mesh_filename);
+  bezier_planner.displayMesh(defect_mesh_publisher, mesh_ressource + defect_mesh_filename);
   bezier_planner.generateTrajectory(way_points_vector, points_color_viz, index_vector);
 
   // Save dilated meshes

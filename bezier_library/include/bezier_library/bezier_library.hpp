@@ -53,7 +53,7 @@
 /**
  * @file bezier_library.hpp
  * @brief Library used to generate 3D paths (robot poses) from PLY files.
- * @author Francois Lasson - Institut Maupertuis (France)
+ * @author Francois Lasson, Kévin Bolloré - Institut Maupertuis (France)
  * @date Project started in February 2015
  */
 
@@ -76,15 +76,16 @@ public:
 
   /** @brief Initialized constructor
    *  @param[in] filename_inputMesh filename of input poly data (input mesh)
-   *  @param[in] filename_defaultMesh filename of default poly data (default mesh)
-   *  @param[in] maximum_depth_of_path grinding depth (in meters)
+   *  @param[in] filename_defectMesh filename of defect poly data (defect mesh)
+   *  @param[in] maximum_depth_of_path maximum grinding depth (in meters)
    *  @param[in] effector_diameter diameter of effector (in meters)
    *  @param[in] covering_percentage Percentage of covering (decimal value)
-   *  @param[in] extrication_coefficient extrication depth equal of how many maximum_depth_of_path (coefficient)
+   *  @param[in] extrication_coefficient extrication depth equal of the percentage of maximum_depth_of_path (coefficient)
    *  @param[in] extrication_frequency new extrication mesh generated each 1/extrication_frequency times
+   *  @param[in] use_translation_mode see @ref use_translation_mode_
    */
   Bezier(std::string filename_inputMesh,
-         std::string filename_defaultMesh,
+         std::string filename_defectMesh,
          double maximum_depth_of_path,
          double effector_diameter,
          double covering_percentage,
@@ -106,7 +107,7 @@ public:
                      std::vector<int> &index_vector);
 
   /** @brief Allow to save all dilated vtkPolyData
-   *  @param[in] path it's the path of folder where we want saved vtkPolyData
+   *  @param[in] path is the path of folder where we want to save the vtkPolyData
    *  @return True if successful, false otherwise
    **/
   bool
@@ -122,7 +123,7 @@ public:
    *  @param[in] way_points_vector vector containing robot poses
    *  @param[in] points_color_viz vector of booleans useful to distinguish machining / extrication path
    *  @param[out] normal_publisher publisher used to display normals in RVIZ
-   *  @note Boolean vector and trajectory vector need to have same sizes
+   *  @note Boolean vector and trajectory vector must be the same size
    **/
   void
   displayNormal(std::vector<Eigen::Affine3d, Eigen::aligned_allocator<Eigen::Affine3d> > way_points_vector,
@@ -133,7 +134,7 @@ public:
    *  @param[in] way_points_vector 3D trajectory vector (containing poses)
    *  @param[in] points_color_viz vector of booleans useful to distinguish machining / extrication path
    *  @param[out] trajectory_publisher reference to a ROS publisher used to display trajectory marker
-   *  @note Boolean vector and trajectory vector need to have same sizes.
+   *  @note Boolean vector and trajectory vector must be the same size
    */
   void
   displayTrajectory(std::vector<Eigen::Affine3d, Eigen::aligned_allocator<Eigen::Affine3d> > way_points_vector,
@@ -142,7 +143,10 @@ public:
 
   /** @brief Allow to display a mesh in RVIZ
    *  @param[out] mesh_publisher publisher used to display the mesh in RVIZ
-   *  @param[in] mesh_path path of mesh
+   *  @param[in] mesh_path path of the mesh
+   *  @param[in] r red component of the RGB rate
+   *  @param[in] g green component of the RGB rate
+   *  @param[in] b blue component of the RGB rate
    **/
   void
   displayMesh(ros::Publisher &mesh_publisher,
@@ -169,8 +173,8 @@ private:
   /** @brief Input mesh */
   vtkSmartPointer<vtkPolyData> inputPolyData_;
 
-  /** @brief Default mesh */
-  vtkSmartPointer<vtkPolyData> defaultPolyData_;
+  /** @brief Defect mesh */
+  vtkSmartPointer<vtkPolyData> defectPolyData_;
 
   /** @brief Vector containing several dilated meshes */
   std::vector<vtkSmartPointer<vtkPolyData> > dilationPolyDataVector_;
@@ -204,10 +208,9 @@ private:
 
   /** @brief This function uses vtkImplicitModeller in order to dilate the input vtkPolyData surface
    *  @param[in] depth depth for grind process (pass depth)
-   *  @param[in] poly_data input data
-   *  @param[out] dilate_poly_data output data
+   *  @param[out] dilated_polydata output data
    *  @return True if successful, false otherwise
-   *  @bug Dilation problem happens when depth is to high, dilated mesh has unexpected holes\n
+   *  @bug Dilation problem happens when depth is too high, dilated mesh has unexpected holes\n
    *  These holes are problematic. In fact, when cutting process is called on dilated mesh, slices are divided in some parts due to these holes
    *  and this affects the path generation, especially for extrication trajectory\n
    *  We have to find a solution, perhaps find best parameters in order to resolve this problem
@@ -216,11 +219,11 @@ private:
   dilation(double depth,
              vtkSmartPointer<vtkPolyData> &dilated_polydata);
 
-  /**@brief This function used vtkImplicitModeller in order to translate the inputpolydata surface.
-   * @param[in] depth depth for grind process (passe depth)
-   * @param[in] polydata Polydata we would like to translate
-   * @param[out] translate_poly_data translate_poly_data is the result of input_poly_data (this->inputPolyData) translation.
-   * @return boolean flag reflects the function proceedings.
+  /**@brief This function used vtkImplicitModeller in order to translate the inputpolydata surface
+   * @param[in] depth depth for grind process (pass depth)
+   * @param[in] poly_data Polydata we would like to translate
+   * @param[out] translation_poly_data translate_poly_data is the result of input_poly_data (this->inputPolyData) translation
+   * @return boolean flag reflects the function proceedings
    */
   bool
   translation(double depth,
@@ -228,13 +231,13 @@ private:
               vtkSmartPointer<vtkPolyData> &translation_poly_data);
 
   /** @brief This function allows to optimize path generation. When passes are generated (dilation), we make an intersection between the
-   * dilated mesh / default mesh in order to only save useful part of mesh
+   * dilated mesh / defect mesh in order to only save useful part of mesh
    *  @param[in, out] poly_data mesh generated after dilation and before intersection
    *  @return True if successful, false otherwise
-   * @bug Sometimes, unexpected part of the mesh are saved.
+   * @bug Sometimes, unexpected parts of the mesh are saved
    */
   bool
-  defaultIntersectionOptimisation(vtkSmartPointer<vtkPolyData> &poly_data);
+  defectIntersectionOptimisation(vtkSmartPointer<vtkPolyData> &poly_data);
 
   /** @brief Determine the normals of the cells in a mesh
    *  @param[in, out] poly_data vtkPolyData in which normals are computed
@@ -287,7 +290,7 @@ private:
   unsigned int
   determineSliceNumberExpected(vtkSmartPointer<vtkPolyData> poly_data);
 
-  /** @brief Allow to compute the real number of slices because if there are holes in the vtkPolyData,
+  /** @brief Allows to compute the real number of slices because if there are holes in the vtkPolyData,
    *  the line number returned by VTK is not the one expected
    *  @param stripper slice cut without organization
    *  @param vector_dir cut direction
@@ -298,7 +301,7 @@ private:
                      Eigen::Vector3d vector_dir);
 
   /** @brief Slices a vtkPolyData, the result is a series of lines stored into a vtkStripper
-   *  @param[in] PolyData vtkPolyData represents the mesh we have to cut
+   *  @param[in] PolyData vtkPolyData represents the mesh to be cut
    *  @param[in] line_number_expected Number of slices expected
    *  @param[in] cut_dir Slicing direction
    *  @param[out] stripper Output lines
@@ -316,7 +319,7 @@ private:
   void
   harmonizeLinesOrientation(std::vector<std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d> > > &lines);
 
-  /** @brief Removes point that are very close in a point cloud
+  /** @brief Removes points that are very close in a point cloud
    *  Points that are too close can lead to numerical errors when trying to normalize vectors (division by 0)
    *  @param[in, out] lines lines is a vector containing several lines. Each line is a vector of pairs (first point position, second z normal)
    *  @note The threshold distance is fixed to 0.001
@@ -346,10 +349,10 @@ private:
   generateStripperOnSurface(vtkSmartPointer<vtkPolyData> PolyData,
                             std::vector<std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d> > > &lines);
 
-  /** @brief Function used to generate extrication paths between two lines. It allows to find the closest extrication line of a point.
+  /** @brief Function used to generate extrication paths between two lines. It allows to find the closest extrication line of a point
    *  @param[in] point_vector vector of point position
    *  @param[in] extrication_lines a vector containing several lines. Each line is a vector of pairs (first point position, second z normal)\n
-   *                                  extrication_lines are lines generated on dilated (extrication) mesh.
+   *                                  extrication_lines are lines generated on dilated (extrication) mesh
    *  @return Value equal to index of closest line in extrication_lines vector.
    */
   int
@@ -359,16 +362,16 @@ private:
   /** @brief Function used for extrication path. Extrication between two lines. It allows to find the closest extrication point of a point in a line.
    *  @param[in] point_vector Eigen vector of point position
    *  @param[in] extrication_line Line is a vector of pairs (first point position, second z normal)\n
-   *                                  extrication_line are the closest line on the dilated (extrication) mesh.
-   *  @return Value equal to index of closest point in extrication_line vector.
+   *                                  extrication_line are the closest line on the dilated (extrication) mesh
+   *  @return Value equal to index of closest point in extrication_line vector
    */
   int
   seekClosestPoint(Eigen::Vector3d point_vector,
                    std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d> > extrication_line);
 
-  /** @brief Function used for extrication path. Extrication between two passes. It allows to find the closest extrication point of a point in the last extrication line.
+  /** @brief Function used for extrication path. Extrication between two passes. It allows to find the closest extrication point of a point in the last extrication line
    *  @param[in] point_vector Eigen vector of point position
-   *  @param[in] extrication_poses extrication poses is a vector containing all poses generated in the stripper between a passe i and a passe i+1.
+   *  @param[in] extrication_poses Vector containing all poses generated in the stripper between a passe i and a passe i+1.
    *  @return Value equal to index of closest point in extrication_poses vector.
    */
   int
