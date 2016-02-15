@@ -4,7 +4,7 @@ project(bezier_application)
 ## Find catkin and any catkin packages
 find_package(catkin REQUIRED COMPONENTS roscpp bezier_library tf tf_conversions moveit_ros_planning_interface visualization_msgs)
 find_package(PCL 1.8.0 REQUIRED)
-find_package(VTK 6.3 REQUIRED COMPONENTS vtkFiltersHybrid NO_MODULE)
+find_package(VTK 7.0 REQUIRED COMPONENTS vtkFiltersHybrid NO_MODULE)
 
 ## Declare a catkin package
 catkin_package(CATKIN_DEPENDS bezier_library)

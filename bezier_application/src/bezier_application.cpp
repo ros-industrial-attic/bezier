@@ -22,8 +22,8 @@
  * @date Project started in February 2015
  */
 /**@mainpage This application is a test of bezier_library.
- * It has been developed for a Fanuc M10iA Robot under Ubuntu 14.04 with PCL 1.8.0
- * VTK 6.3 (with patch) and ROS Indigo.
+ * It has been developed for a Fanuc M10iA Robot.
+ * Look at the [documentation](https://github.com/ros-industrial-consortium/bezier/blob/indigo-devel/README.md) in order to have more information.
  */
 
 /** @brief The main function
