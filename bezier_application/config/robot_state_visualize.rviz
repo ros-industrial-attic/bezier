@@ -178,7 +178,7 @@ Visualization Manager:
       Value: true
     - Class: rviz/Marker
       Enabled: true
-      Marker Topic: /my_default_mesh
+      Marker Topic: /my_defect_mesh
       Name: Marker
       Namespaces:
         "": true

@@ -17,9 +17,12 @@ It is able to create rectilinear trajectories on complicated surfaces (3D surfac
 Dependencies
 ------------
 
-- ROS indigo version (with the [Fanuc package](https://github.com/ros-industrial/fanuc))
-- VTK 7.0 or later, you need ([this patch](https://gitlab.kitware.com/vtk/vtk/merge_requests/213)), using the `master` branch is fine.
-- The [Point Cloud Library](https://github.com/PointCloudLibrary/pcl) version 1.8 or trunk
+- [ROS](http::wiki.ros.org/ROS/Installation) (Robot Operating System)
+- [`insdustrial-core`](http://wiki.ros.org/industrial_core)
+- [`fanuc`](https://github.com/InstitutMaupertuis/fanuc) :warning: Joint limits have been tweaked
+- [`fanuc experimental`](https://github.com/InstitutMaupertuis/fanuc_experimental) :warning: Joint limits have been tweaked
+- [`VTK 7.0`](https://gitlab.kitware.com/vtk/vtk/merge_requests/213) or later, using the `master` branch is fine.
+- [`Point Cloud Library`](https://github.com/PointCloudLibrary/pcl) version 1.8 or trunk
 
 Bezier has been tested with ROS Indigo under Ubuntu 14.04.
 
@@ -55,5 +58,6 @@ In this example, `bezier_application` will be launched with `oriented_complicate
 
 Others examples of meshes are available in:
 ```bash
-$(catkin_workspace)/src/bezier/bezier_application/mesh
+$(catkin_workspace)/src/bezier/bezier_application/meshes
 ```
+
