@@ -1000,7 +1000,7 @@ bool Bezier::generateTrajectory(
     {
       color_vector.push_back(false);
     }
-    index_vector.push_back(way_points_vector.size() - 1);  // Push back index of last pose in passe
+    index_vector.push_back(way_points_vector.size() - 1);  // Push back index of last pose in pass
   }
   return true;
 }

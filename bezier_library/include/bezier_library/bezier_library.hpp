@@ -98,7 +98,7 @@ public:
   /** @brief Generate 3D paths thanks the the input parameters
    *  @param[out] way_points_vector in order to save robot poses
    *  @param[out] color_vector in order to know if pose is an extrication pose or not (Use to display path)
-   *  @param[out] index_vector in order to know index of start and end pose in each passe (Use to display path)
+   *  @param[out] index_vector in order to know index of start and end pose in each pass (Use to display path)
    *  @return True if successful, false otherwise
    */
   bool
@@ -371,7 +371,7 @@ private:
 
   /** @brief Function used for extrication path. Extrication between two passes. It allows to find the closest extrication point of a point in the last extrication line
    *  @param[in] point_vector Eigen vector of point position
-   *  @param[in] extrication_poses Vector containing all poses generated in the stripper between a passe i and a passe i+1.
+   *  @param[in] extrication_poses Vector containing all poses generated in the stripper between a pass i and a pass i+1.
    *  @return Value equal to index of closest point in extrication_poses vector.
    */
   int
