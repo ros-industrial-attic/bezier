@@ -9,8 +9,6 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
-  <exec_depend>routing_library</exec_depend>
-
   <export>
     <metapackage/>
   </export>

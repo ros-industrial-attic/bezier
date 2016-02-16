@@ -11,6 +11,11 @@
 
   <build_depend>roscpp</build_depend>
   <build_depend>bezier_library</build_depend>
+  <build_depend>tf</build_depend>
+  <build_depend>tf_conversions</build_depend>
+  <build_depend>visualization_msgs</build_depend>
+  <build_depend>moveit_ros_planning_interface</build_depend>
+  <build_export_depend>bezier_library</build_export_depend>
 
   <exec_depend>roscpp</exec_depend>
   <exec_depend>bezier_library</exec_depend>
