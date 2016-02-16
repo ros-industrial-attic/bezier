@@ -2,7 +2,7 @@
 <package format="2">
   <name>bezier_library</name>
   <version>0.0.1</version>
-  <description>This library contains several function used to generate grinding 3D path for robot</description>
+  <description>Robot path planner for complex 6 DOF surfacing trajectories</description>
   <author>Francois Lasson, Kévin Bolloré - Institut Maupertuis</author>
   <maintainer email="victor.lamoine@institutmaupertuis.fr">Victor Lamoine</maintainer>
   <license>BSD</license>
@@ -10,6 +10,7 @@
   <buildtool_depend>catkin</buildtool_depend>
 
   <build_depend>roscpp</build_depend>
+  <build_export_depend>roscpp</build_export_depend>
 
   <exec_depend>roscpp</exec_depend>
 

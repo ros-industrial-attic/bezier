@@ -2,7 +2,7 @@
 <package format="2">
   <name>bezier_application</name>
   <version>0.0.1</version>
-  <description>Application of bezier_library for M10ia Fanuc robot using ROS</description>
+  <description>Application example of bezier_library on a Fanuc M-10iA robot</description>
   <author>Francois Lasson, Kévin Bolloré - Institut Maupertuis</author>
   <maintainer email="victor.lamoine@institutmaupertuis.fr">Victor Lamoine</maintainer>
   <license>BSD</license>
@@ -11,6 +11,11 @@
 
   <build_depend>roscpp</build_depend>
   <build_depend>bezier_library</build_depend>
+  <build_depend>tf</build_depend>
+  <build_depend>tf_conversions</build_depend>
+  <build_depend>visualization_msgs</build_depend>
+  <build_depend>moveit_ros_planning_interface</build_depend>
+  <build_export_depend>bezier_library</build_export_depend>
 
   <exec_depend>roscpp</exec_depend>
   <exec_depend>bezier_library</exec_depend>

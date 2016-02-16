@@ -222,7 +222,7 @@ private:
   /**@brief This function used vtkImplicitModeller in order to translate the inputpolydata surface
    * @param[in] depth depth for grind process (pass depth)
    * @param[in] poly_data Polydata we would like to translate
-   * @param[out] translation_poly_data translate_poly_data is the result of input_poly_data (this->inputPolyData) translation
+   * @param[out] translation_poly_data output of input poly data (@ref inputPolyData_) translation
    * @return boolean flag reflects the function proceedings
    */
   bool
