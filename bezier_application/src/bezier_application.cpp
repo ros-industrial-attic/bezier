@@ -26,6 +26,14 @@
  * Look at the [documentation](https://github.com/ros-industrial-consortium/bezier/blob/indigo-devel/README.md) in order to have more information.
  */
 
+/** Pointer to the move group */
+boost::shared_ptr<move_group_interface::MoveGroup> group;
+
+/** Name of the move_group used to move the robot during calibration */
+const std::string move_group_name("grinding_disk");
+/** Name of the TCP that should be used to compute the trajectories */
+const std::string tcp_name("/grinding_disk_tcp");
+
 /** @brief The main function
  * @param[in] argc
  * @param[in] argv
@@ -78,7 +86,7 @@ int main(int argc, char **argv)
   int extrication_frequency = 5; // Generate a new extrication mesh each 4 passes generated
   int extrication_coefficient = 5;
   Bezier bezier_planner(mesh_original, mesh_defect, maximum_depth_of_path, grind_diameter, covering_percentage,
-                        extrication_coefficient, extrication_frequency, true);
+                        extrication_coefficient, extrication_frequency, false);
   std::vector<bool> points_color_viz;
   std::vector<Eigen::Affine3d, Eigen::aligned_allocator<Eigen::Affine3d> > way_points_vector;
   std::vector<int> index_vector;
@@ -92,8 +100,10 @@ int main(int argc, char **argv)
   bezier_planner.saveDilatedMeshes(meshes_path + "dilatedMeshes");
 
   // Execute robot trajectory
-  move_group_interface::MoveGroup group("manipulator");
-  group.setPoseReferenceFrame("/base"); // Otherwise "base_link" is the reference!
+  // Initialize move group
+    group.reset(new move_group_interface::MoveGroup("grinding_disk"));
+    group->setPoseReferenceFrame("/base_link");
+    group->setPlanningTime(2);
 
   while (ros::ok())
   {
@@ -111,28 +121,18 @@ int main(int argc, char **argv)
       bezier_planner.displayTrajectory(way_points_vector_pass, points_color_viz_pass, trajectory_publisher); // Display trajectory in this pass
       bezier_planner.displayNormal(way_points_vector_pass, points_color_viz_pass, normal_publisher); // Display normals in this pass
 
-      // Add offset BASE/BASE_LINK
-      for (int j = 0; j < way_points_vector_pass.size(); j++)
-      {
-        way_points_vector_pass[j].translation().z() -= 0.950;
-        //reverse tool orientation for cables (Specific to institut maupertuis' robot)
-        way_points_vector_pass[j].linear().col(0) = - way_points_vector_pass[j].linear().col(0);
-        way_points_vector_pass[j].linear().col(1) = - way_points_vector_pass[j].linear().col(1);
-      }
       // Copy the vector of Eigen poses into a vector of ROS poses
       std::vector<geometry_msgs::Pose> way_points_msg;
       way_points_msg.resize(way_points_vector_pass.size());
-      tf::Transform link6_to_tcp_tf;
-      link6_to_tcp_tf = tf::Transform(tf::Matrix3x3::getIdentity(),
-                                      tf::Vector3(0.0, 0.0, -size_of_fsw_tool - size_of_grind_tool));
-      for (size_t j = 0; j < way_points_msg.size(); j++)
+
+      for(size_t j = 0; j < way_points_msg.size(); j++)
       {
         tf::poseEigenToMsg(way_points_vector_pass[j], way_points_msg[j]);
         tf::Transform world_to_link6_tf, world_to_tcp_tf;
         geometry_msgs::Pose world_to_link6 = way_points_msg[j];
         geometry_msgs::Pose world_to_tcp;
         tf::poseMsgToTF(world_to_link6, world_to_link6_tf);
-        world_to_tcp_tf = world_to_link6_tf * link6_to_tcp_tf;
+        world_to_tcp_tf = world_to_link6_tf;
         tf::poseTFToMsg(world_to_tcp_tf, world_to_tcp);
         way_points_msg[j] = world_to_tcp;
       }
@@ -142,14 +142,14 @@ int main(int argc, char **argv)
       srv.request.wait_for_execution = true;
       ros::ServiceClient executeKnownTrajectoryServiceClient = node.serviceClient<moveit_msgs::ExecuteKnownTrajectory>(
           "/execute_kinematic_path");
-      group.computeCartesianPath(way_points_msg, 0.05, 0.0, srv.request.trajectory);
+      group->computeCartesianPath(way_points_msg, 0.05, 0.0, srv.request.trajectory);
       executeKnownTrajectoryServiceClient.call(srv);
 
       // Return to first point
       way_points_msg.resize(1);
-      listener.waitForTransform("/base", "/tool0", ros::Time::now(), ros::Duration(3.0));
+      listener.waitForTransform("/base", tcp_name, ros::Time::now(), ros::Duration(3.0));
       sleep(1);
-      group.computeCartesianPath(way_points_msg, 0.05, 0.0, srv.request.trajectory);
+      group->computeCartesianPath(way_points_msg, 0.05, 0.0, srv.request.trajectory);
       executeKnownTrajectoryServiceClient.call(srv);
       sleep(1);
     }

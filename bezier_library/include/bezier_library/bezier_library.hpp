@@ -25,7 +25,6 @@
 #include <vtkPLYReader.h>
 #include <vtkPLYWriter.h>
 #include <vtkPolyData.h>
-#include <vtkPolyDataMapper.h>
 #include <vtkPolyDataNormals.h>
 #include <vtkPlane.h>
 #include <vtkCutter.h>
@@ -34,7 +33,6 @@
 #include <vtkCellData.h>
 #include <vtkPoints.h>
 #include <vtkCellArray.h>
-#include <vtkGlyph3D.h>
 #include <vtkImplicitModeller.h>
 #include <vtkMarchingCubes.h>
 #include <vtkKdTreePointLocator.h>
