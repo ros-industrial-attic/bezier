@@ -74,9 +74,6 @@ int main(int argc, char **argv)
   fsw_table_mesh_publisher = node.advertise<visualization_msgs::Marker>("my_fsw_table", 1);
 
   // Generate trajectory
-  double size_of_fsw_tool = 0.45767; //height oh fsw tool
-  double size_of_grind_tool = 0.04; //height of end-mill
-
   double covering_percentage = 0.25; //value between 0.0 & 1.0
   double grind_diameter = 0.014;
   double maximum_depth_of_path = 0.015;
@@ -104,7 +101,7 @@ int main(int argc, char **argv)
 
   while (ros::ok())
   {
-    for (int i = 0; i < index_vector.size() - 1; i++)
+    for (unsigned int i = 0; i < index_vector.size() - 1; i++)
     { //For each pass
       std::vector<Eigen::Affine3d, Eigen::aligned_allocator<Eigen::Affine3d> > way_points_vector_pass; // Get pose in this pass
       way_points_vector_pass.insert(way_points_vector_pass.begin(), way_points_vector.begin() + index_vector[i] + 1,

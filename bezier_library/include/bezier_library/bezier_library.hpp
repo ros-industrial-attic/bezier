@@ -182,17 +182,17 @@ private:
   /** @brief Grinding depth (in meters) */
   double maximum_depth_of_path_;
 
-  /** @brief Extrication depth equal of how many @ref maximum_depth_of_path_ (coefficient) should be used to generate extrication paths */
-  int extrication_coefficient_;
-
-  /** @brief New extrication mesh generated each 1/extrication_frequency times */
-  int extrication_frequency_;
-
   /** @brief Diameter of effector (in meters) */
   double effector_diameter_;
 
   /** @brief Percentage of covering (decimal value) */
   double covering_percentage_;
+
+  /** @brief Extrication depth equal of how many @ref maximum_depth_of_path_ (coefficient) should be used to generate extrication paths */
+  int extrication_coefficient_;
+
+  /** @brief New extrication mesh generated each 1/extrication_frequency times */
+  int extrication_frequency_;
 
   /** @brief Mesh global normal vector */
   Eigen::Vector3d mesh_normal_vector_;
@@ -219,9 +219,9 @@ private:
   dilation(double depth,
              vtkSmartPointer<vtkPolyData> &dilated_polydata);
 
-  /**@brief This function used vtkImplicitModeller in order to translate the inputpolydata surface
+  /**@brief This function used vtkImplicitModeller in order to translate the @ref inputPolyData_ surface
    * @param[in] depth depth for grind process (pass depth)
-   * @param[in] poly_data Polydata we would like to translate
+   * @param[in] poly_data Poly data we would like to translate
    * @param[out] translation_poly_data output of input poly data (@ref inputPolyData_) translation
    * @return boolean flag reflects the function proceedings
    */

@@ -221,10 +221,11 @@ bool Bezier::translation(double depth,
   distanceFilter->SetInputData(1, poly_data);
   distanceFilter->SetInputData(0, translation_poly_data);
   distanceFilter->Update();
-  if(depth - distanceFilter->GetOutput()->GetPointData()->GetScalars()->GetRange()[0] <= 0)
+  double distance = depth - distanceFilter->GetOutput()->GetPointData()->GetScalars()->GetRange()[0];
+  if(distance <= 0)
   {
-    printf("ERROR IN MESH TRANSLATION : DEPTH WRONG\n");
-    //return false;
+    ROS_ERROR_STREAM("Bezier::translation Wrong translation! " << distance << " <= 0");
+    return false;
   }
   return true;
 }
@@ -339,7 +340,7 @@ void Bezier::ransacPlaneSegmentation()
   seg.setModelType(pcl::SACMODEL_PLANE);
   seg.setMethodType(pcl::SAC_RANSAC);
   model_coefficients.values.resize(3);  //Plane
-  //@note : Thresold = max(x_size,y_size,z_size) cos plane model has to fit all points of inputPolyData
+  //@note : Threshold = max(x_size,y_size,z_size) cos plane model has to fit all points of inputPolyData
   double threshold = std::max(x_size, y_size);
   threshold = std::max(threshold, z_size);
   seg.setDistanceThreshold(threshold);
@@ -357,8 +358,8 @@ void Bezier::generateSlicingDirection()
 {
   // Find two simple orthogonal vectors to mesh_normal
   Eigen::Vector3d x_vector = Eigen::Vector3d(mesh_normal_vector_[2], 0, -mesh_normal_vector_[0]);
-  Eigen::Vector3d y_vector = Eigen::Vector3d(0, mesh_normal_vector_[2], -mesh_normal_vector_[1]);
-  // By default, we chose x_vector. But another vector in this plan could be choosen.
+  //Eigen::Vector3d y_vector = Eigen::Vector3d(0, mesh_normal_vector_[2], -mesh_normal_vector_[1]);
+  // By default, we chose x_vector. But another vector in this plan could be chosen.
   x_vector.normalize();
   slicing_dir_ = x_vector;
 }
@@ -368,7 +369,7 @@ unsigned int Bezier::determineSliceNumberExpected(vtkSmartPointer<vtkPolyData> p
   // Init with extreme values
   double min_value = DBL_MAX;
   double max_value = DBL_MIN;
-  // Get point cloud from polydata : We have to use points of cells and not point cloud directly.
+  // Get point cloud from poly data : We have to use points of cells and not point cloud directly.
   // In fact, in dilation process, several cells have been deleted. Yet, none of points has been deleted.
   for(vtkIdType index_cell = 0; index_cell < (poly_data->GetNumberOfCells()); index_cell++)
   {
@@ -397,7 +398,7 @@ unsigned int Bezier::determineSliceNumberExpected(vtkSmartPointer<vtkPolyData> p
 
 unsigned int Bezier::getRealSliceNumber(vtkSmartPointer<vtkStripper> stripper, Eigen::Vector3d vector_dir)
 {
-  vtkIdType numberOfLines = stripper->GetOutput()->GetNumberOfLines();
+  //vtkIdType numberOfLines = stripper->GetOutput()->GetNumberOfLines();
   vtkPoints *points = stripper->GetOutput()->GetPoints();
   vtkCellArray *cells = stripper->GetOutput()->GetLines();
   vtkIdType *indices;
@@ -424,7 +425,7 @@ unsigned int Bezier::getRealSliceNumber(vtkSmartPointer<vtkStripper> stripper, E
   // Else sort vector
   std::sort(dot_vector.begin(), dot_vector.end());
   // Remove duplicated value or too close values
-  int index = 0;
+  unsigned int index = 0;
   double value = (effector_diameter_ * (1 - covering_percentage_)) / (2 * 10); //2 to get radius, 10 to get 10% of virtual radius as threshold
   while (index < (dot_vector.size() - 1))
   {
@@ -483,8 +484,8 @@ bool Bezier::cutMesh(vtkSmartPointer<vtkPolyData> poly_data,
 #endif
   cutter->Update();
   // Check real number of lines: if the mesh has holes, the number of lines returned by vtk does not match the expected number of lines
-  int line_number_real(0);
-  int temp(0);
+  unsigned int line_number_real(0);
+  unsigned int temp(0);
   while (line_number_real < line_number_expected)
   {
     cutter->GenerateValues(line_number_expected + temp, -distanceMin, distanceMax);
@@ -551,7 +552,7 @@ void Bezier::harmonizeLinesOrientation(std::vector<std::vector<std::pair<Eigen::
   reference.normalize();
 
   // Compare orientation of lines with reference
-  for(int line_index = 0; line_index < lines.size(); line_index++)
+  for(unsigned int line_index = 0; line_index < lines.size(); line_index++)
   {
     // Get line orientation
     int point_number = lines[line_index].size();
@@ -567,9 +568,9 @@ void Bezier::removeNearNeighborPoints(std::vector<std::vector<std::pair<Eigen::V
                                       Eigen::Vector3d> > > &lines)
 {
   // For each points
-  for(int index_line = 0; index_line < lines.size(); index_line++)
+  for(unsigned int index_line = 0; index_line < lines.size(); index_line++)
   {
-    for(int index_point = 0; index_point < (lines[index_line].size() - 1); index_point++)
+    for(unsigned int index_point = 0; index_point < (lines[index_line].size() - 1); index_point++)
     {
       Eigen::Vector3d point_vector = lines[index_line][index_point].first;  // Get point position
       Eigen::Vector3d next_point_vector = lines[index_line][index_point + 1].first;  // Get next point position
@@ -605,7 +606,7 @@ Bezier::generateStripperOnSurface (vtkSmartPointer<vtkPolyData> PolyData,
   //       In the future, we must change that in order to use stripper only
 
   // Get data from stripper
-  vtkIdType numberOfLines = stripper->GetOutput()->GetNumberOfLines();
+  //vtkIdType numberOfLines = stripper->GetOutput()->GetNumberOfLines();
   vtkPoints *points = stripper->GetOutput()->GetPoints();
   vtkCellArray *cells = stripper->GetOutput()->GetLines();
   vtkIdType *indices;
@@ -799,7 +800,7 @@ bool Bezier::generateTrajectory(
   std::vector < std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d> > > extrication_lines;
   index_vector.push_back(way_points_vector.size() - 1);  // Push back index of last pose in pass
   // Generate trajectory
-  for(int polydata_index = 0; polydata_index < dilationPolyDataVector_.size(); polydata_index++)
+  for(unsigned int polydata_index = 0; polydata_index < dilationPolyDataVector_.size(); polydata_index++)
   {  // For each polydata (passes)
      // Generate extrication mesh
     double dist_to_extrication_mesh(0);
@@ -817,7 +818,7 @@ bool Bezier::generateTrajectory(
             (extrication_coefficient_ + dilationPolyDataVector_.size() - 1 - polydata_index) * maximum_depth_of_path_);
         dilation(dilated_depth, extrication_poly_data);
         //dilatation(extrication_coefficient_*maximum_depth_of_path_, dilationPolyDataVector_[polydata_index], extrication_poly_data);
-        double dist_to_extrication_mesh((extrication_coefficient_ + polydata_index) * maximum_depth_of_path_); //distance between dilationPolyDataVector_[index_polydata] and extrication polydata
+        //double dist_to_extrication_mesh((extrication_coefficient_ + polydata_index) * maximum_depth_of_path_); //distance between dilationPolyDataVector_[index_polydata] and extrication polydata
       }
       generateStripperOnSurface(extrication_poly_data, extrication_lines);
     }
@@ -826,18 +827,18 @@ bool Bezier::generateTrajectory(
     // Generate trajectory on mesh (polydata)
     std::vector<std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d> > > lines;
     generateStripperOnSurface(dilationPolyDataVector_[polydata_index], lines);
-    for(int index_line = 0; index_line < lines.size(); index_line++)
+    for(unsigned int index_line = 0; index_line < lines.size(); index_line++)
     {
       // Variable use to store pose : used for extrication paths
       Eigen::Affine3d start_pose(Eigen::Affine3d::Identity());  // Start line pose
       Eigen::Affine3d end_pose(Eigen::Affine3d::Identity());  // End line pose
 
       // Generate poses on a line
-      for(int index_point = 0; index_point < lines[index_line].size(); index_point++) // For each point
+      for(unsigned int index_point = 0; index_point < lines[index_line].size(); index_point++) // For each point
       {
         if(lines[index_line].size() < 2)
         {
-          ROS_WARN_STREAM("Line path is too small (number of points on the line < 2)");
+          ROS_WARN_STREAM("Bezier::generateTrajectory: Line path is too small (number of points on the line < 2)");
           break;
         }
         // Get points, normal and generate pose
@@ -910,7 +911,7 @@ bool Bezier::generateTrajectory(
       Eigen::Affine3d pose(start_pose);
       Eigen::Vector3d point(Eigen::Vector3d::Identity());
       std::vector<Eigen::Affine3d, Eigen::aligned_allocator<Eigen::Affine3d> > extrication_poses;
-      for(int index_point = 0; index_point < extrication_line.size(); index_point++)
+      for(unsigned int index_point = 0; index_point < extrication_line.size(); index_point++)
       {
         if(index_point == 0 || index_point == (extrication_line.size() - 1) || index_point % 5 == 0)
         {
@@ -977,9 +978,9 @@ bool Bezier::generateTrajectory(
     if(orientation.dot(extrication_pass_dir) > 0)
       std::reverse(extrication_poses.begin(), extrication_poses.end());
     // Seek for closest end pass point index
-    int index_start_extrication_path;
+    unsigned int index_start_extrication_path;
     // Seek for closest start pass point index
-    int index_end_extrication_path;
+    unsigned int index_end_extrication_path;
     if(use_translation_mode_)
     {
       index_start_extrication_path = 0;
@@ -993,9 +994,10 @@ bool Bezier::generateTrajectory(
       index_end_extrication_path = seekClosestExtricationPassPoint(
           start_point_pass - dist_to_extrication_mesh * start_normal_pass, extrication_poses);
     }
-    // Get indice of close points
+    // Get indices of close points
     way_points_vector.insert(way_points_vector.end(), extrication_poses.begin() + index_start_extrication_path,
                              extrication_poses.begin() + index_end_extrication_path);
+
     for(size_t i = 0; i < (index_end_extrication_path - index_start_extrication_path); i++)
     {
       color_vector.push_back(false);
@@ -1015,7 +1017,7 @@ void Bezier::displayNormal(std::vector<Eigen::Affine3d,
 
   // Delete old markers
   visualization_msgs::MarkerArray markers;
-  for(int k = 0; k < number_of_normal_markers_published_; k++)
+  for(unsigned int k = 0; k < number_of_normal_markers_published_; k++)
   {
     visualization_msgs::Marker marker;
     marker.header.frame_id = "/base_link";
@@ -1029,7 +1031,7 @@ void Bezier::displayNormal(std::vector<Eigen::Affine3d,
   normal_publisher.publish(markers);
 
   number_of_normal_markers_published_ = way_points_vector.size(); // Store number of markers drawn
-  for(int k = 0; k < way_points_vector.size(); k++)
+  for(unsigned int k = 0; k < way_points_vector.size(); k++)
   {
     if(points_color_viz[k] == true)
     {
@@ -1086,7 +1088,6 @@ void Bezier::displayTrajectory(
   {
     ROS_ERROR_STREAM("Bezier::displayTrajectory: Path vector and bool vector have different sizes");
   }
-  double diffRepz = 0.45;               // z offset between "/base" and "/base_link"
   visualization_msgs::Marker marker;
   marker.header.frame_id = "/base_link";
   marker.header.stamp = ros::Time::now();
@@ -1105,7 +1106,7 @@ void Bezier::displayTrajectory(
   // Set the pose and color of marker from parameter[in]
   geometry_msgs::Point p;  // Temporary point
   std_msgs::ColorRGBA color;  // Temporary color
-  for(int k = 1; k < way_points_vector.size(); k++)
+  for(unsigned int k = 1; k < way_points_vector.size(); k++)
   {
     // For each index of trajectory vector, store coordinates in a temporary point p;
     p.x = way_points_vector[k].translation()[0];
