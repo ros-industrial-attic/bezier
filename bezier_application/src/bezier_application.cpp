@@ -55,13 +55,13 @@ int main(int argc, char **argv)
   // Get PLY file name from command line
   std::string input_mesh_filename;
   std::string defect_mesh_filename;
-  node.getParam("filename_param", input_mesh_filename); //filename_param is a parameter defined in launch file
+  node.getParam("meshname_param", input_mesh_filename); //meshname_param is a parameter defined in launch file
   if (input_mesh_filename.size() > 4) // size>".ply"
     ROS_INFO_STREAM("Mesh file imported :" << input_mesh_filename);
   else
   {
     ROS_WARN_STREAM("Command line error in file set up." << std::endl <<
-                    "Usage :" << std::endl << "roslaunch my_path_generator path_generator.launch filename:=filename.ply");
+                    "Usage :" << std::endl << "roslaunch my_path_generator path_generator.launch meshname:=meshname.ply");
     return -1;
   }
   std::string mesh_original = meshes_path + input_mesh_filename;

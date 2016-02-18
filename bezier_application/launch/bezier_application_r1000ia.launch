@@ -9,8 +9,8 @@
   <arg name="use_bswap" unless="$(arg sim)" default="true" />
 
   <!-- load PLY file from command line in order to use it in C++ programm  -->
-	<arg name="filename" default="" />  
-	<param name="filename_param" value="$(arg filename)" />
+	<arg name="meshname" default="" />  
+	<param name="meshname_param" value="$(arg meshname)" />
 
   <!-- load the robot_description parameter before launching ROS-I nodes -->
   <include file="$(find fanuc_r1000ia_sls_2_grinding_moveit_config)/launch/planning_context.launch" >
