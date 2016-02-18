@@ -13,7 +13,8 @@ include_directories(${VTK_USE_FILE} ${PCL_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS}) 
 add_definitions(${PCL_DEFINITIONS} ${VTK_DEFINITIONS})
 
 add_executable (bezier_application src/bezier_application.cpp)
-if(VTK_LIBRARIES) # May never happen because we expect VTK 6.3 minimum
+set_property(TARGET bezier_application APPEND_STRING PROPERTY COMPILE_FLAGS -Wall)
+if(VTK_LIBRARIES) # May never happen because we expect VTK 7.0 minimum
   target_link_libraries (bezier_application ${catkin_LIBRARIES} ${VTK_LIBRARIES} ${PCL_LIBRARIES} bezier_library)
 else()
   target_link_libraries (bezier_application ${catkin_LIBRARIES} vtkHybrid vtkWidgets ${PCL_LIBRARIES} bezier_library)
