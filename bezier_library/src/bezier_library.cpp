@@ -1140,7 +1140,7 @@ void Bezier::displayTrajectory(
 
 void Bezier::displayMesh(ros::Publisher &mesh_publisher,
                          std::string mesh_path,
-                         float r, float g, float b)
+                         float r, float g, float b, float a)
 {
   // Create a mesh marker from ply files
   visualization_msgs::Marker mesh_marker;
@@ -1154,7 +1154,7 @@ void Bezier::displayMesh(ros::Publisher &mesh_publisher,
   mesh_marker.color.r = r;
   mesh_marker.color.g = g;
   mesh_marker.color.b = b;
-  mesh_marker.color.a = 1.0;
+  mesh_marker.color.a = a;
   mesh_marker.lifetime = ros::Duration();
 
   while (mesh_publisher.getNumSubscribers() < 1)
