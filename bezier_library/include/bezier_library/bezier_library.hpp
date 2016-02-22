@@ -89,7 +89,7 @@ public:
          double covering_percentage,
          int extrication_coefficient,
          int extrication_frequency,
-         bool use_translation_mode = false);
+         bool use_translation_mode);
 
   ~Bezier();
 

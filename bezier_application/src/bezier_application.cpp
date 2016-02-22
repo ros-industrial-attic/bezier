@@ -80,8 +80,8 @@ int main(int argc, char **argv)
   normal_publisher        = node.advertise<visualization_msgs::MarkerArray>("my_normals", 1);
 
   // Generate trajectory
-  double covering_percentage = 0.25; //value between 0.0 & 1.0
-  double grind_diameter = 0.014;
+  double covering_percentage = 0.01; //value between 0.0 & 1.0
+  double grind_diameter = 0.05;
   double maximum_depth_of_path = 0.015;
   int extrication_frequency = 5; // Generate a new extrication mesh each 4 passes generated
   int extrication_coefficient = 5;
@@ -93,7 +93,7 @@ int main(int argc, char **argv)
 
   // Display in RVIZ
   bezier_planner.displayMesh(input_mesh_publisher, mesh_ressource + input_mesh_filename);
-  bezier_planner.displayMesh(defect_mesh_publisher, mesh_ressource + defect_mesh_filename, 0.6, 0.6, 0.6, 0.5);
+  bezier_planner.displayMesh(defect_mesh_publisher, mesh_ressource + defect_mesh_filename, 0.1, 0.1, 0.1, 0.6);
   bezier_planner.generateTrajectory(way_points_vector, points_color_viz, index_vector);
 
   // Save dilated meshes
@@ -119,7 +119,7 @@ int main(int argc, char **argv)
       std::string number(boost::lexical_cast<std::string>(i));
       bezier_planner.displayMesh(dilated_mesh_publisher, mesh_ressource + "dilatedMeshes/mesh_" + number + ".ply");
       bezier_planner.displayTrajectory(way_points_vector_pass, points_color_viz_pass, trajectory_publisher); // Display trajectory in this pass
-      bezier_planner.displayNormal(way_points_vector_pass, points_color_viz_pass, normal_publisher); // Display normals in this pass
+      //bezier_planner.displayNormal(way_points_vector_pass, points_color_viz_pass, normal_publisher); // Display normals in this pass
 
       // Copy the vector of Eigen poses into a vector of ROS poses
       std::vector<geometry_msgs::Pose> way_points_msg;
