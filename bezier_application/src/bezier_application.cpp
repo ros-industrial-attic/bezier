@@ -89,7 +89,7 @@ int main(int argc, char **argv)
   bezier_planner.displayMesh(fix_table_mesh_publisher, mesh_ressource + "environment/TableFix.ply", .1, .4, .1);
   bezier_planner.displayMesh(fsw_table_mesh_publisher, mesh_ressource + "environment/TableFSW.ply");
   bezier_planner.displayMesh(input_mesh_publisher, mesh_ressource + input_mesh_filename);
-  bezier_planner.displayMesh(defect_mesh_publisher, mesh_ressource + defect_mesh_filename);
+  bezier_planner.displayMesh(defect_mesh_publisher, mesh_ressource + defect_mesh_filename, 0.6, 0.6, 0.6, 0.5);
   bezier_planner.generateTrajectory(way_points_vector, points_color_viz, index_vector);
 
   // Save dilated meshes
