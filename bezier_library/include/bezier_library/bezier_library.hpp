@@ -152,7 +152,7 @@ public:
   void
   displayMesh(ros::Publisher &mesh_publisher,
               std::string mesh_path,
-              float r = 0.6, float g = 0.6, float b = 0.6, float a=1.0);
+              float r = 0.6, float g = 0.6, float b = 0.6, float a = 1.0);
 
   /** @brief Function used to display some Bezier library's parameters (effector diameter, grind depth and covering_percentage) */
   void
