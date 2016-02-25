@@ -83,21 +83,21 @@ Eigen::Vector3d Bezier::getSlicingDirection()
   return slicing_dir_;
 }
 
-bool Bezier::loadPLYPolydata(std::string filename,
+bool Bezier::loadPLYPolydata(std::string meshname,
                              vtkSmartPointer<vtkPolyData> &poly_data)
 {
   vtkSmartPointer<vtkPLYReader> reader = vtkSmartPointer<vtkPLYReader>::New();
-  reader->SetFileName(filename.c_str());
+  reader->SetFileName(meshname.c_str());
   reader->Update();
   poly_data = reader->GetOutput();
   return true;
 }
 
-bool Bezier::savePLYPolyData(std::string filename,
+bool Bezier::savePLYPolyData(std::string meshname,
                              vtkSmartPointer<vtkPolyData> poly_data)
 {
   vtkSmartPointer<vtkPLYWriter> plyWriter = vtkSmartPointer<vtkPLYWriter>::New();
-  plyWriter->SetFileName(filename.c_str());
+  plyWriter->SetFileName(meshname.c_str());
   plyWriter->SetInputData(poly_data);
   plyWriter->Update();
   if(!plyWriter->Write())

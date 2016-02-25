@@ -25,7 +25,6 @@
 #include <vtkPLYReader.h>
 #include <vtkPLYWriter.h>
 #include <vtkPolyData.h>
-#include <vtkPolyDataMapper.h>
 #include <vtkPolyDataNormals.h>
 #include <vtkPlane.h>
 #include <vtkCutter.h>
@@ -34,7 +33,6 @@
 #include <vtkCellData.h>
 #include <vtkPoints.h>
 #include <vtkCellArray.h>
-#include <vtkGlyph3D.h>
 #include <vtkImplicitModeller.h>
 #include <vtkMarchingCubes.h>
 #include <vtkKdTreePointLocator.h>
@@ -91,7 +89,7 @@ public:
          double covering_percentage,
          int extrication_coefficient,
          int extrication_frequency,
-         bool use_translation_mode = false);
+         bool use_translation_mode);
 
   ~Bezier();
 
@@ -255,20 +253,20 @@ private:
   generatePointNormals(vtkSmartPointer<vtkPolyData> &poly_data);
 
   /** @brief Allows to load a PLY file into a vtkPolyData
-   *  @param[in] filename file path
+   *  @param[in] meshname file path
    *  @param[out] poly_Data vtkPolyData loaded
    *  @return True if successful, false otherwise
    */
   bool
-  loadPLYPolydata(std::string filename, vtkSmartPointer<vtkPolyData> &poly_Data);
+  loadPLYPolydata(std::string meshname, vtkSmartPointer<vtkPolyData> &poly_Data);
 
   /** @brief Allows to save a PLY file from a vtkPolyData object
-   *  @param[in] filename file path
+   *  @param[in] meshname file path
    *  @param[in] poly_data vtkPolyData to be saved
    *  @return True if successful, false otherwise
    */
   bool
-  savePLYPolyData(std::string filename, vtkSmartPointer<vtkPolyData> poly_data);
+  savePLYPolyData(std::string meshname, vtkSmartPointer<vtkPolyData> poly_data);
 
   /** @brief Uses PCL RANSAC to segment a plane into @ref inputPolyData_ and fills @ref mesh_normal_vector_
    *  @note The segmented plane represents a global mesh orientation

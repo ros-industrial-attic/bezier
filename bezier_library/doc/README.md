@@ -32,6 +32,14 @@ Input
 -----
 An input mesh (PLY file), a default mesh (PLY file) and several parameters for grinding (depth, diameter of the effector, percentage of covering, frequency of extrications and their depths).
 
+| Parameters | Description
+------------ | -----------
+`maximum_depth_of_pass_` | Maximum depth machining (in meters)
+`effector_diameter_` | Diameter of the end effector (in meters)
+`covering_percentage_` | Percentage of covering (from 0.0 to 1.0)
+`extrication_coefficient_` | Extrication depth equal of the percentage of `maximum_depth_of_path_` (coefficient)
+`extrication_frequency_` | New extrication mesh generated each one `extrication_frequency_` times
+
 ![mesh](mesh.jpg)
 
 1. Planar segmentation
@@ -75,6 +83,7 @@ To generate different passes, the input mesh is dilated and the process is repea
 
 Output
 ------
-Vector of robot poses (quaternions and positions)
+Robot poses and trajectories
 
-![trajectory](trajectory.jpg)
+![robot_trajectory](robot_trajectory.png)
+![robot_trajectory](grind_trajectory.png)
