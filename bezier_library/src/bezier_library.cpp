@@ -156,6 +156,13 @@ bool Bezier::dilation(double depth,
   dilated_tmp->BuildCells();
   dilated_tmp->BuildLinks();
   // Get normal tab
+  // if there are no normals in poly data, they are computed
+  if(inputPolyData_->GetPointData()->GetNormals() == 0)
+  {
+    ROS_WARN_STREAM("Bezier::dilation: No normals in inputPolyData_. Computing normals...");
+    generatePointNormals(inputPolyData_);
+  }
+
   vtkFloatArray *PointNormalArray = vtkFloatArray::SafeDownCast(inputPolyData_->GetPointData()->GetNormals());
   if(!PointNormalArray)
     return false;
@@ -237,6 +244,14 @@ bool Bezier::defectIntersectionOptimisation(vtkSmartPointer<vtkPolyData> &poly_d
   vtkSmartPointer<vtkKdTreePointLocator> kDTreeDefect = vtkSmartPointer<vtkKdTreePointLocator>::New();
   kDTreeDefect->SetDataSet(defectPolyData_);
   kDTreeDefect->BuildLocator();
+
+  // if there are no normals in poly data, they are computed
+  if(defectPolyData_->GetPointData()->GetNormals() == 0)
+  {
+    ROS_WARN_STREAM("Bezier::defectIntersectionOptimisation: No normals in inputPolyData_. Computing normals...");
+    generatePointNormals(defectPolyData_);
+  }
+
   vtkFloatArray *defectPointNormalArray = vtkFloatArray::SafeDownCast(
       defectPolyData_->GetPointData()->GetNormals());
   // For each cell in dilate polydata
