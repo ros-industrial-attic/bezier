@@ -2,6 +2,7 @@
 #define BEZIER_LIBRARY_HPP
 
 #include <string>
+#include <limits>
 
 // PCL headers
 #include <pcl/PCLPointCloud2.h>
