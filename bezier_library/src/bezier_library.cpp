@@ -382,8 +382,8 @@ void Bezier::generateSlicingDirection()
 unsigned int Bezier::determineSliceNumberExpected(vtkSmartPointer<vtkPolyData> poly_data)
 {
   // Init with extreme values
-  double min_value = DBL_MAX;
-  double max_value = DBL_MIN;
+  double min_value = std::numeric_limits<double>::max();
+  double max_value = std::numeric_limits<double>::min();
   // Get point cloud from poly data : We have to use points of cells and not point cloud directly.
   // In fact, in dilation process, several cells have been deleted. Yet, none of points has been deleted.
   for(vtkIdType index_cell = 0; index_cell < (poly_data->GetNumberOfCells()); index_cell++)
@@ -673,7 +673,7 @@ int Bezier::seekClosestLine(Eigen::Vector3d point_vector,
                             std::vector<std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d> > > extrication_lines)
 {
   int index_of_closest_line(0);
-  double distance(DBL_MAX);
+  double distance(std::numeric_limits<double>::max());
   for(size_t index_line = 0; index_line < extrication_lines.size(); index_line++)
   {
     double number_of_point = extrication_lines[index_line].size();
@@ -699,7 +699,7 @@ int Bezier::seekClosestPoint(Eigen::Vector3d point_vector,
                              std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d> > extrication_line)
 {
   int index(0);
-  double distance(DBL_MAX);
+  double distance(std::numeric_limits<double>::max());
   for(size_t index_point = 0; index_point < extrication_line.size(); index_point++)
   {
     Eigen::Vector3d extrication_point_vector = extrication_line[index_point].first;
@@ -724,7 +724,7 @@ int Bezier::seekClosestExtricationPassPoint(
     Eigen::aligned_allocator<Eigen::Affine3d> > extrication_poses)
 {
   int index(0);
-  double distance(DBL_MAX);
+  double distance(std::numeric_limits<double>::max());
   for(size_t index_point = 0; index_point < extrication_poses.size(); index_point++)
   {
     Eigen::Vector3d closest_point_vector = extrication_poses[index_point].translation();
