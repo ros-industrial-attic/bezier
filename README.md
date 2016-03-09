@@ -50,7 +50,7 @@ git clone https://github.com/ros-industrial-consortium/bezier.git
 
 **Launch**
 ```bash
-roslaunch bezier_application bezier_application.launch filename:=oriented_complicated_mesh.ply
+roslaunch bezier_application bezier_application.launch meshname:=oriented_complicated_mesh.ply
 ```
 
 In this example, `bezier_application` will be launched with `oriented_complicated_mesh.ply` as input mesh and `oriented_complicated_mesh_defect.ply` as default mesh.
