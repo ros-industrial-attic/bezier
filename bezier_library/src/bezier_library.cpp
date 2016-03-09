@@ -379,38 +379,6 @@ void Bezier::generateSlicingDirection()
   slicing_dir_ = x_vector;
 }
 
-unsigned int Bezier::determineSliceNumberExpected(const vtkSmartPointer<vtkPolyData> poly_data)
-{
-  // Init with extreme values
-  double min_value = std::numeric_limits<double>::max();
-  double max_value = std::numeric_limits<double>::min();
-  // Get point cloud from poly data : We have to use points of cells and not point cloud directly.
-  // In fact, in dilation process, several cells have been deleted. Yet, none of points has been deleted.
-  for(vtkIdType index_cell = 0; index_cell < (poly_data->GetNumberOfCells()); index_cell++)
-  {
-    // Get cell
-    vtkCell* cell = poly_data->GetCell(index_cell);
-    // Get points of cell
-    vtkPoints * pts = cell->GetPoints();
-    for(int i = 0; i < pts->GetNumberOfPoints(); i++)
-    {
-      double p[3];
-      pts->GetPoint(i, p);
-      Eigen::Vector3d point(p[0], p[1], p[2]);
-      double value = point.dot(slicing_dir_);
-      if(value > max_value)
-        max_value = value;
-      if(value < min_value)
-        min_value = value;
-    }
-  }
-  // Virtual effector size = effector size * (1- covering_percentage%)
-  // Distance we have to cut = max_value - min_value
-  double virtual_effector_diameter = effector_diameter_ * (1 - covering_percentage_);
-  double distance = max_value - min_value;
-  return std::ceil(distance / virtual_effector_diameter);
-}
-
 unsigned int Bezier::getRealSliceNumber(vtkSmartPointer<vtkStripper> stripper, Eigen::Vector3d vector_dir)
 {
   //vtkIdType numberOfLines = stripper->GetOutput()->GetNumberOfLines();
@@ -474,13 +442,10 @@ bool Bezier::cutMesh(const vtkSmartPointer<vtkPolyData> poly_data,
   maxBound[1] = poly_data->GetBounds()[3];
   maxBound[2] = poly_data->GetBounds()[5];
 
-  double center[3];
-  center[0] = poly_data->GetCenter()[0];
-  center[1] = poly_data->GetCenter()[1];
-  center[2] = poly_data->GetCenter()[2];
+  double distanceMinMax = sqrt(vtkMath::Distance2BetweenPoints(minBound,maxBound));
 
-  double distanceMin = sqrt(vtkMath::Distance2BetweenPoints(minBound, center));
-  double distanceMax = sqrt(vtkMath::Distance2BetweenPoints(maxBound, center));
+  double width = effector_diameter_ * (1 - covering_percentage_);
+  double line_number = std::floor((distanceMinMax) / width);
 
   // Direction for cutter
   cut_dir.normalize();
@@ -498,12 +463,12 @@ bool Bezier::cutMesh(const vtkSmartPointer<vtkPolyData> poly_data,
   cutter->SetInputData(poly_data);
 #endif
   cutter->Update();
-  // Check real number of lines: if the mesh has holes, the number of lines returned by vtk does not match the expected number of lines
-  unsigned int line_number_real(0);
-  unsigned int temp(0);
-  while (line_number_real < line_number_expected)
-  {
-    cutter->GenerateValues(line_number_expected + temp, -distanceMin, distanceMax);
+
+  // This loop will create cuts from center to maximum bound of poly_data, with width like offset between two cuts
+  // and will do the same from center to minimum bound of poly_data
+  for(unsigned int i = 0; i < (line_number / 2); i++){
+    cutter->SetValue(i + 1, width * (i + 1));
+    cutter->SetValue(i + 1 + line_number / 2, -width * (i + 1));
     cutter->Update();
     // VTK triangle filter used for stripper
     vtkSmartPointer<vtkTriangleFilter> triangleFilter = vtkSmartPointer<vtkTriangleFilter>::New();
@@ -512,13 +477,6 @@ bool Bezier::cutMesh(const vtkSmartPointer<vtkPolyData> poly_data,
     // VTK Stripper used to generate polylines from cutter
     stripper->SetInputConnection(triangleFilter->GetOutputPort());
     stripper->Update();
-
-    line_number_real = getRealSliceNumber(stripper, cut_dir);
-    if(line_number_real < line_number_expected)
-      temp++;
-
-    //ROS_INFO_STREAM("Expected : " << line_number_expected << ", returned : " << stripper->GetOutput()->GetNumberOfLines() <<
-    //                ", calculated : " << line_number_real);
   }
   return true;
 }
@@ -610,12 +568,10 @@ bool
 Bezier::generateStripperOnSurface (const vtkSmartPointer<vtkPolyData> PolyData,
                                    std::vector<std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d> > > &lines)
 {
-  // Set slice number (With covering_percentage)
-  unsigned int slice_number_expected = determineSliceNumberExpected(PolyData);
   // Cut mesh
   vtkSmartPointer<vtkStripper> stripper = vtkSmartPointer<vtkStripper>::New();
   stripper->SetJoinContiguousSegments(true);
-  cutMesh(PolyData, slicing_dir_, slice_number_expected, stripper);  // Fill this stripper with cutMesh function
+  cutMesh(PolyData, slicing_dir_, 0, stripper);  // Fill this stripper with cutMesh function
 
   // FIXME At the moment we use vector to reorganize data from stripper
   //       In the future, we must change that in order to use stripper only

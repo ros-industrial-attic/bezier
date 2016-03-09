@@ -282,14 +282,6 @@ private:
   void
   generateSlicingDirection();
 
-  /** @brief Compute scalar product between @ref slicing_dir_ and all points of the vtkPolyData point cloud
-   *  to to determine the number of lines that should be sliced into the mesh
-   *  @param[in] poly_data mesh to be sliced
-   *  @return Number of lines that should be sliced in order to respect the covering_percentage constraint
-   */
-  unsigned int
-  determineSliceNumberExpected(const vtkSmartPointer<vtkPolyData> poly_data);
-
   /** @brief Allows to compute the real number of slices because if there are holes in the vtkPolyData,
    *  the line number returned by VTK is not the one expected
    *  @param stripper slice cut without organization
