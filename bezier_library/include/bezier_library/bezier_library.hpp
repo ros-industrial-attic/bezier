@@ -83,14 +83,14 @@ public:
    *  @param[in] extrication_frequency new extrication mesh generated each 1/extrication_frequency times
    *  @param[in] use_translation_mode see @ref use_translation_mode_
    */
-  Bezier(std::string filename_inputMesh,
-         std::string filename_defectMesh,
-         double maximum_depth_of_path,
-         double effector_diameter,
-         double covering_percentage,
-         int extrication_coefficient,
-         int extrication_frequency,
-         bool use_translation_mode);
+  Bezier(const std::string filename_inputMesh,
+         const std::string filename_defectMesh,
+         const double maximum_depth_of_path,
+         const double effector_diameter,
+         const double covering_percentage,
+         const int extrication_coefficient,
+         const int extrication_frequency,
+         const bool use_translation_mode);
 
   ~Bezier();
 
@@ -110,7 +110,7 @@ public:
    *  @return True if successful, false otherwise
    **/
   bool
-  saveDilatedMeshes(std::string path);
+  saveDilatedMeshes(const std::string path);
 
   /** @brief Retrieve the slicing direction vector
    *  @return @ref slicing_dir_
@@ -126,8 +126,8 @@ public:
    **/
   void
   displayNormal(std::vector<Eigen::Affine3d, Eigen::aligned_allocator<Eigen::Affine3d> > way_points_vector,
-                std::vector<bool> points_color_viz,
-                ros::Publisher &normal_publisher);
+                const std::vector<bool> points_color_viz,
+                const ros::Publisher &normal_publisher);
 
   /** @brief Generate a trajectory (LINE_STRIP) marker and publish it
    *  @param[in] way_points_vector 3D trajectory vector (containing poses)
@@ -137,8 +137,8 @@ public:
    */
   void
   displayTrajectory(std::vector<Eigen::Affine3d, Eigen::aligned_allocator<Eigen::Affine3d> > way_points_vector,
-                    std::vector<bool> points_color_viz,
-                    ros::Publisher &trajectory_publisher);
+                    const std::vector<bool> points_color_viz,
+                    const ros::Publisher &trajectory_publisher);
 
   /** @brief Allow to display a mesh in RVIZ
    *  @param[out] mesh_publisher publisher used to display the mesh in RVIZ
@@ -149,9 +149,9 @@ public:
    *  @param[in] a transparency component
    **/
   void
-  displayMesh(ros::Publisher &mesh_publisher,
-              std::string mesh_path,
-              float r = 0.6, float g = 0.6, float b = 0.6, float a = 1.0);
+  displayMesh(const ros::Publisher &mesh_publisher,
+              const std::string mesh_path,
+              const float r = 0.6, const float g = 0.6, const float b = 0.6, const float a = 1.0);
 
   /** @brief Function used to display some Bezier library's parameters (effector diameter, grind depth and covering_percentage) */
   void
@@ -161,7 +161,7 @@ public:
    *  @param[in] use_translation
    */
   void
-  setTranslationMode(bool use_translation);
+  setTranslationMode(const bool use_translation);
 
   /** @brief Get @ref use_translation_mode_
    *  @return True if using translation mode, false otherwise
@@ -216,8 +216,8 @@ private:
    *  We have to find a solution, perhaps find best parameters in order to resolve this problem
    */
   bool
-  dilation(double depth,
-             vtkSmartPointer<vtkPolyData> &dilated_polydata);
+  dilation(const double depth,
+           vtkSmartPointer<vtkPolyData> &dilated_polydata);
 
   /**@brief This function used vtkImplicitModeller in order to translate the @ref inputPolyData_ surface
    * @param[in] depth depth for grind process (pass depth)
@@ -226,8 +226,8 @@ private:
    * @return boolean flag reflects the function proceedings
    */
   bool
-  translation(double depth,
-              vtkSmartPointer<vtkPolyData> poly_data,
+  translation(const double depth,
+              const vtkSmartPointer<vtkPolyData> poly_data,
               vtkSmartPointer<vtkPolyData> &translation_poly_data);
 
   /** @brief This function allows to optimize path generation. When passes are generated (dilation), we make an intersection between the
@@ -259,7 +259,7 @@ private:
    *  @return True if successful, false otherwise
    */
   bool
-  loadPLYPolydata(std::string meshname, vtkSmartPointer<vtkPolyData> &poly_Data);
+  loadPLYPolydata(const std::string meshname, vtkSmartPointer<vtkPolyData> &poly_Data);
 
   /** @brief Allows to save a PLY file from a vtkPolyData object
    *  @param[in] meshname file path
@@ -267,7 +267,7 @@ private:
    *  @return True if successful, false otherwise
    */
   bool
-  savePLYPolyData(std::string meshname, vtkSmartPointer<vtkPolyData> poly_data);
+  savePLYPolyData(const std::string meshname, const vtkSmartPointer<vtkPolyData> poly_data);
 
   /** @brief Uses PCL RANSAC to segment a plane into @ref inputPolyData_ and fills @ref mesh_normal_vector_
    *  @note The segmented plane represents a global mesh orientation
@@ -288,7 +288,7 @@ private:
    *  @return Number of lines that should be sliced in order to respect the covering_percentage constraint
    */
   unsigned int
-  determineSliceNumberExpected(vtkSmartPointer<vtkPolyData> poly_data);
+  determineSliceNumberExpected(const vtkSmartPointer<vtkPolyData> poly_data);
 
   /** @brief Allows to compute the real number of slices because if there are holes in the vtkPolyData,
    *  the line number returned by VTK is not the one expected
@@ -308,8 +308,9 @@ private:
    *  @return True if successful, false otherwise
    */
   bool
-  cutMesh(vtkSmartPointer<vtkPolyData> PolyData,
-          Eigen::Vector3d cut_dir, unsigned int line_number_expected,
+  cutMesh(const vtkSmartPointer<vtkPolyData> PolyData,
+          Eigen::Vector3d cut_dir,
+          const unsigned int line_number_expected,
           vtkSmartPointer<vtkStripper> &stripper);
 
   /** @brief This function checks lines orientation and compares them with a reference vector (cut_direction.dot(mesh_normal))
@@ -335,9 +336,9 @@ private:
    *  @return True if successful, false otherwise
    */
   bool
-  generateRobotPoses(Eigen::Vector3d point,
-                     Eigen::Vector3d point_next,
-                     Eigen::Vector3d normal,
+  generateRobotPoses(const Eigen::Vector3d point,
+                     const Eigen::Vector3d point_next,
+                     const Eigen::Vector3d normal,
                      Eigen::Affine3d &pose);
 
   /** @brief Generates 3D robot trajectories on a vtkPolyData
@@ -346,7 +347,7 @@ private:
    *  @return True if successful, false otherwise
    */
   bool
-  generateStripperOnSurface(vtkSmartPointer<vtkPolyData> PolyData,
+  generateStripperOnSurface(const vtkSmartPointer<vtkPolyData> PolyData,
                             std::vector<std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d> > > &lines);
 
   /** @brief Function used to generate extrication paths between two lines. It allows to find the closest extrication line of a point
@@ -356,8 +357,8 @@ private:
    *  @return Value equal to index of closest line in extrication_lines vector.
    */
   int
-  seekClosestLine(Eigen::Vector3d point_vector,
-                  std::vector<std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d> > > extrication_lines);
+  seekClosestLine(const Eigen::Vector3d point_vector,
+                  const std::vector<std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d> > > extrication_lines);
 
   /** @brief Function used for extrication path. Extrication between two lines. It allows to find the closest extrication point of a point in a line.
    *  @param[in] point_vector Eigen vector of point position
@@ -366,8 +367,8 @@ private:
    *  @return Value equal to index of closest point in extrication_line vector
    */
   int
-  seekClosestPoint(Eigen::Vector3d point_vector,
-                   std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d> > extrication_line);
+  seekClosestPoint(const Eigen::Vector3d point_vector,
+                   const std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d> > extrication_line);
 
   /** @brief Function used for extrication path. Extrication between two passes. It allows to find the closest extrication point of a point in the last extrication line
    *  @param[in] point_vector Eigen vector of point position
@@ -376,8 +377,8 @@ private:
    */
   int
   seekClosestExtricationPassPoint(
-      Eigen::Vector3d point_vector,
-      std::vector<Eigen::Affine3d, Eigen::aligned_allocator<Eigen::Affine3d> > extrication_poses);
+      const Eigen::Vector3d point_vector,
+      const std::vector<Eigen::Affine3d, Eigen::aligned_allocator<Eigen::Affine3d> > extrication_poses);
 };
 
 #endif
