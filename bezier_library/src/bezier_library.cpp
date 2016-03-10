@@ -9,14 +9,14 @@ Bezier::Bezier() :
   defectPolyData_ = vtkSmartPointer<vtkPolyData>::New();
 }
 
-Bezier::Bezier(std::string filename_inputMesh,
-               std::string filename_defectMesh,
-               double maximum_depth_of_path,
-               double effector_diameter,
-               double covering_percentage,
-               int extrication_coefficient,
-               int extrication_frequency,
-               bool use_translation_mode):
+Bezier::Bezier(const std::string filename_inputMesh,
+               const std::string filename_defectMesh,
+               const double maximum_depth_of_path,
+               const double effector_diameter,
+               const double covering_percentage,
+               const int extrication_coefficient,
+               const int extrication_frequency,
+               const bool use_translation_mode):
     maximum_depth_of_path_(maximum_depth_of_path),
     effector_diameter_(effector_diameter),
     covering_percentage_(covering_percentage),
@@ -67,7 +67,7 @@ void Bezier::printBezierParameters(void)
       "Bézier parameters" << std::endl << "maximum_depth_of_path (in centimeters) : " << maximum_depth_of_path_*100 << std::endl << "Effector diameter (in centimeters) : " << effector_diameter_*100 << std::endl << "covering_percentage (in %) : "<< covering_percentage_*100 << "/100");
 }
 
-void Bezier::setTranslationMode(bool translation_mode)
+void Bezier::setTranslationMode(const bool translation_mode)
 {
   use_translation_mode_ = translation_mode;
 }
@@ -83,7 +83,7 @@ Eigen::Vector3d Bezier::getSlicingDirection()
   return slicing_dir_;
 }
 
-bool Bezier::loadPLYPolydata(std::string meshname,
+bool Bezier::loadPLYPolydata(const std::string meshname,
                              vtkSmartPointer<vtkPolyData> &poly_data)
 {
   vtkSmartPointer<vtkPLYReader> reader = vtkSmartPointer<vtkPLYReader>::New();
@@ -93,8 +93,8 @@ bool Bezier::loadPLYPolydata(std::string meshname,
   return true;
 }
 
-bool Bezier::savePLYPolyData(std::string meshname,
-                             vtkSmartPointer<vtkPolyData> poly_data)
+bool Bezier::savePLYPolyData(const std::string meshname,
+                             const vtkSmartPointer<vtkPolyData> poly_data)
 {
   vtkSmartPointer<vtkPLYWriter> plyWriter = vtkSmartPointer<vtkPLYWriter>::New();
   plyWriter->SetFileName(meshname.c_str());
@@ -109,7 +109,7 @@ bool Bezier::savePLYPolyData(std::string meshname,
 // These holes are problematic. In fact, when cutting process is called on dilated mesh, slices are divided in some parts due to these holes
 // and this affects the path generation, especially for extrication trajectory. We have to find a solution, perhaps find best parameters
 // in order to resolve this problem.
-bool Bezier::dilation(double depth,
+bool Bezier::dilation(const double depth,
                       vtkSmartPointer<vtkPolyData> &dilated_polydata)
 {
   // Get maximum length of the sides
@@ -210,8 +210,8 @@ bool Bezier::dilation(double depth,
   return true;
 }
 
-bool Bezier::translation(double depth,
-                         vtkSmartPointer<vtkPolyData> poly_data,
+bool Bezier::translation(const double depth,
+                         const vtkSmartPointer<vtkPolyData> poly_data,
                          vtkSmartPointer<vtkPolyData> &translation_poly_data)
 {
   vtkSmartPointer<vtkTransform> translation = vtkSmartPointer<vtkTransform>::New();
@@ -379,7 +379,7 @@ void Bezier::generateSlicingDirection()
   slicing_dir_ = x_vector;
 }
 
-unsigned int Bezier::determineSliceNumberExpected(vtkSmartPointer<vtkPolyData> poly_data)
+unsigned int Bezier::determineSliceNumberExpected(const vtkSmartPointer<vtkPolyData> poly_data)
 {
   // Init with extreme values
   double min_value = std::numeric_limits<double>::max();
@@ -458,9 +458,9 @@ unsigned int Bezier::getRealSliceNumber(vtkSmartPointer<vtkStripper> stripper, E
   return dot_vector.size();
 }
 
-bool Bezier::cutMesh(vtkSmartPointer<vtkPolyData> poly_data,
+bool Bezier::cutMesh(const vtkSmartPointer<vtkPolyData> poly_data,
                      Eigen::Vector3d cut_dir,
-                     unsigned int line_number_expected,
+                     const unsigned int line_number_expected,
                      vtkSmartPointer<vtkStripper> &stripper)
 {
   // Get info about polyData : center point & bounds
@@ -523,9 +523,9 @@ bool Bezier::cutMesh(vtkSmartPointer<vtkPolyData> poly_data,
   return true;
 }
 
-bool Bezier::generateRobotPoses(Eigen::Vector3d point,
-                                Eigen::Vector3d point_next,
-                                Eigen::Vector3d normal,
+bool Bezier::generateRobotPoses(const Eigen::Vector3d point,
+                                const Eigen::Vector3d point_next,
+                                const Eigen::Vector3d normal,
                                 Eigen::Affine3d &pose)
 {
   Eigen::Vector3d normal_x(Eigen::Vector3d().Identity());
@@ -607,7 +607,7 @@ void Bezier::removeNearNeighborPoints(std::vector<std::vector<std::pair<Eigen::V
 }
 
 bool
-Bezier::generateStripperOnSurface (vtkSmartPointer<vtkPolyData> PolyData,
+Bezier::generateStripperOnSurface (const vtkSmartPointer<vtkPolyData> PolyData,
                                    std::vector<std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d> > > &lines)
 {
   // Set slice number (With covering_percentage)
@@ -669,8 +669,8 @@ Bezier::generateStripperOnSurface (vtkSmartPointer<vtkPolyData> PolyData,
   return true;
 }
 
-int Bezier::seekClosestLine(Eigen::Vector3d point_vector,
-                            std::vector<std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d> > > extrication_lines)
+int Bezier::seekClosestLine(const Eigen::Vector3d point_vector,
+                            const std::vector<std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d> > > extrication_lines)
 {
   int index_of_closest_line(0);
   double distance(std::numeric_limits<double>::max());
@@ -695,8 +695,8 @@ int Bezier::seekClosestLine(Eigen::Vector3d point_vector,
 }
 
 // FIXME Combine seekClosestPoint and seekClosestExtricationPassPoint in one function
-int Bezier::seekClosestPoint(Eigen::Vector3d point_vector,
-                             std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d> > extrication_line)
+int Bezier::seekClosestPoint(const Eigen::Vector3d point_vector,
+                             const std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d> > extrication_line)
 {
   int index(0);
   double distance(std::numeric_limits<double>::max());
@@ -719,8 +719,8 @@ int Bezier::seekClosestPoint(Eigen::Vector3d point_vector,
 }
 
 int Bezier::seekClosestExtricationPassPoint(
-    Eigen::Vector3d point_vector,
-    std::vector<Eigen::Affine3d,
+    const Eigen::Vector3d point_vector,
+    const std::vector<Eigen::Affine3d,
     Eigen::aligned_allocator<Eigen::Affine3d> > extrication_poses)
 {
   int index(0);
@@ -741,7 +741,7 @@ int Bezier::seekClosestExtricationPassPoint(
   return index;
 }
 
-bool Bezier::saveDilatedMeshes(std::string path)
+bool Bezier::saveDilatedMeshes(const std::string path)
 {
   if(dilationPolyDataVector_.empty())
     return false;
@@ -1024,8 +1024,8 @@ bool Bezier::generateTrajectory(
 
 void Bezier::displayNormal(std::vector<Eigen::Affine3d,
                            Eigen::aligned_allocator<Eigen::Affine3d> > way_points_vector,
-                           std::vector<bool> points_color_viz,
-                           ros::Publisher &normal_publisher)
+                           const std::vector<bool> points_color_viz,
+                           const ros::Publisher &normal_publisher)
 {
   if(way_points_vector.size() != points_color_viz.size())
     ROS_ERROR_STREAM("Bezier::displayNormal: Path vector and bool vector have different sizes");
@@ -1095,8 +1095,8 @@ void Bezier::displayNormal(std::vector<Eigen::Affine3d,
 void Bezier::displayTrajectory(
     std::vector<Eigen::Affine3d,
     Eigen::aligned_allocator<Eigen::Affine3d> > way_points_vector,
-    std::vector<bool> points_color_viz,
-    ros::Publisher &trajectory_publisher)
+    const std::vector<bool> points_color_viz,
+    const ros::Publisher &trajectory_publisher)
 {
   //check possible error
   if(way_points_vector.size() != points_color_viz.size())
@@ -1153,9 +1153,9 @@ void Bezier::displayTrajectory(
   trajectory_publisher.publish(marker);
 }
 
-void Bezier::displayMesh(ros::Publisher &mesh_publisher,
-                         std::string mesh_path,
-                         float r, float g, float b, float a)
+void Bezier::displayMesh(const ros::Publisher &mesh_publisher,
+                         const std::string mesh_path,
+                         const float r, const float g, const float b, const float a)
 {
   // Create a mesh marker from ply files
   visualization_msgs::Marker mesh_marker;
