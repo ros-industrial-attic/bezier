@@ -77,7 +77,7 @@ public:
    *  @param[in] filename_inputMesh filename of input poly data (input mesh)
    *  @param[in] filename_defectMesh filename of defect poly data (defect mesh)
    *  @param[in] maximum_depth_of_path maximum grinding depth (in meters)
-   *  @param[in] effector_diameter diameter of effector (in meters)
+   *  @param[in] working_line_width width of the tool which is used to cut (in meters)
    *  @param[in] covering_percentage Percentage of covering (decimal value)
    *  @param[in] extrication_coefficient extrication depth equal of the percentage of maximum_depth_of_path (coefficient)
    *  @param[in] extrication_frequency new extrication mesh generated each 1/extrication_frequency times
@@ -86,7 +86,7 @@ public:
   Bezier(const std::string filename_inputMesh,
          const std::string filename_defectMesh,
          const double maximum_depth_of_path,
-         const double effector_diameter,
+         const double working_line_width,
          const double covering_percentage,
          const int extrication_coefficient,
          const int extrication_frequency,
@@ -182,8 +182,8 @@ private:
   /** @brief Grinding depth (in meters) */
   double maximum_depth_of_path_;
 
-  /** @brief Diameter of effector (in meters) */
-  double effector_diameter_;
+  /** @brief width of working tool (in meters) */
+  double working_line_width_;
 
   /** @brief Percentage of covering (decimal value) */
   double covering_percentage_;
@@ -281,14 +281,6 @@ private:
    */
   void
   generateSlicingDirection();
-
-  /** @brief Compute scalar product between @ref slicing_dir_ and all points of the vtkPolyData point cloud
-   *  to to determine the number of lines that should be sliced into the mesh
-   *  @param[in] poly_data mesh to be sliced
-   *  @return Number of lines that should be sliced in order to respect the covering_percentage constraint
-   */
-  unsigned int
-  determineSliceNumberExpected(const vtkSmartPointer<vtkPolyData> poly_data);
 
   /** @brief Allows to compute the real number of slices because if there are holes in the vtkPolyData,
    *  the line number returned by VTK is not the one expected

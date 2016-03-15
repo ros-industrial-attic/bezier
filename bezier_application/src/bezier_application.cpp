@@ -80,8 +80,8 @@ int main(int argc, char **argv)
   normal_publisher        = node.advertise<visualization_msgs::MarkerArray>("my_normals", 1);
 
   // Generate trajectory
-  double covering_percentage = 0.01; //value between 0.0 & 1.0
-  double grind_diameter = 0.05;
+  double covering_percentage = 0.4; //value between 0.0 & 1.0
+  double grind_diameter = 0.03;
   double maximum_depth_of_path = 0.015;
   int extrication_frequency = 5; // Generate a new extrication mesh each 4 passes generated
   int extrication_coefficient = 5;
