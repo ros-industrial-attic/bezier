@@ -1,7 +1,7 @@
 #include "bezier_library/bezier_library.hpp"
 
 Bezier::Bezier() :
-    maximum_depth_of_path_(0.05), effector_diameter_(0.02), covering_percentage_(0.50), extrication_coefficient_(0.5), extrication_frequency_(
+    maximum_depth_of_path_(0.05), working_line_width_(0.02), covering_percentage_(0.50), extrication_coefficient_(0.5), extrication_frequency_(
         1), mesh_normal_vector_(Eigen::Vector3d::Identity()), slicing_dir_(Eigen::Vector3d::Identity()), number_of_normal_markers_published_(0),
         use_translation_mode_ (false)
 {
@@ -12,13 +12,13 @@ Bezier::Bezier() :
 Bezier::Bezier(const std::string filename_inputMesh,
                const std::string filename_defectMesh,
                const double maximum_depth_of_path,
-               const double effector_diameter,
+               const double working_line_width,
                const double covering_percentage,
                const int extrication_coefficient,
                const int extrication_frequency,
                const bool use_translation_mode):
     maximum_depth_of_path_(maximum_depth_of_path),
-    effector_diameter_(effector_diameter),
+    working_line_width_(working_line_width),
     covering_percentage_(covering_percentage),
     extrication_coefficient_(extrication_coefficient),
     extrication_frequency_(extrication_frequency),
@@ -64,7 +64,7 @@ struct lineOrganizerStruct
 void Bezier::printBezierParameters(void)
 {
   ROS_INFO_STREAM(
-      "Bézier parameters" << std::endl << "maximum_depth_of_path (in centimeters) : " << maximum_depth_of_path_*100 << std::endl << "Effector diameter (in centimeters) : " << effector_diameter_*100 << std::endl << "covering_percentage (in %) : "<< covering_percentage_*100 << "/100");
+      "Bézier parameters" << std::endl << "maximum_depth_of_path (in centimeters) : " << maximum_depth_of_path_*100 << std::endl << "Effector diameter (in centimeters) : " << working_line_width_*100 << std::endl << "covering_percentage (in %) : "<< covering_percentage_*100 << "/100");
 }
 
 void Bezier::setTranslationMode(const bool translation_mode)
@@ -409,7 +409,7 @@ unsigned int Bezier::getRealSliceNumber(vtkSmartPointer<vtkStripper> stripper, E
   std::sort(dot_vector.begin(), dot_vector.end());
   // Remove duplicated value or too close values
   unsigned int index = 0;
-  double value = (effector_diameter_ * (1 - covering_percentage_)) / (2 * 10); //2 to get radius, 10 to get 10% of virtual radius as threshold
+  double value = (working_line_width_ * (1 - covering_percentage_)) / (2 * 10); //2 to get radius, 10 to get 10% of virtual radius as threshold
   while (index < (dot_vector.size() - 1))
   {
     if(std::abs(dot_vector[index] - dot_vector[index + 1]) < value)
@@ -444,7 +444,7 @@ bool Bezier::cutMesh(const vtkSmartPointer<vtkPolyData> poly_data,
 
   double distanceMinMax = sqrt(vtkMath::Distance2BetweenPoints(minBound,maxBound));
 
-  double width = effector_diameter_ * (1 - covering_percentage_);
+  double width = working_line_width_ * (1 - covering_percentage_);
   double line_number = std::floor((distanceMinMax) / width);
 
   // Direction for cutter
@@ -466,18 +466,20 @@ bool Bezier::cutMesh(const vtkSmartPointer<vtkPolyData> poly_data,
 
   // This loop will create cuts from center to maximum bound of poly_data, with width like offset between two cuts
   // and will do the same from center to minimum bound of poly_data
-  for(unsigned int i = 0; i < (line_number / 2); i++){
+  for(unsigned int i = 0; i < (line_number / 2); ++i)
+  {
     cutter->SetValue(i + 1, width * (i + 1));
     cutter->SetValue(i + 1 + line_number / 2, -width * (i + 1));
-    cutter->Update();
-    // VTK triangle filter used for stripper
-    vtkSmartPointer<vtkTriangleFilter> triangleFilter = vtkSmartPointer<vtkTriangleFilter>::New();
-    triangleFilter->SetInputConnection(cutter->GetOutputPort());
-    triangleFilter->Update();
-    // VTK Stripper used to generate polylines from cutter
-    stripper->SetInputConnection(triangleFilter->GetOutputPort());
-    stripper->Update();
   }
+
+  cutter->Update();
+  // VTK triangle filter used for stripper
+  vtkSmartPointer<vtkTriangleFilter> triangleFilter = vtkSmartPointer<vtkTriangleFilter>::New();
+  triangleFilter->SetInputConnection(cutter->GetOutputPort());
+  triangleFilter->Update();
+  // VTK Stripper used to generate polylines from cutter
+  stripper->SetInputConnection(triangleFilter->GetOutputPort());
+  stripper->Update();
   return true;
 }
 
@@ -874,7 +876,7 @@ bool Bezier::generateTrajectory(
         index_of_closest_end_point = seekClosestPoint(dilated_end_point, extrication_lines[index_of_closest_line]);
         index_of_closest_start_point = seekClosestPoint(dilated_start_point, extrication_lines[index_of_closest_line]);
       }
-      // Get vector between these indexes
+      // Get vector between these indices
       std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d> > extrication_line(
           extrication_lines[index_of_closest_line].begin() + index_of_closest_start_point,
           extrication_lines[index_of_closest_line].begin() + index_of_closest_end_point);
