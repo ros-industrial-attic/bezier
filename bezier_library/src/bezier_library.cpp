@@ -464,12 +464,22 @@ bool Bezier::cutMesh(const vtkSmartPointer<vtkPolyData> poly_data,
 #endif
   cutter->Update();
 
+  // In the case where line_number_expected is 1, the call of the function SetValue is automatically done
+  // at the creation of the cutter, so we don't have to call it again, because it will create an other
+  // cut which is not expected
+  if(line_number_expected == 1)
+    {
+      line_number = line_number_expected;
+    }
   // This loop will create cuts from center to maximum bound of poly_data, with width like offset between two cuts
   // and will do the same from center to minimum bound of poly_data
-  for(unsigned int i = 0; i < (line_number / 2); ++i)
+  else
   {
-    cutter->SetValue(i + 1, width * (i + 1));
-    cutter->SetValue(i + 1 + line_number / 2, -width * (i + 1));
+    for(unsigned int i = 0; i < (line_number / 2); ++i)
+      {
+        cutter->SetValue(i + 1, width * (i + 1));
+        cutter->SetValue(i + 1 + line_number / 2, -width * (i + 1));
+      }
   }
 
   cutter->Update();
