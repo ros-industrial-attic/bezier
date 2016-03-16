@@ -1066,6 +1066,13 @@ void Bezier::displayTrajectory(
     const std::vector<bool> points_color_viz,
     const ros::Publisher &trajectory_publisher)
 {
+  // Rviz cannot display more than 8192, else the program will crash
+  if(way_points_vector.size() >= 8192)
+  {
+    ROS_ERROR_STREAM("Bezier::displayTrajectory: Rviz cannot display more than 8192 points.");
+    return;
+  }
+
   //check possible error
   if(way_points_vector.size() != points_color_viz.size())
   {
