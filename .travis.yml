@@ -1,0 +1,38 @@
+sudo: required
+dist: trusty
+language: generic
+
+compiler:
+  - gcc
+
+notifications:
+  email:
+    on_failure: never
+
+branches:
+  only:
+    - travis_ci
+
+env:
+  matrix:
+    - USE_DEB=true
+      ROS_DISTRO="indigo"
+      ROS_REPOSITORY_PATH=http://packages.ros.org/ros/ubuntu
+      NOT_TEST_BUILD=true
+      NOT_TEST_INSTALL=true
+    - USE_DEB=true
+      ROS_DISTRO="indigo"
+      ROS_REPOSITORY_PATH=http://packages.ros.org/ros-shadow-fixed/ubuntu
+      NOT_TEST_BUILD=true
+      NOT_TEST_INSTALL=true
+
+install:
+  - git clone https://github.com/ros-industrial/industrial_ci.git .ci_config
+  - git clone https://github.com/ros-industrial/fanuc_experimental.git
+
+script:
+  - source .travis_davidSDK.sh
+  - source .travis_ensensoSDK.sh
+  - source .travis_vtk.sh
+  - source .travis_pcl.sh
+  - source .ci_config/travis.sh
