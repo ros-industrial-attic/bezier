@@ -11,6 +11,7 @@ catkin_package(CATKIN_DEPENDS bezier_library)
 
 include_directories(${VTK_USE_FILE} ${PCL_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS}) # Order matters!
 add_definitions(${PCL_DEFINITIONS} ${VTK_DEFINITIONS})
+link_directories(${catkin_LIBRARY_DIRS})
 
 add_executable (bezier_application src/bezier_application.cpp)
 set_property(TARGET bezier_application APPEND_STRING PROPERTY COMPILE_FLAGS -Wall)

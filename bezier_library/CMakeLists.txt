@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 2.8.3)
-set (CMAKE_CXX_FLAGS "-fPIC")
 project(bezier_library)
 
 find_package(catkin REQUIRED COMPONENTS roscpp)
@@ -16,7 +15,7 @@ include_directories(include ${VTK_USE_FILE} ${PCL_INCLUDE_DIRS} ${catkin_INCLUDE
 add_definitions(${PCL_DEFINITIONS}) # ${VTK_DEFINITIONS} crashes compilation
 
 add_library (bezier_library_obj OBJECT src/bezier_library.cpp)
-set_property(TARGET bezier_library_obj APPEND_STRING PROPERTY COMPILE_FLAGS -Wall)
+set_property(TARGET bezier_library_obj APPEND_STRING PROPERTY COMPILE_FLAGS "-fPIC -Wall")
 add_library (${PROJECT_NAME} $<TARGET_OBJECTS:bezier_library_obj>)
 
 install(
