@@ -779,9 +779,8 @@ bool Bezier::generateTrajectory(
     ROS_INFO_STREAM("Please wait : translation in progress");
   else
     ROS_INFO_STREAM("Please wait : dilation in progress");
-  dilationPolyDataVector_.push_back(inputPolyData_);
   bool intersection_flag = true;  // Flag variable : dilate while dilated mesh intersect defect mesh
-  double depth = maximum_depth_of_path_;  // Depth between input mesh and dilated mesh
+  double depth = 0;  // Depth between input mesh and dilated mesh
 
   while (intersection_flag)
   {
@@ -790,7 +789,29 @@ bool Bezier::generateTrajectory(
     if(use_translation_mode_)
       flag_expansion = translation(depth, inputPolyData_, expanded_polydata);
     else
-     flag_expansion = dilation(depth, expanded_polydata);
+    {
+      // Add inputPolyData_ as first expanded_polydata, in order to compute intersection between input and defect
+      if(depth == 0)
+      {
+        expanded_polydata->DeepCopy(inputPolyData_);
+        // if expanded_polydata have not normals, they are computed
+        if(expanded_polydata->GetPointData()->GetNormals() == 0)
+        {
+          generatePointNormals(expanded_polydata);
+        }
+        // Reverse normals sense
+        vtkSmartPointer<vtkReverseSense> normalReverser = vtkSmartPointer<vtkReverseSense>::New();
+        normalReverser->SetInputData(expanded_polydata);
+        normalReverser->ReverseNormalsOn();
+        normalReverser->Update();
+        expanded_polydata = normalReverser->GetOutput();
+        flag_expansion = true;
+      }
+      else
+      {
+        flag_expansion = dilation(depth, expanded_polydata);
+      }
+    }
     vtkSmartPointer<vtkPolyData> temp_polydata = vtkSmartPointer<vtkPolyData>::New(); //Ignore collision in translation process fixme
     temp_polydata->ShallowCopy(expanded_polydata);
     if(flag_expansion && defectIntersectionOptimisation(expanded_polydata)
