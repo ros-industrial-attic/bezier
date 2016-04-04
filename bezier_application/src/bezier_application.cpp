@@ -105,6 +105,7 @@ int main(int argc, char **argv)
   // Initialize move group
     group.reset(new move_group_interface::MoveGroup("grinding_disk"));
     group->setPoseReferenceFrame("/base_link");
+    group->setPlannerId("RRTConnectkConfigDefault");
     group->setPlanningTime(2);
 
   while (ros::ok())
