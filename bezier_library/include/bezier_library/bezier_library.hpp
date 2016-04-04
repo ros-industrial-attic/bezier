@@ -76,6 +76,8 @@ public:
   /** @brief Initialized constructor
    *  @param[in] filename_inputMesh filename of input poly data (input mesh)
    *  @param[in] filename_defectMesh filename of defect poly data (defect mesh)
+   *  @param[in] lean_angle_axis rotation axis for the lean angle
+   *  @param[in] angle_value rotation value (in radians) around lean_angle_axis
    *  @param[in] maximum_depth_of_path maximum grinding depth (in meters)
    *  @param[in] working_line_width width of the tool which is used to cut (in meters)
    *  @param[in] covering_percentage Percentage of covering (decimal value)
@@ -85,6 +87,8 @@ public:
    */
   Bezier(const std::string filename_inputMesh,
          const std::string filename_defectMesh,
+         const std::string lean_angle_axis,
+         const double angle_value,
          const double maximum_depth_of_path,
          const double working_line_width,
          const double covering_percentage,
@@ -178,6 +182,12 @@ private:
 
   /** @brief Vector containing several dilated meshes */
   std::vector<vtkSmartPointer<vtkPolyData> > dilationPolyDataVector_;
+
+  /** @brief Lean angle axis (string) */
+  std::string lean_angle_axis_;
+
+  /** @brief angle_value_ */
+  double angle_value_;
 
   /** @brief Grinding depth (in meters) */
   double maximum_depth_of_path_;
@@ -371,6 +381,17 @@ private:
   seekClosestExtricationPassPoint(
       const Eigen::Vector3d point_vector,
       const std::vector<Eigen::Affine3d, Eigen::aligned_allocator<Eigen::Affine3d> > extrication_poses);
+
+  /** @brief Function used to provide a lean angle for effector
+   * @param[in, out] pose rotation matrix modified with the lean angle
+   * @param[in] lean_angle_axis axis of rotation
+   * @param[in] angle_value value of angle of rotation (radians)
+   * @return True if rotation is successful, false otherwise
+   */
+  bool
+  applyLeanAngle(Eigen::Affine3d &pose,
+                 const std::string lean_angle_axis,
+                 const double angle_value);
 };
 
 #endif

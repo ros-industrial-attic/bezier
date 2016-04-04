@@ -80,12 +80,14 @@ int main(int argc, char **argv)
   normal_publisher        = node.advertise<visualization_msgs::MarkerArray>("my_normals", 1);
 
   // Generate trajectory
+  std::string lean_angle_axis = "y";
+  double angle_value = -0.3;
   double covering_percentage = 0.4; //value between 0.0 & 1.0
   double grind_diameter = 0.03;
   double maximum_depth_of_path = 0.015;
   int extrication_frequency = 5; // Generate a new extrication mesh each 4 passes generated
   int extrication_coefficient = 5;
-  Bezier bezier_planner(mesh_original, mesh_defect, maximum_depth_of_path, grind_diameter, covering_percentage,
+  Bezier bezier_planner(mesh_original, mesh_defect, lean_angle_axis, angle_value, maximum_depth_of_path, grind_diameter, covering_percentage,
                         extrication_coefficient, extrication_frequency, false);
   std::vector<bool> points_color_viz;
   std::vector<Eigen::Affine3d, Eigen::aligned_allocator<Eigen::Affine3d> > way_points_vector;

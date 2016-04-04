@@ -1,7 +1,7 @@
 #include "bezier_library/bezier_library.hpp"
 
 Bezier::Bezier() :
-    maximum_depth_of_path_(0.05), working_line_width_(0.02), covering_percentage_(0.50), extrication_coefficient_(0.5), extrication_frequency_(
+        lean_angle_axis_(std::string()), angle_value_(0.0), maximum_depth_of_path_(0.05), working_line_width_(0.02), covering_percentage_(0.50), extrication_coefficient_(0.5), extrication_frequency_(
         1), mesh_normal_vector_(Eigen::Vector3d::Identity()), slicing_dir_(Eigen::Vector3d::Identity()), number_of_normal_markers_published_(0),
         use_translation_mode_ (false)
 {
@@ -11,12 +11,16 @@ Bezier::Bezier() :
 
 Bezier::Bezier(const std::string filename_inputMesh,
                const std::string filename_defectMesh,
+               const std::string lean_angle_axis,
+               const double angle_value,
                const double maximum_depth_of_path,
                const double working_line_width,
                const double covering_percentage,
                const int extrication_coefficient,
                const int extrication_frequency,
                const bool use_translation_mode):
+    lean_angle_axis_(lean_angle_axis),
+    angle_value_(angle_value),
     maximum_depth_of_path_(maximum_depth_of_path),
     working_line_width_(working_line_width),
     covering_percentage_(covering_percentage),
@@ -526,7 +530,7 @@ bool Bezier::generateRobotPoses(const Eigen::Vector3d point,
   pose.linear().col(1) << normal_y[0], normal_y[1], normal_y[2];
   pose.linear().col(2) << normal_z[0], normal_z[1], normal_z[2];
 
-  return true;
+  return (applyLeanAngle(pose,lean_angle_axis_,angle_value_));
 }
 
 void Bezier::harmonizeLinesOrientation(std::vector<std::vector<std::pair<Eigen::Vector3d,
@@ -723,6 +727,37 @@ bool Bezier::saveDilatedMeshes(const std::string path)
     ROS_INFO_STREAM(file << " saved successfully");
   }
   return true;
+}
+
+bool Bezier::applyLeanAngle(Eigen::Affine3d &pose,
+                            const std::string lean_angle_axis,
+                            const double angle_value)
+{
+  // Check if axis of rotation given is known
+  if(lean_angle_axis != "x" && lean_angle_axis != "y" && lean_angle_axis != "z")
+  {
+    ROS_ERROR_STREAM("Bezier::applyLeanAngle: lean angle provide is not correct. Trajectory will be computed with no angle");
+    return false;
+  }
+
+  else
+  {
+    // Will provide effector angle with axis of rotation and angle value ( in radians ).
+    if(lean_angle_axis == "x")
+    {
+      pose.rotate(Eigen::AngleAxisd(angle_value, Eigen::Vector3d::UnitX()));
+    }
+    else if(lean_angle_axis == "y")
+    {
+      pose.rotate(Eigen::AngleAxisd(angle_value, Eigen::Vector3d::UnitY()));
+    }
+    else
+    {
+      pose.rotate(Eigen::AngleAxisd(angle_value, Eigen::Vector3d::UnitZ()));
+    }
+    return true;
+  }
+
 }
 
 //////////////////// PUBLIC MEMBERS ////////////////////
