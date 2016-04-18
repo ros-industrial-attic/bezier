@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(bezier_library)
 
-find_package(catkin REQUIRED COMPONENTS roscpp)
+find_package(catkin REQUIRED COMPONENTS pcl_conversions
+                                        roscpp)
 find_package(PCL 1.8.0 REQUIRED)
 find_package(VTK 7.0 REQUIRED) # You need https://gitlab.kitware.com/vtk/vtk/merge_requests/213
 include(${VTK_USE_FILE})
