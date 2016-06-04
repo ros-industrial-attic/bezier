@@ -24,11 +24,9 @@ env:
 
 install:
   - git clone https://github.com/ros-industrial/industrial_ci.git .ci_config
+  - git clone https://github.com/InstitutMaupertuis/advanced_industrial_ci.git .advanced_ci_config
   - git clone https://github.com/ros-industrial/fanuc_experimental.git
 
 script:
-  - source .travis_davidSDK.sh
-  - source .travis_ensensoSDK.sh
-  - source .travis_vtk.sh
-  - source .travis_pcl.sh
+  - cd .advanced_ci_config && source ./travis_pcl.sh && cd ..
   - source .ci_config/travis.sh
