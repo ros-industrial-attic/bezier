@@ -1,30 +1,16 @@
 #ifndef BEZIER_LIBRARY_HPP
 #define BEZIER_LIBRARY_HPP
 
-#include <string>
-#include <limits>
-
 // PCL headers
-#include <pcl/PCLPointCloud2.h>
-#include <pcl/PolygonMesh.h>
-#include <pcl_conversions/pcl_conversions.h>
-#include <pcl/filters/filter.h>
-#include <pcl/io/ply_io.h>
-#include <pcl/io/vtk_lib_io.h>
 #include <pcl/segmentation/sac_segmentation.h>
 #include <pcl/surface/vtk_smoothing/vtk_utils.h>
 
-// Eigen headers
-#include <eigen_conversions/eigen_msg.h>
-#include <Eigen/StdVector>
-#include <Eigen/Dense>
-
 // VTK headers
-#include <vtkVersion.h>
 #include <vtkMath.h>
-#include <vtkSmartPointer.h>
 #include <vtkPLYReader.h>
 #include <vtkPLYWriter.h>
+#include <vtkPointData.h>
+#include <vtkFloatArray.h>
 #include <vtkPolyData.h>
 #include <vtkPolyDataNormals.h>
 #include <vtkPlane.h>
@@ -46,8 +32,6 @@
 #include <ros/ros.h>
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
-
-#include <boost/lexical_cast.hpp>
 
 /**
  * @file bezier_library.hpp
