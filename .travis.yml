@@ -9,10 +9,6 @@ notifications:
   email:
     on_failure: never
 
-branches:
-  only:
-    - travis_ci
-
 env:
   matrix:
     - USE_DEB=true
