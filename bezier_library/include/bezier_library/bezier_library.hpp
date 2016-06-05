@@ -113,7 +113,7 @@ public:
    *  @note Boolean vector and trajectory vector must be the same size
    **/
   void
-  displayNormal(std::vector<Eigen::Affine3d, Eigen::aligned_allocator<Eigen::Affine3d> > way_points_vector,
+  displayNormal(const std::vector<Eigen::Affine3d, Eigen::aligned_allocator<Eigen::Affine3d> > &way_points_vector,
                 const std::vector<bool> points_color_viz,
                 const ros::Publisher &normal_publisher);
 
@@ -124,7 +124,7 @@ public:
    *  @note Boolean vector and trajectory vector must be the same size
    */
   void
-  displayTrajectory(std::vector<Eigen::Affine3d, Eigen::aligned_allocator<Eigen::Affine3d> > way_points_vector,
+  displayTrajectory(const std::vector<Eigen::Affine3d, Eigen::aligned_allocator<Eigen::Affine3d> > &way_points_vector,
                     const std::vector<bool> points_color_viz,
                     const ros::Publisher &trajectory_publisher);
 
@@ -284,7 +284,7 @@ private:
    */
   unsigned int
   getRealSliceNumber(vtkSmartPointer<vtkStripper> stripper,
-                     Eigen::Vector3d vector_dir);
+                     const Eigen::Vector3d &vector_dir);
 
   /** @brief Slices a vtkPolyData, the result is a series of lines stored into a vtkStripper
    *  @param[in] PolyData vtkPolyData represents the mesh to be cut
@@ -295,7 +295,7 @@ private:
    */
   bool
   cutMesh(const vtkSmartPointer<vtkPolyData> PolyData,
-          Eigen::Vector3d cut_dir,
+          const Eigen::Vector3d &cut_dir,
           const unsigned int line_number_expected,
           vtkSmartPointer<vtkStripper> &stripper);
 
@@ -322,9 +322,9 @@ private:
    *  @return True if successful, false otherwise
    */
   bool
-  generateRobotPoses(const Eigen::Vector3d point,
-                     const Eigen::Vector3d point_next,
-                     const Eigen::Vector3d normal,
+  generateRobotPoses(const Eigen::Vector3d &point,
+                     const Eigen::Vector3d &point_next,
+                     const Eigen::Vector3d &normal,
                      Eigen::Affine3d &pose);
 
   /** @brief Generates 3D robot trajectories on a vtkPolyData
@@ -343,8 +343,8 @@ private:
    *  @return Value equal to index of closest line in extrication_lines vector.
    */
   int
-  seekClosestLine(const Eigen::Vector3d point_vector,
-                  const std::vector<std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d> > > extrication_lines);
+  seekClosestLine(const Eigen::Vector3d &point_vector,
+                  const std::vector<std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d> > > &extrication_lines);
 
   /** @brief Function used for extrication path. Extrication between two lines. It allows to find the closest extrication point of a point in a line.
    *  @param[in] point_vector Eigen vector of point position
@@ -353,8 +353,8 @@ private:
    *  @return Value equal to index of closest point in extrication_line vector
    */
   int
-  seekClosestPoint(const Eigen::Vector3d point_vector,
-                   const std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d> > extrication_line);
+  seekClosestPoint(const Eigen::Vector3d &point_vector,
+                   const std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d> > &extrication_line);
 
   /** @brief Function used for extrication path. Extrication between two passes. It allows to find the closest extrication point of a point in the last extrication line
    *  @param[in] point_vector Eigen vector of point position
@@ -363,8 +363,8 @@ private:
    */
   int
   seekClosestExtricationPassPoint(
-      const Eigen::Vector3d point_vector,
-      const std::vector<Eigen::Affine3d, Eigen::aligned_allocator<Eigen::Affine3d> > extrication_poses);
+      const Eigen::Vector3d &point_vector,
+      const std::vector<Eigen::Affine3d, Eigen::aligned_allocator<Eigen::Affine3d> > &extrication_poses);
 
   /** @brief Function used to provide a lean angle for effector
    * @param[in, out] pose rotation matrix modified with the lean angle
@@ -376,6 +376,8 @@ private:
   applyLeanAngle(Eigen::Affine3d &pose,
                  const std::string lean_angle_axis,
                  const double angle_value);
+
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
 
 #endif
