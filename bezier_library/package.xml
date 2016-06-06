@@ -11,10 +11,8 @@
 
   <build_depend>roscpp</build_depend>
   <build_export_depend>roscpp</build_export_depend>
-  <build_depend>pcl_conversions</build_depend>
 
   <exec_depend>roscpp</exec_depend>
-  <exec_depend>pcl_conversions</exec_depend>
 
   <export>
     <rosdoc config="doc/rosdoc.yaml" />
