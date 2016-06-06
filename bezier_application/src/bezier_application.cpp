@@ -15,17 +15,6 @@
 
 #include <Eigen/StdVector>
 
-/**
- * @file bezier_application.hpp
- * @brief This is an application using bezier_library.
- * @author Francois Lasson, Kévin Bolloré - Institut Maupertuis (France)
- * @date Project started in February 2015
- */
-/**@mainpage This application is a test of bezier_library.
- * It has been developed for a Fanuc M10iA Robot.
- * Look at the [documentation](https://github.com/ros-industrial-consortium/bezier/blob/indigo-devel/README.md) in order to have more information.
- */
-
 /** Pointer to the move group */
 boost::shared_ptr<move_group_interface::MoveGroup> group;
 
@@ -50,7 +39,7 @@ int main(int argc, char **argv)
   // Get package path
   std::string package_path = ros::package::getPath(package);
   std::string meshes_path = package_path + "/meshes/";
-  std::string mesh_ressource = "package://" + package + "/meshes/";
+  std::string mesh_ressources = "package://" + package + "/meshes/";
 
   // Get PLY file name from command line
   std::string input_mesh_filename;
@@ -60,7 +49,7 @@ int main(int argc, char **argv)
     ROS_INFO_STREAM("Mesh file imported :" << input_mesh_filename);
   else
   {
-    ROS_WARN_STREAM("Command line error in file set up." << std::endl <<
+    ROS_ERROR_STREAM("Command line error in file set up." << std::endl <<
                     "Usage :" << std::endl << "roslaunch my_path_generator path_generator.launch meshname:=meshname.ply");
     return -1;
   }
@@ -94,12 +83,17 @@ int main(int argc, char **argv)
   std::vector<int> index_vector;
 
   // Display in RVIZ
-  bezier_planner.displayMesh(input_mesh_publisher, mesh_ressource + input_mesh_filename);
-  bezier_planner.displayMesh(defect_mesh_publisher, mesh_ressource + defect_mesh_filename, 0.1, 0.1, 0.1, 0.6);
+  bezier_planner.displayMesh(input_mesh_publisher, mesh_ressources + input_mesh_filename);
+  bezier_planner.displayMesh(defect_mesh_publisher, mesh_ressources + defect_mesh_filename, 0.1, 0.1, 0.1, 0.6);
   bezier_planner.generateTrajectory(way_points_vector, points_color_viz, index_vector);
 
   // Save dilated meshes
-  bezier_planner.saveDilatedMeshes(meshes_path + "dilatedMeshes");
+  // Create directory
+  boost::filesystem::path dir(meshes_path + "dilated_meshes");
+  if (!boost::filesystem::create_directory(dir))
+      ROS_WARN_STREAM(meshes_path + "dilated_meshes" << " directory could not be created.");
+  // Save
+  bezier_planner.saveDilatedMeshes(meshes_path + "dilated_meshes");
 
   // Execute robot trajectory
   // Initialize move group
@@ -120,7 +114,7 @@ int main(int argc, char **argv)
                                     points_color_viz.begin() + index_vector[i + 1]);
 
       std::string number(boost::lexical_cast<std::string>(i));
-      bezier_planner.displayMesh(dilated_mesh_publisher, mesh_ressource + "dilatedMeshes/mesh_" + number + ".ply");
+      bezier_planner.displayMesh(dilated_mesh_publisher, mesh_ressources + "dilated_meshes/mesh_" + number + ".ply");
       bezier_planner.displayTrajectory(way_points_vector_pass, points_color_viz_pass, trajectory_publisher); // Display trajectory in this pass
       //bezier_planner.displayNormal(way_points_vector_pass, points_color_viz_pass, normal_publisher); // Display normals in this pass
 
@@ -145,7 +139,11 @@ int main(int argc, char **argv)
       srv.request.wait_for_execution = true;
       ros::ServiceClient executeKnownTrajectoryServiceClient = node.serviceClient<moveit_msgs::ExecuteKnownTrajectory>(
           "/execute_kinematic_path");
-      group->computeCartesianPath(way_points_msg, 0.05, 0.0, srv.request.trajectory);
+      if (group->computeCartesianPath(way_points_msg, 0.05, 0.0, srv.request.trajectory) < 0.95)
+      {
+        ROS_ERROR_STREAM("A solution could not be found to move the robot along the trajectory, aborting.");
+        return -1;
+      }
       executeKnownTrajectoryServiceClient.call(srv);
 
       // Return to first point
@@ -157,5 +155,9 @@ int main(int argc, char **argv)
       sleep(1);
     }
   }
+
+  while (node.ok())
+  {}
+  spinner.stop();
   return 0;
 }
