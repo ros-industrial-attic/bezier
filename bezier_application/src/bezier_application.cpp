@@ -14,6 +14,7 @@
 #include <visualization_msgs/MarkerArray.h>
 
 #include <Eigen/StdVector>
+#include <boost/filesystem.hpp>
 
 /** Pointer to the move group */
 boost::shared_ptr<move_group_interface::MoveGroup> group;
