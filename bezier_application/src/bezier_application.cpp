@@ -4,7 +4,6 @@
 #include <ros/ros.h>
 #include <ros/package.h>
 #include <eigen_conversions/eigen_msg.h>
-#include <pcl_ros/point_cloud.h>
 #include <moveit/move_group_interface/move_group.h>
 #include <moveit/planning_interface/planning_interface.h>
 #include <tf/transform_listener.h>
