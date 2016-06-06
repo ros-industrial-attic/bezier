@@ -383,7 +383,7 @@ void Bezier::generateSlicingDirection()
   slicing_dir_ = x_vector;
 }
 
-unsigned int Bezier::getRealSliceNumber(vtkSmartPointer<vtkStripper> stripper, Eigen::Vector3d vector_dir)
+unsigned int Bezier::getRealSliceNumber(vtkSmartPointer<vtkStripper> stripper, const Eigen::Vector3d &vector_dir)
 {
   //vtkIdType numberOfLines = stripper->GetOutput()->GetNumberOfLines();
   vtkPoints *points = stripper->GetOutput()->GetPoints();
@@ -431,7 +431,7 @@ unsigned int Bezier::getRealSliceNumber(vtkSmartPointer<vtkStripper> stripper, E
 }
 
 bool Bezier::cutMesh(const vtkSmartPointer<vtkPolyData> poly_data,
-                     Eigen::Vector3d cut_dir,
+                     const Eigen::Vector3d &cut_dir,
                      const unsigned int line_number_expected,
                      vtkSmartPointer<vtkStripper> &stripper)
 {
@@ -451,13 +451,10 @@ bool Bezier::cutMesh(const vtkSmartPointer<vtkPolyData> poly_data,
   double width = working_line_width_ * (1 - covering_percentage_);
   double line_number = std::floor((distanceMinMax) / width);
 
-  // Direction for cutter
-  cut_dir.normalize();
-
   // Create a plane to cut mesh
   vtkSmartPointer<vtkPlane> plane = vtkSmartPointer<vtkPlane>::New();
   plane->SetOrigin(poly_data->GetCenter());
-  plane->SetNormal(cut_dir[0], cut_dir[1], cut_dir[2]);
+  plane->SetNormal(cut_dir.normalized()[0], cut_dir.normalized()[1], cut_dir.normalized()[2]);
   // Create a cutter
   vtkSmartPointer<vtkCutter> cutter = vtkSmartPointer<vtkCutter>::New();
   cutter->SetCutFunction(plane);
@@ -497,14 +494,14 @@ bool Bezier::cutMesh(const vtkSmartPointer<vtkPolyData> poly_data,
   return true;
 }
 
-bool Bezier::generateRobotPoses(const Eigen::Vector3d point,
-                                const Eigen::Vector3d point_next,
-                                const Eigen::Vector3d normal,
+bool Bezier::generateRobotPoses(const Eigen::Vector3d &point,
+                                const Eigen::Vector3d &point_next,
+                                const Eigen::Vector3d &normal,
                                 Eigen::Affine3d &pose)
 {
-  Eigen::Vector3d normal_x(Eigen::Vector3d().Identity());
-  Eigen::Vector3d normal_y(Eigen::Vector3d().Identity());
-  Eigen::Vector3d normal_z = Eigen::Vector3d(normal[0], normal[1], normal[2]);
+  Eigen::Vector3d normal_x;
+  Eigen::Vector3d normal_y;
+  Eigen::Vector3d normal_z (normal);
   normal_x = point_next - point;  // Next point direction
   if(normal_x == Eigen::Vector3d::Zero())
   {
@@ -524,11 +521,11 @@ bool Bezier::generateRobotPoses(const Eigen::Vector3d point,
     return false;
   // Else generate matrix (pose)
   // Translation
-  pose.translation() << point[0], point[1], point[2];
+  pose.translation() << point;
   // Rotation
-  pose.linear().col(0) << normal_x[0], normal_x[1], normal_x[2];
-  pose.linear().col(1) << normal_y[0], normal_y[1], normal_y[2];
-  pose.linear().col(2) << normal_z[0], normal_z[1], normal_z[2];
+  pose.linear().col(0) << normal_x;
+  pose.linear().col(1) << normal_y;
+  pose.linear().col(2) << normal_z;
 
   return (applyLeanAngle(pose,lean_angle_axis_,angle_value_));
 }
@@ -641,8 +638,9 @@ Bezier::generateStripperOnSurface (const vtkSmartPointer<vtkPolyData> PolyData,
   return true;
 }
 
-int Bezier::seekClosestLine(const Eigen::Vector3d point_vector,
-                            const std::vector<std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d> > > extrication_lines)
+
+int Bezier::seekClosestLine(const Eigen::Vector3d &point_vector,
+                            const std::vector<std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d> > > &extrication_lines)
 {
   int index_of_closest_line(0);
   double distance(std::numeric_limits<double>::max());
@@ -667,8 +665,8 @@ int Bezier::seekClosestLine(const Eigen::Vector3d point_vector,
 }
 
 // FIXME Combine seekClosestPoint and seekClosestExtricationPassPoint in one function
-int Bezier::seekClosestPoint(const Eigen::Vector3d point_vector,
-                             const std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d> > extrication_line)
+int Bezier::seekClosestPoint(const Eigen::Vector3d &point_vector,
+                             const std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d> > &extrication_line)
 {
   int index(0);
   double distance(std::numeric_limits<double>::max());
@@ -691,9 +689,8 @@ int Bezier::seekClosestPoint(const Eigen::Vector3d point_vector,
 }
 
 int Bezier::seekClosestExtricationPassPoint(
-    const Eigen::Vector3d point_vector,
-    const std::vector<Eigen::Affine3d,
-    Eigen::aligned_allocator<Eigen::Affine3d> > extrication_poses)
+    const Eigen::Vector3d &point_vector,
+    const std::vector<Eigen::Affine3d, Eigen::aligned_allocator<Eigen::Affine3d> > &extrication_poses)
 {
   int index(0);
   double distance(std::numeric_limits<double>::max());
@@ -740,24 +737,15 @@ bool Bezier::applyLeanAngle(Eigen::Affine3d &pose,
     return false;
   }
 
+  // Will provide effector angle with axis of rotation and angle value ( in radians ).
+  if(lean_angle_axis == "x")
+    pose.rotate(Eigen::AngleAxisd(angle_value, Eigen::Vector3d::UnitX()));
+  else if(lean_angle_axis == "y")
+    pose.rotate(Eigen::AngleAxisd(angle_value, Eigen::Vector3d::UnitY()));
   else
-  {
-    // Will provide effector angle with axis of rotation and angle value ( in radians ).
-    if(lean_angle_axis == "x")
-    {
-      pose.rotate(Eigen::AngleAxisd(angle_value, Eigen::Vector3d::UnitX()));
-    }
-    else if(lean_angle_axis == "y")
-    {
-      pose.rotate(Eigen::AngleAxisd(angle_value, Eigen::Vector3d::UnitY()));
-    }
-    else
-    {
-      pose.rotate(Eigen::AngleAxisd(angle_value, Eigen::Vector3d::UnitZ()));
-    }
-    return true;
-  }
+    pose.rotate(Eigen::AngleAxisd(angle_value, Eigen::Vector3d::UnitZ()));
 
+  return true;
 }
 
 //////////////////// PUBLIC MEMBERS ////////////////////
@@ -897,7 +885,7 @@ bool Bezier::generateTrajectory(
           next_point = lines[index_line][index_point].first;
           normal = lines[index_line][index_point - 1].second;
           flag_isFinite = generateRobotPoses(point, next_point, normal, pose);
-          pose.translation() << next_point[0], next_point[1], next_point[2];
+          pose.translation() << next_point;
         }
         if(index_point == 0)
         {  // First point in line
@@ -923,8 +911,8 @@ bool Bezier::generateTrajectory(
         break;
       Eigen::Vector3d end_point(end_pose.translation() + dist_to_extrication_mesh * end_pose.linear().col(0));
       Eigen::Vector3d dilated_end_point(end_pose.translation() - dist_to_extrication_mesh * end_pose.linear().col(2));
-      Eigen::Vector3d dilated_start_point(
-          start_pose.translation() - dist_to_extrication_mesh * start_pose.linear().col(2));
+      Eigen::Vector3d dilated_start_point(start_pose.translation()
+                                          - dist_to_extrication_mesh * start_pose.linear().col(2));
       // Seek closest line in extrication lines
       int index_of_closest_line = seekClosestLine(end_point, extrication_lines);
       // Seek for dilated_end_point neighbor in extrication line
@@ -942,10 +930,12 @@ bool Bezier::generateTrajectory(
         index_of_closest_end_point = seekClosestPoint(dilated_end_point, extrication_lines[index_of_closest_line]);
         index_of_closest_start_point = seekClosestPoint(dilated_start_point, extrication_lines[index_of_closest_line]);
       }
+
       // Get vector between these indices
       std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d> > extrication_line(
           extrication_lines[index_of_closest_line].begin() + index_of_closest_start_point,
           extrication_lines[index_of_closest_line].begin() + index_of_closest_end_point);
+
       // Generate pose on this vector (line)
       Eigen::Affine3d pose(start_pose);
       Eigen::Vector3d point(Eigen::Vector3d::Identity());
@@ -960,6 +950,7 @@ bool Bezier::generateTrajectory(
           color_vector.push_back(false);
         }
       }
+
       // Reverse extrication pose
       std::reverse(extrication_poses.begin(), extrication_poses.end());
       way_points_vector.insert(way_points_vector.end(), extrication_poses.begin(), extrication_poses.end());
@@ -1046,8 +1037,7 @@ bool Bezier::generateTrajectory(
   return true;
 }
 
-void Bezier::displayNormal(std::vector<Eigen::Affine3d,
-                           Eigen::aligned_allocator<Eigen::Affine3d> > way_points_vector,
+void Bezier::displayNormal(const std::vector<Eigen::Affine3d, Eigen::aligned_allocator<Eigen::Affine3d> > &way_points_vector,
                            const std::vector<bool> points_color_viz,
                            const ros::Publisher &normal_publisher)
 {
@@ -1117,8 +1107,7 @@ void Bezier::displayNormal(std::vector<Eigen::Affine3d,
 }
 
 void Bezier::displayTrajectory(
-    std::vector<Eigen::Affine3d,
-    Eigen::aligned_allocator<Eigen::Affine3d> > way_points_vector,
+    const std::vector<Eigen::Affine3d, Eigen::aligned_allocator<Eigen::Affine3d> > &way_points_vector,
     const std::vector<bool> points_color_viz,
     const ros::Publisher &trajectory_publisher)
 {
