@@ -11,7 +11,6 @@
 
   <build_depend>roscpp</build_depend>
   <build_depend>bezier_library</build_depend>
-  <build_depend>pcl_ros</build_depend>
   <build_depend>tf</build_depend>
   <build_depend>tf_conversions</build_depend>
   <build_depend>visualization_msgs</build_depend>
@@ -20,5 +19,4 @@
 
   <exec_depend>roscpp</exec_depend>
   <exec_depend>bezier_library</exec_depend>
-  <exec_depend>pcl_ros</exec_depend>
 </package>
