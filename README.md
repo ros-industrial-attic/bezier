@@ -17,6 +17,8 @@ This project goal is to create an automatic grinding path generator for 6-axis r
 Bezier planner generates robot poses (3D trajectories) in harmony with a grinding process.
 It is able to create rectilinear trajectories on complicated surfaces (3D surfaces) and to dilate them in all directions in order to grind defects with a pass principle.
 
+![bezier_application](bezier_library/doc/bezier_application.png)
+
 Directories in the project
 --------------------------
 
