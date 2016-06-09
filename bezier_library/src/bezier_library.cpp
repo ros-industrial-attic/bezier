@@ -29,7 +29,8 @@ Bezier::Bezier(const std::string filename_inputMesh,
     mesh_normal_vector_(Eigen::Vector3d::Identity()),
     slicing_dir_(Eigen::Vector3d::Identity()),
     number_of_normal_markers_published_(0),
-    use_translation_mode_ (use_translation_mode)
+    use_translation_mode_ (use_translation_mode),
+    surfacing_(false)
 {
   inputPolyData_ = vtkSmartPointer<vtkPolyData>::New();
   if(!loadPLYPolydata(filename_inputMesh, inputPolyData_))
@@ -79,6 +80,27 @@ void Bezier::setTranslationMode(const bool translation_mode)
 bool Bezier::getTranslationMode()
 {
   return use_translation_mode_;
+}
+
+void Bezier::setSurfacingOn()
+{
+  ROS_INFO_STREAM("Bezier::setSurfacingOn : Running in surfacing mode");
+  surfacing_ = true;
+}
+
+void Bezier::setSurfacingOff()
+{
+  surfacing_ = false;
+}
+
+void Bezier::setSurfacing(const bool surfacing_mode)
+{
+  surfacing_ = surfacing_mode;
+}
+
+bool Bezier::getSurfacing() const
+{
+  return surfacing_;
 }
 
 //////////////////// PRIVATE FUNCTIONS ////////////////////
@@ -766,11 +788,16 @@ bool Bezier::generateTrajectory(
   if(use_translation_mode_)
     ROS_INFO_STREAM("Please wait : translation in progress");
   else
-    ROS_INFO_STREAM("Please wait : dilation in progress");
+  {
+    if(surfacing_)
+      ROS_INFO_STREAM("Please wait : surfacing in progress");
+    else
+      ROS_INFO_STREAM("Please wait : dilation in progress");
+  }
   bool intersection_flag = true;  // Flag variable : dilate while dilated mesh intersect defect mesh
   double depth = 0;  // Depth between input mesh and dilated mesh
-
-  while (intersection_flag)
+  bool surfacing_interrupt = false;
+  while (intersection_flag && !surfacing_interrupt)
   {
     vtkSmartPointer<vtkPolyData> expanded_polydata = vtkSmartPointer<vtkPolyData>::New();
     bool flag_expansion(false);
@@ -778,6 +805,15 @@ bool Bezier::generateTrajectory(
       flag_expansion = translation(depth, inputPolyData_, expanded_polydata);
     else
     {
+      if(surfacing_)
+      {
+        ROS_INFO_STREAM("Surfacing Mode operation");
+        // We Interrupt the while loop after the first pass in order to make only a surface grinding
+        // In this case, the dilation will not be perform. The if(depth == 0) condition is executed before
+        // exiting the loop
+        surfacing_interrupt = true;
+      }
+
       // Add inputPolyData_ as first expanded_polydata, in order to compute intersection between input and defect
       if(depth == 0)
       {
@@ -802,24 +838,43 @@ bool Bezier::generateTrajectory(
     }
     vtkSmartPointer<vtkPolyData> temp_polydata = vtkSmartPointer<vtkPolyData>::New(); //Ignore collision in translation process fixme
     temp_polydata->ShallowCopy(expanded_polydata);
-    if(flag_expansion && defectIntersectionOptimisation(expanded_polydata)
-        && expanded_polydata->GetNumberOfCells() > 10) // FIXME Check intersection between new dilated mesh and defect
+    if(!surfacing_)
     {
-      if(use_translation_mode_)
-        dilationPolyDataVector_.push_back(temp_polydata);  // If intersection, consider dilated mesh as a pass
-      else
-        dilationPolyDataVector_.push_back(expanded_polydata);
+      if(flag_expansion && defectIntersectionOptimisation(expanded_polydata)
+      && expanded_polydata->GetNumberOfCells() > 10) // FIXME Check intersection between new dilated mesh and defect
+      {
+        if(use_translation_mode_)
+          dilationPolyDataVector_.push_back(temp_polydata);  // If intersection, consider dilated mesh as a pass
+        else
+          dilationPolyDataVector_.push_back(expanded_polydata);
 
-      ROS_INFO_STREAM("New pass generated");
+        ROS_INFO_STREAM("New pass generated");
+      }
+      else
+        intersection_flag = false;  // No intersection : end of dilation
+    }
+    else if (expanded_polydata->GetNumberOfCells() > 10 && surfacing_){
+      ROS_INFO_STREAM("New surface pass generated");
+      intersection_flag = false;
+      dilationPolyDataVector_.push_back(expanded_polydata);
     }
     else
-      intersection_flag = false;  // No intersection : end of dilation
+    {
+      ROS_WARN_STREAM("Number of cells isn't sufficient");
+      intersection_flag = false;
+    }
     depth += maximum_depth_of_path_;
   }
+
   if(use_translation_mode_)
     ROS_INFO_STREAM("Translation process done");
   else
-    ROS_INFO_STREAM("Dilation process done");
+  {
+    if(!surfacing_)
+      ROS_INFO_STREAM("Dilation process done");
+    else
+      ROS_INFO_STREAM("Surfacing process done");
+  }
   // Reverse pass vector: grind from upper (last) pass
   std::reverse(dilationPolyDataVector_.begin(), dilationPolyDataVector_.end());
   // Generate extrication mesh data

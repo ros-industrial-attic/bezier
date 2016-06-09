@@ -14,6 +14,7 @@
 
 #include <Eigen/StdVector>
 #include <boost/filesystem.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 
 /** Pointer to the move group */
 boost::shared_ptr<move_group_interface::MoveGroup> group;
@@ -44,7 +45,9 @@ int main(int argc, char **argv)
   // Get PLY file name from command line
   std::string input_mesh_filename;
   std::string defect_mesh_filename;
+  std::string surface_mode;
   node.getParam("meshname_param", input_mesh_filename); //meshname_param is a parameter defined in launch file
+  node.getParam("surface_param", surface_mode); // grinding_param is a parameter defined in the launch file
   if (input_mesh_filename.size() > 4) // size>".ply"
     ROS_INFO_STREAM("Mesh file imported :" << input_mesh_filename);
   else
@@ -81,7 +84,16 @@ int main(int argc, char **argv)
   std::vector<bool> points_color_viz;
   std::vector<Eigen::Affine3d, Eigen::aligned_allocator<Eigen::Affine3d> > way_points_vector;
   std::vector<int> index_vector;
-
+  if(boost::iequals(surface_mode,"on"))
+  {
+    //Grinding on surface mode has been selected
+    bezier_planner.setSurfacingOn();
+  }
+  else
+  {
+    //Apply the full grinding mode
+    bezier_planner.setSurfacingOff();
+  }
   // Display in RVIZ
   bezier_planner.displayMesh(input_mesh_publisher, mesh_ressources + input_mesh_filename);
   bezier_planner.displayMesh(defect_mesh_publisher, mesh_ressources + defect_mesh_filename, 0.1, 0.1, 0.1, 0.6);

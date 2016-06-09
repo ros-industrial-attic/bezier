@@ -19,6 +19,10 @@
   <!-- load PLY file from command line in order to use it in C++ programm  -->
 	<arg name="meshname" default="" />  
 	<param name="meshname_param" value="$(arg meshname)" />
+	
+  <!-- Choose the grinding mode for the bezier library (full(off) or surface(on))  -->
+	<arg name="surface" default="off" />  
+	<param name="surface_param" value="$(arg surface)" />
 
   <!-- load the robot_description parameter before launching ROS-I nodes -->
   <include file="$(find fanuc_r1000ia_sls_2_grinding_moveit_config)/launch/planning_context.launch" >

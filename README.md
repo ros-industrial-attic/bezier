@@ -56,10 +56,10 @@ git clone https://github.com/ros-industrial-consortium/bezier.git
 
 **Launch**
 ```bash
-roslaunch bezier_application bezier_application_r1000ia.launch meshname:=plane/plane.ply
+roslaunch bezier_application bezier_application_r1000ia.launch meshname:=plane/plane.ply surface:=on
 ```
 
-In this example, `bezier_application` will be launched with `oriented_complicated_mesh.ply` as input mesh and `oriented_complicated_mesh_defect.ply` as default mesh.
+In this example, `bezier_application` will be launched with `oriented_complicated_mesh.ply` as input mesh and `oriented_complicated_mesh_defect.ply` as default mesh. Moreover, the grinding will be done in surface mode, meaning that we only pass on the surface of the mesh to smooth it.
 
 Others examples of meshes are available in:
 ```bash
