@@ -157,6 +157,24 @@ public:
   bool
   getTranslationMode();
 
+  /** @brief Activate the surfacing mode
+   */
+  void setSurfacingOn();
+
+  /** @brief Deactivate the surfacing mode
+    */
+  void setSurfacingOff();
+
+  /** @brief Set the surfacing mode
+   *  @param[in] surface_mode
+   */
+  void setSurfacing(const bool surfacing_mode);
+
+  /** @brief Get the surfacing mode
+    * @return surfacing_mode
+    */
+  bool getSurfacing() const;
+
 private:
   /** @brief Input mesh */
   vtkSmartPointer<vtkPolyData> inputPolyData_;
@@ -199,6 +217,9 @@ private:
 
   /** @brief If true, uses a translation expansion instead of a dilation. False by default */
   bool use_translation_mode_;
+
+  /** @brief If true, No dilation will be done, we only make a surfacing process onto the scanned mesh*/
+  bool surfacing_;
 
   /** @brief This function uses vtkImplicitModeller in order to dilate the input vtkPolyData surface
    *  @param[in] depth depth for grind process (pass depth)
