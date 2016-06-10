@@ -956,6 +956,11 @@ bool Bezier::generateTrajectory(
           way_points_vector.push_back(pose);
           color_vector.push_back(true);
         }
+        else
+        {
+          ROS_ERROR_STREAM("Bezier::generateTrajectory: The pose generated is not correct! Aborting generation.");
+          return false;
+        }
 
         if (index_point == (lines[index_line].size() - 1))
         {  // Last point in line
