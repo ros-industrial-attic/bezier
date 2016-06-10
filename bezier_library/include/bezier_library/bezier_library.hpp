@@ -139,7 +139,10 @@ public:
   void
   displayMesh(const ros::Publisher &mesh_publisher,
               const std::string mesh_path,
-              const float r = 0.6, const float g = 0.6, const float b = 0.6, const float a = 1.0);
+              const float r = 0.6,
+              const float g = 0.6,
+              const float b = 0.6,
+              const float a = 1.0);
 
   /** @brief Function used to display some Bezier library's parameters (effector diameter, grind depth and covering_percentage) */
   void
@@ -162,7 +165,7 @@ public:
   void setSurfacingOn();
 
   /** @brief Deactivate the surfacing mode
-    */
+   */
   void setSurfacingOff();
 
   /** @brief Set the surfacing mode
@@ -171,8 +174,8 @@ public:
   void setSurfacing(const bool surfacing_mode);
 
   /** @brief Get the surfacing mode
-    * @return surfacing_mode
-    */
+   * @return surfacing_mode
+   */
   bool getSurfacing() const;
 
 private:
@@ -231,8 +234,7 @@ private:
    *  We have to find a solution, perhaps find best parameters in order to resolve this problem
    */
   bool
-  dilation(const double depth,
-           vtkSmartPointer<vtkPolyData> &dilated_polydata);
+  dilation(const double depth, vtkSmartPointer<vtkPolyData> &dilated_polydata);
 
   /**@brief This function used vtkImplicitModeller in order to translate the @ref inputPolyData_ surface
    * @param[in] depth depth for grind process (pass depth)
@@ -241,8 +243,7 @@ private:
    * @return boolean flag reflects the function proceedings
    */
   bool
-  translation(const double depth,
-              const vtkSmartPointer<vtkPolyData> poly_data,
+  translation(const double depth, const vtkSmartPointer<vtkPolyData> poly_data,
               vtkSmartPointer<vtkPolyData> &translation_poly_data);
 
   /** @brief This function allows to optimize path generation. When passes are generated (dilation), we make an intersection between the
@@ -274,7 +275,8 @@ private:
    *  @return True if successful, false otherwise
    */
   bool
-  loadPLYPolydata(const std::string meshname, vtkSmartPointer<vtkPolyData> &poly_Data);
+  loadPLYPolydata(const std::string meshname,
+                  vtkSmartPointer<vtkPolyData> &poly_Data);
 
   /** @brief Allows to save a PLY file from a vtkPolyData object
    *  @param[in] meshname file path
@@ -282,7 +284,8 @@ private:
    *  @return True if successful, false otherwise
    */
   bool
-  savePLYPolyData(const std::string meshname, const vtkSmartPointer<vtkPolyData> poly_data);
+  savePLYPolyData(const std::string meshname,
+                  const vtkSmartPointer<vtkPolyData> poly_data);
 
   /** @brief Uses PCL RANSAC to segment a plane into @ref inputPolyData_ and fills @ref mesh_normal_vector_
    *  @note The segmented plane represents a global mesh orientation
@@ -383,9 +386,8 @@ private:
    *  @return Value equal to index of closest point in extrication_poses vector.
    */
   int
-  seekClosestExtricationPassPoint(
-      const Eigen::Vector3d &point_vector,
-      const std::vector<Eigen::Affine3d, Eigen::aligned_allocator<Eigen::Affine3d> > &extrication_poses);
+  seekClosestExtricationPassPoint(const Eigen::Vector3d &point_vector,
+                                  const std::vector<Eigen::Affine3d, Eigen::aligned_allocator<Eigen::Affine3d> > &extrication_poses);
 
   /** @brief Function used to provide a lean angle for effector
    * @param[in, out] pose rotation matrix modified with the lean angle
