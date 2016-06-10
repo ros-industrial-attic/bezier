@@ -52,8 +52,7 @@ int main(int argc, char **argv)
     ROS_INFO_STREAM("Mesh file imported :" << input_mesh_filename);
   else
   {
-    ROS_ERROR_STREAM("Command line error in file set up." << std::endl <<
-                    "Usage :" << std::endl << "roslaunch my_path_generator path_generator.launch meshname:=meshname.ply");
+    ROS_ERROR_STREAM("Command line error, please specify a mesh file (eg meshname:=plane/plane.ply)");
     return -1;
   }
   std::string mesh_original = meshes_path + input_mesh_filename;
@@ -63,13 +62,16 @@ int main(int argc, char **argv)
   mesh_defect = meshes_path + defect_mesh_filename;
 
   // Create publishers for point clouds and markers
-  ros::Publisher trajectory_publisher, input_mesh_publisher, defect_mesh_publisher, dilated_mesh_publisher,
+  ros::Publisher trajectory_publisher,
+                 input_mesh_publisher,
+                 defect_mesh_publisher,
+                 dilated_mesh_publisher,
                  normal_publisher;
-  trajectory_publisher    = node.advertise<visualization_msgs::Marker>("my_trajectory", 1);
-  input_mesh_publisher    = node.advertise<visualization_msgs::Marker>("my_input_mesh", 1);
-  defect_mesh_publisher  = node.advertise<visualization_msgs::Marker>("my_defect_mesh", 1);
-  dilated_mesh_publisher  = node.advertise<visualization_msgs::Marker>("my_dilated_mesh", 1);
-  normal_publisher        = node.advertise<visualization_msgs::MarkerArray>("my_normals", 1);
+  trajectory_publisher = node.advertise<visualization_msgs::Marker>("my_trajectory", 1);
+  input_mesh_publisher = node.advertise<visualization_msgs::Marker>("my_input_mesh", 1);
+  defect_mesh_publisher = node.advertise<visualization_msgs::Marker>("my_defect_mesh", 1);
+  dilated_mesh_publisher = node.advertise<visualization_msgs::Marker>("my_dilated_mesh", 1);
+  normal_publisher = node.advertise<visualization_msgs::MarkerArray>("my_normals", 1);
 
   // Generate trajectory
   std::string lean_angle_axis = "y";
@@ -79,12 +81,20 @@ int main(int argc, char **argv)
   double maximum_depth_of_path = 0.015;
   int extrication_frequency = 5; // Generate a new extrication mesh each 4 passes generated
   int extrication_coefficient = 5;
-  Bezier bezier_planner(mesh_original, mesh_defect, lean_angle_axis, angle_value, maximum_depth_of_path, grind_diameter, covering_percentage,
-                        extrication_coefficient, extrication_frequency, false);
+  Bezier bezier_planner(mesh_original,
+                        mesh_defect,
+                        lean_angle_axis,
+                        angle_value,
+                        maximum_depth_of_path,
+                        grind_diameter,
+                        covering_percentage,
+                        extrication_coefficient,
+                        extrication_frequency,
+                        false);
   std::vector<bool> points_color_viz;
   std::vector<Eigen::Affine3d, Eigen::aligned_allocator<Eigen::Affine3d> > way_points_vector;
   std::vector<int> index_vector;
-  if(boost::iequals(surface_mode,"on"))
+  if (boost::iequals(surface_mode, "on"))
   {
     //Grinding on surface mode has been selected
     bezier_planner.setSurfacingOn();
@@ -103,16 +113,16 @@ int main(int argc, char **argv)
   // Create directory
   boost::filesystem::path dir(meshes_path + "dilated_meshes");
   if (!boost::filesystem::create_directory(dir))
-      ROS_WARN_STREAM(meshes_path + "dilated_meshes" << " directory could not be created.");
+    ROS_WARN_STREAM(meshes_path + "dilated_meshes" << " directory could not be created.");
   // Save
   bezier_planner.saveDilatedMeshes(meshes_path + "dilated_meshes");
 
   // Execute robot trajectory
   // Initialize move group
-    group.reset(new move_group_interface::MoveGroup("grinding_disk"));
-    group->setPoseReferenceFrame("/base_link");
-    group->setPlannerId("RRTConnectkConfigDefault");
-    group->setPlanningTime(2);
+  group.reset(new move_group_interface::MoveGroup("grinding_disk"));
+  group->setPoseReferenceFrame("/base_link");
+  group->setPlannerId("RRTConnectkConfigDefault");
+  group->setPlanningTime(2);
 
   while (ros::ok())
   {
@@ -121,9 +131,10 @@ int main(int argc, char **argv)
       std::vector<Eigen::Affine3d, Eigen::aligned_allocator<Eigen::Affine3d> > way_points_vector_pass; // Get pose in this pass
       way_points_vector_pass.insert(way_points_vector_pass.begin(), way_points_vector.begin() + index_vector[i] + 1,
                                     way_points_vector.begin() + index_vector[i + 1]);
+
       std::vector<bool> points_color_viz_pass; // Get bool data in this pass (real/extrication path in this pass)
       points_color_viz_pass.insert(points_color_viz_pass.begin(), points_color_viz.begin() + index_vector[i] + 1,
-                                    points_color_viz.begin() + index_vector[i + 1]);
+                                   points_color_viz.begin() + index_vector[i + 1]);
 
       std::string number(boost::lexical_cast<std::string>(i));
       bezier_planner.displayMesh(dilated_mesh_publisher, mesh_ressources + "dilated_meshes/mesh_" + number + ".ply");
@@ -134,14 +145,16 @@ int main(int argc, char **argv)
       std::vector<geometry_msgs::Pose> way_points_msg;
       way_points_msg.resize(way_points_vector_pass.size());
 
-      for(size_t j = 0; j < way_points_msg.size(); j++)
+      for (size_t j = 0; j < way_points_msg.size(); j++)
       {
         tf::poseEigenToMsg(way_points_vector_pass[j], way_points_msg[j]);
         tf::Transform world_to_link6_tf, world_to_tcp_tf;
+
         geometry_msgs::Pose world_to_link6 = way_points_msg[j];
-        geometry_msgs::Pose world_to_tcp;
         tf::poseMsgToTF(world_to_link6, world_to_link6_tf);
         world_to_tcp_tf = world_to_link6_tf;
+
+        geometry_msgs::Pose world_to_tcp;
         tf::poseTFToMsg(world_to_tcp_tf, world_to_tcp);
         way_points_msg[j] = world_to_tcp;
       }
@@ -169,7 +182,8 @@ int main(int argc, char **argv)
   }
 
   while (node.ok())
-  {}
+  {
+  }
   spinner.stop();
   return 0;
 }
