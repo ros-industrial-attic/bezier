@@ -43,9 +43,14 @@ Bezier::Bezier(const std::string filename_inputMesh,
   inputPolyData_ = vtkSmartPointer<vtkPolyData>::New();
   if (!loadPLYPolydata(filename_inputMesh, inputPolyData_))
     ROS_ERROR_STREAM("Bezier::Bezier: Can't load input mesh: " << filename_inputMesh);
-  defectPolyData_ = vtkSmartPointer<vtkPolyData>::New();
-  if (!loadPLYPolydata(filename_defectMesh, defectPolyData_))
-    ROS_ERROR_STREAM("Bezier::Bezier: Can't load defect mesh: " << filename_defectMesh);
+
+  if(!surfacing_)
+  {
+    //No need to load the defect polyData when using surface mode
+    defectPolyData_ = vtkSmartPointer<vtkPolyData>::New();
+    if (!loadPLYPolydata(filename_defectMesh, defectPolyData_))
+      ROS_ERROR_STREAM("Bezier::Bezier: Can't load defect mesh: " << filename_defectMesh);
+  }
 }
 
 Bezier::~Bezier()
