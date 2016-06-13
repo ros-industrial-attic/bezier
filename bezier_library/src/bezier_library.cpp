@@ -1138,41 +1138,47 @@ void Bezier::displayNormal(
   number_of_normal_markers_published_ = way_points_vector.size(); // Store number of markers drawn
   for (unsigned int k = 0; k < way_points_vector.size(); k++)
   {
+    visualization_msgs::Marker marker;
+    marker.header.frame_id = "/base_link";
+    marker.header.stamp = ros::Time::now();
+    marker.ns = "basic_shapes";
+    marker.id = k;
+    marker.type = visualization_msgs::Marker::ARROW;
+    marker.action = visualization_msgs::Marker::ADD;
+
+    // Set the scale of the marker - 1x1x1 here means 1m on a side
+    marker.scale.x = 0.001;  // Radius
+    marker.scale.y = 0.002;  // Radius
+    //marker.scale.z = 0.001;
+
+    double length = 0.01;  // Length for normal markers
+    geometry_msgs::Point start_point;
+    geometry_msgs::Point end_point;
+    end_point.x = way_points_vector[k].translation()[0];
+    end_point.y = way_points_vector[k].translation()[1];
+    end_point.z = way_points_vector[k].translation()[2];
+    start_point.x = end_point.x - length * way_points_vector[k].linear().col(2)[0];
+    start_point.y = end_point.y - length * way_points_vector[k].linear().col(2)[1];
+    start_point.z = end_point.z - length * way_points_vector[k].linear().col(2)[2];
+
+    marker.points.push_back(start_point);
+    marker.points.push_back(end_point);
+
     if (points_color_viz[k] == true)
     {
-      visualization_msgs::Marker marker;
-      marker.header.frame_id = "/base_link";
-      marker.header.stamp = ros::Time::now();
-      marker.ns = "basic_shapes";
-      marker.id = k;
-      marker.type = visualization_msgs::Marker::ARROW;
-      marker.action = visualization_msgs::Marker::ADD;
-
-      // Set the scale of the marker - 1x1x1 here means 1m on a side
-      marker.scale.x = 0.001;  // Radius
-      marker.scale.y = 0.002;  // Radius
-      //marker.scale.z = 0.001;
-
-      double length = 0.01;  // Length for normal markers
-      geometry_msgs::Point start_point;
-      geometry_msgs::Point end_point;
-      end_point.x = way_points_vector[k].translation()[0];
-      end_point.y = way_points_vector[k].translation()[1];
-      end_point.z = way_points_vector[k].translation()[2];
-      start_point.x = end_point.x - length * way_points_vector[k].linear().col(2)[0];
-      start_point.y = end_point.y - length * way_points_vector[k].linear().col(2)[1];
-      start_point.z = end_point.z - length * way_points_vector[k].linear().col(2)[2];
-
-      marker.points.push_back(start_point);
-      marker.points.push_back(end_point);
-
       marker.color.r = 0.0f;
       marker.color.g = 1.0f;
       marker.color.b = 0.0f;
-      marker.color.a = 0.7;
-      marker.lifetime = ros::Duration();
-      markers.markers.push_back(marker);
     }
+    else
+    {
+      marker.color.r = 1.0f;
+      marker.color.g = 0.0f;
+      marker.color.b = 0.0f;
+    }
+    marker.color.a = 0.7;
+    marker.lifetime = ros::Duration();
+    markers.markers.push_back(marker);
   }
   while (normal_publisher.getNumSubscribers() < 1)
   {
