@@ -75,12 +75,12 @@ int main(int argc, char **argv)
 
   // Generate trajectory
   std::string lean_angle_axis = "y";
-  double angle_value = -0.3;
+  double angle_value = -0.4;
   double covering_percentage = 0.4; //value between 0.0 & 1.0
   double grind_diameter = 0.03;
   double maximum_depth_of_path = 0.015;
   int extrication_frequency = 5; // Generate a new extrication mesh each 4 passes generated
-  int extrication_coefficient = 5;
+  int extrication_coefficient = 4;
   Bezier bezier_planner(mesh_original,
                         mesh_defect,
                         lean_angle_axis,
