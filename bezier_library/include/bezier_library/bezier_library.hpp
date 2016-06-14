@@ -129,20 +129,27 @@ public:
                     const ros::Publisher &trajectory_publisher);
 
   /** @brief Allow to display a mesh in RVIZ
-   *  @param[out] mesh_publisher publisher used to display the mesh in RVIZ
-   *  @param[in] mesh_path path of the mesh
-   *  @param[in] r red component of the RGB rate
-   *  @param[in] g green component of the RGB rate
-   *  @param[in] b blue component of the RGB rate
-   *  @param[in] a transparency component
-   **/
+       *  @param[in] mesh_publisher publisher used to display the mesh in RVIZ
+       *  @param[in] mesh_path path of the mesh
+       *  @param[in] r red component of the RGB rate
+       *  @param[in] g green component of the RGB rate
+       *  @param[in] b blue component of the RGB rate
+       *  @param[in] a transparency component
+       **/
   void
   displayMesh(const ros::Publisher &mesh_publisher,
-              const std::string mesh_path,
-              const float r = 0.6,
-              const float g = 0.6,
-              const float b = 0.6,
-              const float a = 1.0);
+                  const std::string mesh_path,
+                  const float r = 0.6,
+                  const float g = 0.6,
+                  const float b = 0.6,
+                  const float a = 1.0);
+
+  /** @brief Allow to display all meshes needed for the application in RVIZ */
+  bool
+  displayMeshes(const ros::Publisher &CAD_mesh_publisher,
+                const ros::Publisher &Defect_mesh_publisher,
+                const std::string cad_filename,
+                const std::string defect_filename);
 
   /** @brief Function used to display some Bezier library's parameters (effector diameter, grind depth and covering_percentage) */
   void

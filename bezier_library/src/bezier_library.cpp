@@ -1285,3 +1285,34 @@ void Bezier::displayMesh(const ros::Publisher &mesh_publisher,
   }
   mesh_publisher.publish(mesh_marker);
 }
+
+bool Bezier::displayMeshes(const ros::Publisher &CAD_mesh_publisher,
+                           const ros::Publisher &Defect_mesh_publisher,
+                           const std::string cad_filename,
+                           const std::string defect_filename)
+{
+    if (cad_filename.size() < 4) // size>".ply"
+    {
+      ROS_ERROR_STREAM("Command line error, please specify a mesh file (eg meshname:=plane/plane.ply)");
+      return false;
+    }
+    else
+    {
+      displayMesh(CAD_mesh_publisher,cad_filename);
+      ROS_INFO_STREAM("Bezier:displayMeshses : CAD mesh displayed");
+    }
+
+    if(!surfacing_)
+    {
+      // We display the defect mesh only when the full grinding mode is applied
+      displayMesh(Defect_mesh_publisher, defect_filename, 0.1, 0.1, 0.1, 0.6);
+      ROS_INFO_STREAM("Bezier:displayMeshses : Surface mode deactivated, defect mesh displayed");
+    }
+    else
+    {
+      ROS_INFO_STREAM("Bezier:displayMeshses : Surface mode activated, defect mesh display skipped");
+    }
+
+    return true;
+
+}

@@ -38,9 +38,8 @@ int main(int argc, char **argv)
   spinner.start();
 
   // Get package path
-  std::string package_path = ros::package::getPath(package);
-  std::string meshes_path = package_path + "/meshes/";
-  std::string mesh_ressources = "package://" + package + "/meshes/";
+  std::string meshes_resources = ros::package::getPath(package) + "/meshes/";
+  std::string meshes_res = "package://" + package + "/meshes/";
 
   // Get PLY file name from command line
   std::string input_mesh_filename;
@@ -55,11 +54,11 @@ int main(int argc, char **argv)
     ROS_ERROR_STREAM("Command line error, please specify a mesh file (eg meshname:=plane/plane.ply)");
     return -1;
   }
-  std::string mesh_original = meshes_path + input_mesh_filename;
+  std::string mesh_original = meshes_resources + input_mesh_filename;
   std::string mesh_defect;
 
   defect_mesh_filename = input_mesh_filename.substr(0, input_mesh_filename.size() - 4) + "_defect.ply";
-  mesh_defect = meshes_path + defect_mesh_filename;
+  mesh_defect = meshes_resources + defect_mesh_filename;
 
   // Create publishers for point clouds and markers
   ros::Publisher trajectory_publisher,
@@ -80,7 +79,7 @@ int main(int argc, char **argv)
   double grind_diameter = 0.03;
   double maximum_depth_of_path = 0.015;
   int extrication_frequency = 5; // Generate a new extrication mesh each 4 passes generated
-  int extrication_coefficient = 4;
+  int extrication_coefficient = 5;
   Bezier bezier_planner(mesh_original,
                         mesh_defect,
                         lean_angle_axis,
@@ -105,17 +104,21 @@ int main(int argc, char **argv)
     bezier_planner.setSurfacingOff();
   }
   // Display in RVIZ
-  bezier_planner.displayMesh(input_mesh_publisher, mesh_ressources + input_mesh_filename);
-  bezier_planner.displayMesh(defect_mesh_publisher, mesh_ressources + defect_mesh_filename, 0.1, 0.1, 0.1, 0.6);
+  //bezier_planner.displayMesh(input_mesh_publisher, meshes_resources + input_mesh_filename);
+  //bezier_planner.displayMesh(defect_mesh_publisher, meshes_resources + defect_mesh_filename, 0.1, 0.1, 0.1, 0.6);
+  bezier_planner.displayMeshes(input_mesh_publisher,
+                               defect_mesh_publisher,
+                               meshes_res + input_mesh_filename,
+                               meshes_res + defect_mesh_filename);
   bezier_planner.generateTrajectory(way_points_vector, points_color_viz, index_vector);
 
   // Save dilated meshes
   // Create directory
-  boost::filesystem::path dir(meshes_path + "dilated_meshes");
+  boost::filesystem::path dir(meshes_resources + "dilated_meshes");
   if (!boost::filesystem::create_directory(dir))
-    ROS_WARN_STREAM(meshes_path + "dilated_meshes" << " directory could not be created.");
+    ROS_WARN_STREAM(meshes_resources + "dilated_meshes" << " directory could not be created.");
   // Save
-  bezier_planner.saveDilatedMeshes(meshes_path + "dilated_meshes");
+  bezier_planner.saveDilatedMeshes(meshes_resources + "dilated_meshes");
 
   // Execute robot trajectory
   // Initialize move group
@@ -137,7 +140,7 @@ int main(int argc, char **argv)
                                    points_color_viz.begin() + index_vector[i + 1]);
 
       std::string number(boost::lexical_cast<std::string>(i));
-      bezier_planner.displayMesh(dilated_mesh_publisher, mesh_ressources + "dilated_meshes/mesh_" + number + ".ply");
+      bezier_planner.displayMesh(dilated_mesh_publisher, meshes_resources + "dilated_meshes/mesh_" + number + ".ply");
       bezier_planner.displayTrajectory(way_points_vector_pass, points_color_viz_pass, trajectory_publisher); // Display trajectory in this pass
       //bezier_planner.displayNormal(way_points_vector_pass, points_color_viz_pass, normal_publisher); // Display normals in this pass
 
