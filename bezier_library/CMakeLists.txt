@@ -19,7 +19,7 @@ include_directories(include ${VTK_USE_FILE} ${PCL_INCLUDE_DIRS} ${catkin_INCLUDE
 add_definitions(${PCL_DEFINITIONS}) # ${VTK_DEFINITIONS} crashes compilation
 
 add_library (bezier_library_obj OBJECT src/bezier_library.cpp)
-set_property(TARGET bezier_library_obj APPEND_STRING PROPERTY COMPILE_FLAGS "-fPIC -Wall")
+set_property(TARGET bezier_library_obj APPEND_STRING PROPERTY COMPILE_FLAGS "-std=c++11 -fPIC -Wall")
 add_library (${PROJECT_NAME} $<TARGET_OBJECTS:bezier_library_obj>)
 target_link_libraries(${PROJECT_NAME} ${VTK_LIBRARIES} ${catkin_LIBRARIES})
 
