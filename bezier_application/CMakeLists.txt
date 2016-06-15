@@ -2,7 +2,14 @@ cmake_minimum_required(VERSION 2.8.3)
 project(bezier_application)
 
 ## Find catkin and any catkin packages
-find_package(catkin REQUIRED COMPONENTS bezier_library moveit_ros_planning_interface roscpp tf tf_conversions visualization_msgs)
+find_package(catkin REQUIRED COMPONENTS bezier_library
+										moveit_ros_planning_interface 
+										roscpp 
+										tf 
+										tf_conversions
+										visualization_msgs
+										moveit_visual_tools
+	     								rviz_visual_tools)
 find_package(PCL 1.8.0 REQUIRED)
 find_package(VTK 7.0 REQUIRED COMPONENTS vtkFiltersHybrid NO_MODULE)
 
