@@ -71,7 +71,11 @@ int main(int argc, char **argv)
   input_mesh_publisher = node.advertise<visualization_msgs::Marker>("my_input_mesh", 1);
   defect_mesh_publisher = node.advertise<visualization_msgs::Marker>("my_defect_mesh", 1);
   dilated_mesh_publisher = node.advertise<visualization_msgs::Marker>("my_dilated_mesh", 1);
-  normal_publisher = node.advertise<visualization_msgs::MarkerArray>("my_normals", 1);
+  normal_publisher = node.advertise<visualization_msgs::MarkerArray>("my_normals", 1, true);
+
+  //RViz publication options
+  std::string rviz_fixed_frame = "base_link";
+  std::string rviz_topic_name = normal_publisher.getTopic();
 
   // Generate trajectory
   std::string lean_angle_axis = "y";
@@ -83,6 +87,8 @@ int main(int argc, char **argv)
   int extrication_coefficient = 4;
   Bezier bezier_planner(mesh_original,
                         mesh_defect,
+                        rviz_fixed_frame,
+                        rviz_topic_name,
                         lean_angle_axis,
                         angle_value,
                         maximum_depth_of_path,
@@ -139,7 +145,8 @@ int main(int argc, char **argv)
       std::string number(boost::lexical_cast<std::string>(i));
       bezier_planner.displayMesh(dilated_mesh_publisher, mesh_ressources + "dilated_meshes/mesh_" + number + ".ply");
       bezier_planner.displayTrajectory(way_points_vector_pass, points_color_viz_pass, trajectory_publisher); // Display trajectory in this pass
-      //bezier_planner.displayNormal(way_points_vector_pass, points_color_viz_pass, normal_publisher); // Display normals in this pass
+      //bezier_planner.rvizDisplayNormals(way_points_vector, points_color_viz, normal_publisher, ALL, 1);
+      //bezier_planner.rvizDisplayAxes(way_points_vector, points_color_viz, normal_publisher, EXTRICATION, 1, 0.01, 0.0005);
 
       // Copy the vector of Eigen poses into a vector of ROS poses
       std::vector<geometry_msgs::Pose> way_points_msg;

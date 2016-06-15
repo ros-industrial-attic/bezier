@@ -15,10 +15,17 @@ Bezier::Bezier() :
 {
   inputPolyData_ = vtkSmartPointer<vtkPolyData>::New();
   defectPolyData_ = vtkSmartPointer<vtkPolyData>::New();
+  ROS_WARN_STREAM("Bezier::Bezier: Default constructor called, RViz visualization tool is initialized in 'base_link' "
+                "and the topic name is 'rviz_visual_tools'");
+  visual_tools_.reset(new rviz_visual_tools::RvizVisualTools("base_link", "rviz_visual_tools"));
+  visual_tools_->setLifetime(0);
+  visual_tools_->enableBatchPublishing();
 }
 
 Bezier::Bezier(const std::string filename_inputMesh,
                const std::string filename_defectMesh,
+               const std::string rviz_fixed_frame,
+               const std::string rviz_topic_name,
                const std::string lean_angle_axis,
                const double angle_value,
                const double maximum_depth_of_path,
@@ -51,6 +58,11 @@ Bezier::Bezier(const std::string filename_inputMesh,
     if (!loadPLYPolydata(filename_defectMesh, defectPolyData_))
       ROS_ERROR_STREAM("Bezier::Bezier: Can't load defect mesh: " << filename_defectMesh);
   }
+
+  visual_tools_.reset(new rviz_visual_tools::RvizVisualTools(rviz_fixed_frame, rviz_topic_name));
+  visual_tools_->setLifetime(0);
+  visual_tools_->enableBatchPublishing();
+
 }
 
 Bezier::~Bezier()
@@ -1112,80 +1124,104 @@ bool Bezier::generateTrajectory(
   return true;
 }
 
-void Bezier::displayNormal(
+bool Bezier::rvizDisplayNormals(
     const std::vector<Eigen::Affine3d, Eigen::aligned_allocator<Eigen::Affine3d> > &way_points_vector,
     const std::vector<bool> points_color_viz,
-    const ros::Publisher &normal_publisher)
+    const ros::Publisher &normal_publisher,
+    const Display disp,
+    const unsigned int factor)
 {
+
   if (way_points_vector.size() != points_color_viz.size())
-    ROS_ERROR_STREAM("Bezier::displayNormal: Path vector and bool vector have different sizes");
-
-  // Delete old markers
-  visualization_msgs::MarkerArray markers;
-  for (unsigned int k = 0; k < number_of_normal_markers_published_; k++)
   {
-    visualization_msgs::Marker marker;
-    marker.header.frame_id = "/base_link";
-    marker.header.stamp = ros::Time::now();
-    marker.ns = "basic_shapes";
-    marker.id = k; // It doesn't matter if the marker was published or not (depending on points_color_viz[k])
-    marker.type = visualization_msgs::Marker::ARROW;
-    marker.action = visualization_msgs::Marker::DELETE;
-    markers.markers.push_back(marker);
+    ROS_ERROR_STREAM("Bezier::rvizDisplayNormals: Path vector and boolean vector have different sizes");
+    return false;
   }
-  normal_publisher.publish(markers);
 
-  number_of_normal_markers_published_ = way_points_vector.size(); // Store number of markers drawn
-  for (unsigned int k = 0; k < way_points_vector.size(); k++)
+  int in_factor = factor;
+  if (in_factor == 0)
+    in_factor = 1;
+
+  visual_tools_->waitForSubscriber(normal_publisher, 0.5, true);
+
+  double length = 0.01;
+  for (unsigned int i = 0; i < way_points_vector.size(); i++)
   {
-    visualization_msgs::Marker marker;
-    marker.header.frame_id = "/base_link";
-    marker.header.stamp = ros::Time::now();
-    marker.ns = "basic_shapes";
-    marker.id = k;
-    marker.type = visualization_msgs::Marker::ARROW;
-    marker.action = visualization_msgs::Marker::ADD;
+    if (i % in_factor != 0)
+      continue;
 
-    // Set the scale of the marker - 1x1x1 here means 1m on a side
-    marker.scale.x = 0.001;  // Radius
-    marker.scale.y = 0.002;  // Radius
-    //marker.scale.z = 0.001;
-
-    double length = 0.01;  // Length for normal markers
-    geometry_msgs::Point start_point;
-    geometry_msgs::Point end_point;
-    end_point.x = way_points_vector[k].translation()[0];
-    end_point.y = way_points_vector[k].translation()[1];
-    end_point.z = way_points_vector[k].translation()[2];
-    start_point.x = end_point.x - length * way_points_vector[k].linear().col(2)[0];
-    start_point.y = end_point.y - length * way_points_vector[k].linear().col(2)[1];
-    start_point.z = end_point.z - length * way_points_vector[k].linear().col(2)[2];
-
-    marker.points.push_back(start_point);
-    marker.points.push_back(end_point);
-
-    if (points_color_viz[k] == true)
+    if (disp == GRINDING && points_color_viz[i])
     {
-      marker.color.r = 0.0f;
-      marker.color.g = 1.0f;
-      marker.color.b = 0.0f;
+      visual_tools_->publishZArrow(way_points_vector[i], rviz_visual_tools::GREEN, rviz_visual_tools::XSMALL, length, i);
+    }
+    else if (disp == EXTRICATION && !points_color_viz[i])
+    {
+      visual_tools_->publishZArrow(way_points_vector[i], rviz_visual_tools::RED, rviz_visual_tools::XSMALL, length, i);
+    }
+    else if (disp == ALL)
+    {
+      visual_tools_->publishZArrow(way_points_vector[i],
+                                   (points_color_viz[i] ? rviz_visual_tools::GREEN : rviz_visual_tools::RED),
+                                   rviz_visual_tools::XSMALL, length, i);
     }
     else
-    {
-      marker.color.r = 1.0f;
-      marker.color.g = 0.0f;
-      marker.color.b = 0.0f;
-    }
-    marker.color.a = 0.7;
-    marker.lifetime = ros::Duration();
-    markers.markers.push_back(marker);
+      return false;
   }
-  while (normal_publisher.getNumSubscribers() < 1)
+
+  visual_tools_->triggerBatchPublish();
+  return true;
+}
+
+bool Bezier::rvizDisplayAxes(
+    const std::vector<Eigen::Affine3d, Eigen::aligned_allocator<Eigen::Affine3d> > &way_points_vector,
+    const std::vector<bool> points_color_viz,
+    const ros::Publisher &axes_publisher,
+    const Display disp,
+    const unsigned int factor,
+    const double axes_length,
+    const double axes_radius)
+{
+
+  if (way_points_vector.size() != points_color_viz.size())
   {
-    ROS_WARN_ONCE("Bezier::displayNormal: Please create a subscriber to the normals marker");
-    sleep(1);
+    ROS_ERROR_STREAM("Bezier::rvizDisplayAxes: Path vector and boolean vector have different sizes");
+    return false;
   }
-  normal_publisher.publish(markers);
+
+  int in_factor = factor;
+  if (in_factor == 0)
+    in_factor = 1;
+
+  visual_tools_->waitForSubscriber(axes_publisher, 0.5, true);
+
+  for (unsigned int i = 0; i < way_points_vector.size(); i++)
+  {
+    if (i % in_factor != 0)
+      continue;
+
+    if (disp == GRINDING && points_color_viz[i])
+    {
+      visual_tools_->publishAxis(way_points_vector[i], axes_length, axes_radius);
+    }
+    else if (disp == EXTRICATION && !points_color_viz[i])
+    {
+      visual_tools_->publishAxis(way_points_vector[i], axes_length, axes_radius);
+    }
+    else if (disp == ALL)
+    {
+      visual_tools_->publishAxis(way_points_vector[i], axes_length, axes_radius);
+    }
+    else
+      return false;
+  }
+
+  visual_tools_->triggerBatchPublish();
+  return true;
+}
+
+void Bezier::rvizRemoveAllMarkers(void)
+{
+  visual_tools_->deleteAllMarkers();
 }
 
 void Bezier::displayTrajectory(
