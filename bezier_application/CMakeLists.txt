@@ -21,7 +21,7 @@ add_definitions(${PCL_DEFINITIONS} ${VTK_DEFINITIONS})
 link_directories(${catkin_LIBRARY_DIRS})
 
 add_executable (bezier_application src/bezier_application.cpp)
-set_property(TARGET bezier_application APPEND_STRING PROPERTY COMPILE_FLAGS -Wall)
+set_property(TARGET bezier_application APPEND_STRING PROPERTY COMPILE_FLAGS "-std=c++11 -Wall")
 if(VTK_LIBRARIES) # May never happen because we expect VTK 7.0 minimum
   target_link_libraries (bezier_application ${catkin_LIBRARIES} ${VTK_LIBRARIES} ${PCL_LIBRARIES} bezier_library)
 else()
