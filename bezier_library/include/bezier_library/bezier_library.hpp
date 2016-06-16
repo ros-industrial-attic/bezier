@@ -33,6 +33,10 @@
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
 
+//RViz headers
+#include "rviz_visual_tools/rviz_visual_tools.h"
+#include "moveit_visual_tools/moveit_visual_tools.h"
+
 /**
  * @file bezier_library.hpp
  * @brief Library used to generate 3D paths (robot poses) from PLY files.
@@ -49,6 +53,15 @@ typedef pcl::PointXYZRGBA PointT;
 /** @brief PointCloudT is a PointT cloud */
 typedef pcl::PointCloud<PointT> PointCloudT;
 
+
+/** \brief Set of display options. */
+enum Display
+{
+  GRINDING,     /**< display items related to the grinding path */
+  EXTRICATION,  /**< display items related to the extrication path */
+  ALL           /**< display items related both to the grinding and extrication path */
+};
+
 /** @brief Bezier class */
 class Bezier
 {
@@ -60,6 +73,8 @@ public:
   /** @brief Initialized constructor
    *  @param[in] filename_inputMesh filename of input poly data (input mesh)
    *  @param[in] filename_defectMesh filename of defect poly data (defect mesh)
+   *  @param[in] rviz_base name of the base in which objects will be published in RViz
+   *  @param[in] rviz_topic_name name of the topic for objects publication in RViz
    *  @param[in] lean_angle_axis rotation axis for the lean angle
    *  @param[in] angle_value rotation value (in radians) around lean_angle_axis
    *  @param[in] maximum_depth_of_path maximum grinding depth (in meters)
@@ -71,6 +86,8 @@ public:
    */
   Bezier(const std::string filename_inputMesh,
          const std::string filename_defectMesh,
+         const std::string rviz_fixed_frame,
+         const std::string rviz_topic_name,
          const std::string lean_angle_axis,
          const double angle_value,
          const double maximum_depth_of_path,
@@ -106,16 +123,51 @@ public:
   Eigen::Vector3d
   getSlicingDirection();
 
-  /** @brief Allow to display normals in RVIZ
+  /** @brief Allow to display normals in RViz
    *  @param[in] way_points_vector vector containing robot poses
    *  @param[in] points_color_viz vector of booleans useful to distinguish machining / extrication path
-   *  @param[out] normal_publisher publisher used to display normals in RVIZ
+   *  @param[in] name of the publisher
+   *  @param[in] axes_publisher publisher used to display axes in RViz
+   *  @param[in] factor division coefficient to display an axe each factor time (ignored if equals to 0)
+   *  @param[in] axes_length length of the axes to be published
+   *  @param[in] axes_radius radius of the axes to be published
+   *  @param[in] disp select where the axes must be displayed : GRINDING for grind path, EXTRICATION for extrication pass
+   *             ALL for both
+   *  @return True if the displayed has been done correctly, False otherwise
    *  @note Boolean vector and trajectory vector must be the same size
+   *  @note The markers can be removed through the function rvizRemoveAllMarkers()
    **/
-  void
-  displayNormal(const std::vector<Eigen::Affine3d, Eigen::aligned_allocator<Eigen::Affine3d> > &way_points_vector,
-                const std::vector<bool> points_color_viz,
-                const ros::Publisher &normal_publisher);
+  bool
+  rvizDisplayAxes(const std::vector<Eigen::Affine3d, Eigen::aligned_allocator<Eigen::Affine3d> > &way_points_vector,
+                  const std::vector<bool> points_color_viz,
+                  const ros::Publisher &axes_publisher,
+                  const Display disp = ALL,
+                  const unsigned int factor = 1,
+                  const double axes_length = 0.01,
+                  const double axes_radius = 0.0005);
+
+  /** @brief Allow to display normals in RViz
+   *  @param[in] way_points_vector vector containing robot poses
+   *  @param[in] Color of the normals
+   *  @param[in] name of the publisher
+   *  @param[in] normal_publisher publisher used to display normals in RViz
+   *  @param[in] factor division coefficient to display an normal each factor time (ignored if equals to 0)
+   *  @param[in] disp select where the normals must be displayed : GRINDING for grind path, EXTRICATION for extrication pass
+   *             ALL for both
+   *  @return True if the displayed has been done correctly, False otherwise
+   *  @note Boolean vector and trajectory vector must be the same size
+   *  @note The markers can be removed through the function rvizRemoveAllMarkers()
+   **/
+  bool
+  rvizDisplayNormals(const std::vector<Eigen::Affine3d, Eigen::aligned_allocator<Eigen::Affine3d> > &way_points_vector,
+                     const std::vector<bool> points_color_viz,
+                     const ros::Publisher &normal_publisher,
+                     const Display disp = ALL,
+                     const unsigned int factor = 1);
+
+  /** @brief Remove all markers in RViz
+   **/
+  void rvizRemoveAllMarkers(void);
 
   /** @brief Generate a trajectory (LINE_STRIP) marker and publish it
    *  @param[in] way_points_vector 3D trajectory vector (containing poses)
@@ -128,8 +180,8 @@ public:
                     const std::vector<bool> points_color_viz,
                     const ros::Publisher &trajectory_publisher);
 
-  /** @brief Allow to display a mesh in RVIZ
-   *  @param[out] mesh_publisher publisher used to display the mesh in RVIZ
+  /** @brief Allow to display a mesh in RViz
+   *  @param[out] mesh_publisher publisher used to display the mesh in RViz
    *  @param[in] mesh_path path of the mesh
    *  @param[in] r red component of the RGB rate
    *  @param[in] g green component of the RGB rate
@@ -187,6 +239,9 @@ private:
 
   /** @brief Vector containing several dilated meshes */
   std::vector<vtkSmartPointer<vtkPolyData> > dilationPolyDataVector_;
+
+  /** @brief Visualization tool handling display of item in RViz */
+  rviz_visual_tools::RvizVisualToolsPtr visual_tools_;
 
   /** @brief Lean angle axis (string) */
   std::string lean_angle_axis_;
