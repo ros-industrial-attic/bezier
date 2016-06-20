@@ -104,20 +104,11 @@ int main(int argc, char **argv)
                         covering_percentage,
                         extrication_coefficient,
                         extrication_frequency,
-                        false);
+                        surfacing_mode);
   std::vector<bool> points_color_viz;
   std::vector<Eigen::Affine3d, Eigen::aligned_allocator<Eigen::Affine3d> > way_points_vector;
   std::vector<int> index_vector;
-  if (surfacing_mode)
-  {
-    //Grinding on surface mode has been selected
-    bezier_planner.setSurfacingOn();
-  }
-  else
-  {
-    //Apply the full grinding mode
-    bezier_planner.setSurfacingOff();
-  }
+
   // Display in RVIZ
   bezier_planner.displayMesh(input_mesh_publisher, mesh_ressources + mesh_cad_filename);
   bezier_planner.displayMesh(defect_mesh_publisher, mesh_ressources + mesh_defect_filename, 0.1, 0.1, 0.1, 0.6);
