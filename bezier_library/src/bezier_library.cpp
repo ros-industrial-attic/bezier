@@ -33,6 +33,7 @@ Bezier::Bezier(const std::string filename_inputMesh,
                const double covering_percentage,
                const int extrication_coefficient,
                const int extrication_frequency,
+               const bool surfacing_mode,
                const bool use_translation_mode) :
     lean_angle_axis_(lean_angle_axis),
     angle_value_(angle_value),
@@ -44,14 +45,14 @@ Bezier::Bezier(const std::string filename_inputMesh,
     mesh_normal_vector_(Eigen::Vector3d::Identity()),
     slicing_dir_(Eigen::Vector3d::Identity()),
     number_of_normal_markers_published_(0),
-    use_translation_mode_(use_translation_mode),
-    surfacing_(false)
+    surfacing_mode_(surfacing_mode),
+    use_translation_mode_(use_translation_mode)
 {
   inputPolyData_ = vtkSmartPointer<vtkPolyData>::New();
   if (!loadPLYPolydata(filename_inputMesh, inputPolyData_))
     ROS_ERROR_STREAM("Bezier::Bezier: Can't load input mesh: " << filename_inputMesh);
 
-  if(!surfacing_)
+  if(!surfacing_mode_)
   {
     //No need to load the defect polyData when using surface mode
     defectPolyData_ = vtkSmartPointer<vtkPolyData>::New();
@@ -109,25 +110,9 @@ bool Bezier::getTranslationMode()
   return use_translation_mode_;
 }
 
-void Bezier::setSurfacingOn()
-{
-  ROS_INFO_STREAM("Bezier::setSurfacingOn: Running in surfacing mode");
-  surfacing_ = true;
-}
-
-void Bezier::setSurfacingOff()
-{
-  surfacing_ = false;
-}
-
-void Bezier::setSurfacing(const bool surfacing_mode)
-{
-  surfacing_ = surfacing_mode;
-}
-
 bool Bezier::getSurfacing() const
 {
-  return surfacing_;
+  return surfacing_mode_;
 }
 
 //////////////////// PRIVATE FUNCTIONS ////////////////////
@@ -805,15 +790,15 @@ bool Bezier::generateTrajectory(
     ROS_INFO_STREAM("Bezier::generateTrajectory: Start translation");
   else
   {
-    if (surfacing_)
+    if (surfacing_mode_)
       ROS_INFO_STREAM("Bezier::generateTrajectory: Start surfacing");
     else
       ROS_INFO_STREAM("Bezier::generateTrajectory: Start dilation");
   }
   bool intersection_flag = true;  // Flag variable : dilate while dilated mesh intersect defect mesh
   double depth = 0;  // Depth between input mesh and dilated mesh
-  bool surfacing_interrupt = false;
-  while (intersection_flag && !surfacing_interrupt)
+  bool surfacing_mode_interrupt = false;
+  while (intersection_flag && !surfacing_mode_interrupt)
   {
     vtkSmartPointer<vtkPolyData> expanded_polydata = vtkSmartPointer<vtkPolyData>::New();
     bool flag_expansion(false);
@@ -821,12 +806,12 @@ bool Bezier::generateTrajectory(
       flag_expansion = translation(depth, inputPolyData_, expanded_polydata);
     else
     {
-      if (surfacing_)
+      if (surfacing_mode_)
       {
         // We Interrupt the while loop after the first pass in order to make only a surface grinding
         // In this case, the dilation will not be perform. The if(depth == 0) condition is executed before
         // exiting the loop
-        surfacing_interrupt = true;
+        surfacing_mode_interrupt = true;
       }
 
       // Add inputPolyData_ as first expanded_polydata, in order to compute intersection between input and defect
@@ -853,7 +838,7 @@ bool Bezier::generateTrajectory(
     }
     vtkSmartPointer<vtkPolyData> temp_polydata = vtkSmartPointer<vtkPolyData>::New(); //Ignore collision in translation process fixme
     temp_polydata->ShallowCopy(expanded_polydata);
-    if (!surfacing_)
+    if (!surfacing_mode_)
     {
       if (flag_expansion && defectIntersectionOptimisation(expanded_polydata)
           && expanded_polydata->GetNumberOfCells() > 10) // FIXME Check intersection between new dilated mesh and defect
@@ -868,7 +853,7 @@ bool Bezier::generateTrajectory(
       else
         intersection_flag = false;  // No intersection : end of dilation
     }
-    else if (expanded_polydata->GetNumberOfCells() > 10 && surfacing_)
+    else if (expanded_polydata->GetNumberOfCells() > 10 && surfacing_mode_)
     {
       ROS_INFO_STREAM("Bezier::generateTrajectory: New surface pass generated");
       intersection_flag = false;
@@ -886,7 +871,7 @@ bool Bezier::generateTrajectory(
     ROS_INFO_STREAM("Bezier::generateTrajectory: Translation process done");
   else
   {
-    if (!surfacing_)
+    if (!surfacing_mode_)
       ROS_INFO_STREAM("Bezier::generateTrajectory: Dilation process done");
     else
       ROS_INFO_STREAM("Bezier::generateTrajectory: Surfacing process done");
