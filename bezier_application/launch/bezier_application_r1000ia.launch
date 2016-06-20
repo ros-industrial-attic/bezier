@@ -16,13 +16,15 @@
   <arg name="robot_ip" unless="$(arg sim)" />
   <arg name="use_bswap" unless="$(arg sim)" default="true" />
 
-  <!-- load PLY file from command line in order to use it in C++ programm  -->
-	<arg name="meshname" default="" />  
-	<param name="meshname_param" value="$(arg meshname)" />
-	
-  <!-- Choose the grinding mode for the bezier library (full(off) or surface(on))  -->
-	<arg name="surface" default="off" />  
-	<param name="surface_param" value="$(arg surface)" />
+  <!-- Choose the grinding mode for the Bezier library -->
+  <arg name="surfacing_mode" default="false"/>
+  <param name="surfacing_mode_param" value="$(arg surfacing_mode)" />
+  <!-- Specify CAD mesh for Bezier -->
+  <arg name="mesh_cad" />
+  <param name="mesh_cad_param" value="$(arg mesh_cad)" />
+  <!-- Specify defect mesh for Bezier (only required if NOT using surfacing mode) -->
+  <arg name="mesh_defect" default="" />
+  <param name="mesh_defect_param" value="$(arg mesh_defect)" />
 
   <!-- load the robot_description parameter before launching ROS-I nodes -->
   <include file="$(find fanuc_r1000ia_sls_2_grinding_moveit_config)/launch/planning_context.launch" >
