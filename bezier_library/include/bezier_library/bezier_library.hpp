@@ -82,6 +82,7 @@ public:
    *  @param[in] covering_percentage Percentage of covering (decimal value)
    *  @param[in] extrication_coefficient extrication depth equal of the percentage of maximum_depth_of_path (coefficient)
    *  @param[in] extrication_frequency new extrication mesh generated each 1/extrication_frequency times
+   *  @param[in] surfacing_mode see @ref surfacing_mode_
    *  @param[in] use_translation_mode see @ref use_translation_mode_
    */
   Bezier(const std::string filename_inputMesh,
@@ -95,7 +96,8 @@ public:
          const double covering_percentage,
          const int extrication_coefficient,
          const int extrication_frequency,
-         const bool use_translation_mode);
+         const bool surfacing_mode = false,
+         const bool use_translation_mode = false);
 
   ~Bezier();
 
@@ -212,21 +214,8 @@ public:
   bool
   getTranslationMode();
 
-  /** @brief Activate the surfacing mode
-   */
-  void setSurfacingOn();
-
-  /** @brief Deactivate the surfacing mode
-   */
-  void setSurfacingOff();
-
-  /** @brief Set the surfacing mode
-   *  @param[in] surface_mode
-   */
-  void setSurfacing(const bool surfacing_mode);
-
   /** @brief Get the surfacing mode
-   * @return surfacing_mode
+   * @return surfacing_mode_
    */
   bool getSurfacing() const;
 
@@ -273,11 +262,11 @@ private:
   /** @brief Stores the last number of normal markers published. Useful to get them deleted */
   unsigned int number_of_normal_markers_published_;
 
+  /** @brief If true, No dilation will be done, we only make a surfacing process onto the scanned mesh*/
+  bool surfacing_mode_;
+
   /** @brief If true, uses a translation expansion instead of a dilation. False by default */
   bool use_translation_mode_;
-
-  /** @brief If true, No dilation will be done, we only make a surfacing process onto the scanned mesh*/
-  bool surfacing_;
 
   /** @brief This function uses vtkImplicitModeller in order to dilate the input vtkPolyData surface
    *  @param[in] depth depth for grind process (pass depth)
