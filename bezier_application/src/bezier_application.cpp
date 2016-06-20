@@ -13,8 +13,6 @@
 #include <visualization_msgs/MarkerArray.h>
 
 #include <Eigen/StdVector>
-#include <boost/filesystem.hpp>
-#include <boost/algorithm/string/predicate.hpp>
 
 /** Pointer to the move group */
 boost::shared_ptr<move_group_interface::MoveGroup> group;
@@ -38,28 +36,38 @@ int main(int argc, char **argv)
   spinner.start();
 
   // Get package path
-  std::string package_path = ros::package::getPath(package);
-  std::string meshes_path = package_path + "/meshes/";
+  std::string meshes_path = ros::package::getPath(package) + "/meshes/";
   std::string mesh_ressources = "package://" + package + "/meshes/";
 
-  // Get PLY file name from command line
-  std::string input_mesh_filename;
-  std::string defect_mesh_filename;
-  std::string surface_mode;
-  node.getParam("meshname_param", input_mesh_filename); //meshname_param is a parameter defined in launch file
-  node.getParam("surface_param", surface_mode); // grinding_param is a parameter defined in the launch file
-  if (input_mesh_filename.size() > 4) // size>".ply"
-    ROS_INFO_STREAM("Mesh file imported :" << input_mesh_filename);
+  // Parameters defined in the launch file
+  std::string mesh_cad_filename;
+  std::string mesh_defect_filename;
+  bool surfacing_mode (false);
+  node.getParam("surfacing_mode_param", surfacing_mode);
+  node.getParam("mesh_cad_param", mesh_cad_filename);
+  node.getParam("mesh_defect_param", mesh_defect_filename);
+
+  if (mesh_cad_filename.size() > 4) // size > ".ply"
+    ROS_INFO_STREAM("CAD mesh file imported :" << mesh_cad_filename);
   else
   {
-    ROS_ERROR_STREAM("Command line error, please specify a mesh file (eg meshname:=plane/plane.ply)");
+    ROS_ERROR_STREAM("Command line error, please specify a CAD mesh file!");
     return -1;
   }
-  std::string mesh_original = meshes_path + input_mesh_filename;
-  std::string mesh_defect;
+  std::string mesh_cad_path = meshes_path + mesh_cad_filename;
 
-  defect_mesh_filename = input_mesh_filename.substr(0, input_mesh_filename.size() - 4) + "_defect.ply";
-  mesh_defect = meshes_path + defect_mesh_filename;
+  std::string mesh_defect_path("");
+  if (!surfacing_mode)
+  {
+    if (mesh_defect_filename.size() > 4) // size > ".ply"
+      ROS_INFO_STREAM("Defect mesh file imported :" << mesh_defect_filename);
+    else
+    {
+      ROS_ERROR_STREAM("Command line error, please specify a defect mesh file!");
+      return -1;
+    }
+    mesh_defect_path = meshes_path + mesh_defect_filename;
+  }
 
   // Create publishers for point clouds and markers
   ros::Publisher trajectory_publisher,
@@ -85,8 +93,8 @@ int main(int argc, char **argv)
   double maximum_depth_of_path = 0.015;
   int extrication_frequency = 5; // Generate a new extrication mesh each 4 passes generated
   int extrication_coefficient = 4;
-  Bezier bezier_planner(mesh_original,
-                        mesh_defect,
+  Bezier bezier_planner(mesh_cad_path,
+                        mesh_defect_path,
                         rviz_fixed_frame,
                         rviz_topic_name,
                         lean_angle_axis,
@@ -100,7 +108,7 @@ int main(int argc, char **argv)
   std::vector<bool> points_color_viz;
   std::vector<Eigen::Affine3d, Eigen::aligned_allocator<Eigen::Affine3d> > way_points_vector;
   std::vector<int> index_vector;
-  if (boost::iequals(surface_mode, "on"))
+  if (surfacing_mode)
   {
     //Grinding on surface mode has been selected
     bezier_planner.setSurfacingOn();
@@ -111,8 +119,8 @@ int main(int argc, char **argv)
     bezier_planner.setSurfacingOff();
   }
   // Display in RVIZ
-  bezier_planner.displayMesh(input_mesh_publisher, mesh_ressources + input_mesh_filename);
-  bezier_planner.displayMesh(defect_mesh_publisher, mesh_ressources + defect_mesh_filename, 0.1, 0.1, 0.1, 0.6);
+  bezier_planner.displayMesh(input_mesh_publisher, mesh_ressources + mesh_cad_filename);
+  bezier_planner.displayMesh(defect_mesh_publisher, mesh_ressources + mesh_defect_filename, 0.1, 0.1, 0.1, 0.6);
   bezier_planner.generateTrajectory(way_points_vector, points_color_viz, index_vector);
 
   // Save dilated meshes
