@@ -12,7 +12,10 @@
   <build_depend>roscpp</build_depend>
   <build_depend>moveit_visual_tools</build_depend>
   <build_depend>rviz_visual_tools</build_depend>
+
   <build_export_depend>roscpp</build_export_depend>
+  <build_export_depend>moveit_visual_tools</build_export_depend>
+  <build_export_depend>rviz_visual_tools</build_export_depend>
 
   <exec_depend>roscpp</exec_depend>
   <exec_depend>moveit_visual_tools</exec_depend>
