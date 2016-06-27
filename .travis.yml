@@ -25,7 +25,6 @@ env:
 install:
   - git clone https://github.com/ros-industrial/industrial_ci.git .ci_config
   - git clone https://github.com/InstitutMaupertuis/advanced_industrial_ci.git .advanced_ci_config
-  - git clone https://github.com/ros-industrial/fanuc_experimental.git
   - git clone https://github.com/davetcoleman/rviz_visual_tools.git
 
 script:
