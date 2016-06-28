@@ -56,14 +56,15 @@ git clone https://github.com/ros-industrial-consortium/bezier.git
 ```
 
 **Launch**
+
 ```bash
-roslaunch bezier_application bezier_application_r1000ia.launch mesh_cad:=plane/plane.ply surfacing_mode:=true
+roslaunch bezier_application bezier_application_m20ia.launch surfacing_mode:=true mesh_cad:=plane/plane_defect.ply
 ```
 
-In this example, `bezier_application` will be launched with `plane.ply` as the CAD mesh and the grinding will be done in surface mode, meaning that we only pass on the surface of the mesh to smooth it.
+In this example, `bezier_application` will be launched with `plane_defect.ply` as the CAD mesh and the grinding will be done in surface mode, meaning that we only pass on the surface of the mesh to smooth it.
 
 ```bash
-roslaunch bezier_application bezier_application_r1000ia.launch mesh_cad:=plane/plane.ply mesh_defect:=plane/plane_defect.ply
+roslaunch bezier_application bezier_application_m20ia.launch mesh_cad:=plane/plane.ply mesh_defect:=plane/plane_defect.ply
 ```
 
 In this example, `bezier_application` will be launched with `plane.ply` as the CAD mesh and `plane_defect.ply` as defect mesh.

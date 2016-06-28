@@ -47,4 +47,4 @@ qtcreator-*
 CATKIN_IGNORE
 
 # Output meshes
-bezier_application/meshes/dilated_meshes/*.ply
+bezier_library/meshes/*.stl
