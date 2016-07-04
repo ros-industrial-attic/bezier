@@ -430,7 +430,11 @@ bool BezierGrindingSurfacing::generateRobotPosesAlongStripper(const vtkSmartPoin
     }
   }
 
-  filterNeighborPosesTooClose(point_normal_table, 1e-4);
+  if(!filterNeighborPosesTooClose(point_normal_table, 1e-2))
+  {
+    ROS_ERROR_STREAM("BezierGrindingSurfacing::generateRobotPosesAlongStripper: cannot filter grinding trajectory");
+    return false;
+  }
 
   if (point_normal_table.empty())
   {
@@ -514,28 +518,101 @@ bool BezierGrindingSurfacing::generateRobotPosesAlongStripper(const vtkSmartPoin
   return true;
 }
 
-//FIXME filterNeighborPosesTooClose doesn't work
-bool BezierGrindingSurfacing::filterNeighborPosesTooClose(BezierPointNormalTable &line,
+bool BezierGrindingSurfacing::filterNeighborPosesTooClose(BezierPointNormalTable &trajectory,
                                                           const double minimal_distance)
 {
-  /*
+
   if (trajectory.size() <= 1)
     return false;
 
-  EigenSTL::vector_Affine3d filtered_traj;
-  for (EigenSTL::vector_Affine3d::iterator it(trajectory.begin()); it != (trajectory.end() - 1); ++it)
+  // Vector that contain the indices for all points to be removed from the trajectory vector
+  std::vector<unsigned> indices_to_be_removed;
+  // The offset variable allows to count how much point will be skipped before reaching a point
+  // located far enough from the current point. Every point located between the index of the
+  // current point and the next point located at index of current point + offset is deleted.
+  // The offset is set to 1 at initialization, so the next point will be immediately the one
+  // following the current into the trajectory vector
+  int offset = 1;
+  // Main loop through the trajectory vector
+  for (unsigned index = 0; index < trajectory.size() - 1; index++)
   {
-    Eigen::Vector3d point( (*it).translation() );
-    Eigen::Vector3d next_point( (*(it+1)).translation() );
-    ROS_ERROR_STREAM("Eigen norm = " << (point-next_point).norm());
-    if ((point-next_point).norm() > minimal_distance)
-      filtered_traj.push_back(*it);
+    // We apply the filter on all the points except for the last point of the trajectory
+    if (index < trajectory.size() - 1)
+    {
+      // Current point from which the distance is computed
+      Eigen::Vector3d point(trajectory[index].first);
+      // Next point from which the distance is computed
+      Eigen::Vector3d next_point(trajectory[index + 1].first);
+      double point_values[3] = {point[0], point[1], point[2]};
+      double next_point_values[3] = {next_point[0], next_point[1], next_point[2]};
+      // Distance computing between the current point and the designated next point
+      double distance = sqrt(vtkMath::Distance2BetweenPoints(point_values, next_point_values));
+      if (distance < minimal_distance)
+      {
+        // The distance is less than minimal distant constraint of the filter
+        // We loop over the trajectory vector until we reached a point located far enough from the current point
+        // or we reached the last point of the trajectory
+        while (distance <= minimal_distance && (index + offset) < trajectory.size())
+        {
+          // At this stage, the next point found is not far enough, so it must be removed from
+          // the trajectory vector. In order to do that, his index is saved into the indices vector
+          indices_to_be_removed.push_back(index + offset);
+          // Increment the offset : This offset represent the distance inside the trajectory vector
+          // from the current point and the next point with which the distance will be computed
+          offset++;
+          // the next point index is the current point index plus the offset
+          next_point = trajectory[index + offset].first;
+          next_point_values[0] = next_point[0];
+          next_point_values[1] = next_point[1];
+          next_point_values[2] = next_point[2];
+          // The new distance between the current point and the next point is computed
+          distance = sqrt(vtkMath::Distance2BetweenPoints(point_values, next_point_values));
+          // if the distance doesn't match our criteria, we loop back and take as next point, a
+          // point located at the position index of the next point + 1
+        }
+
+        // The loop has reached the last point of the trajectory, the filter is not applied!
+        if ((index + offset) >= trajectory.size())
+          break;
+
+        // The filter loop has reached a point located far enough. So we jump to that point
+        // in order to compute the distance between this point and his next neighbor
+        index += offset - 1;
+        // The offset is reset
+        offset = 1;
+      }
+      else
+      {
+        // The next point is located far enough, we do not apply the filter
+        // The offset is kept at the value 1
+        offset = 1;
+      }
+    }
   }
 
-  filtered_traj.push_back(trajectory.back());
-  ROS_ERROR_STREAM("filterNeighborPosesTooClose: before = " << trajectory.size() << " | after = " << filtered_traj.size());
-  trajectory = filtered_traj;
-  */
+  // Temporary buffer used to store non filtered point
+  BezierPointNormalTable tmp_trajectory;
+
+  unsigned position(0);
+  for (PointNormal value : trajectory)
+  {
+    if (!(std::find(indices_to_be_removed.begin(), indices_to_be_removed.end(), position) != indices_to_be_removed.end()))
+    {
+      // The current index is not contained in the vector containing index to be removed
+      // so we can add it to the buffer storing non filtered points
+      tmp_trajectory.push_back(value);
+    }
+    position++;
+  }
+
+  // At this stage, tmp_trajectory contains all the non filtered points
+  // so we clear the trajectory vector and we transfer all the points
+  trajectory.clear();
+  trajectory = tmp_trajectory;
+
+  if (trajectory.size() <= 1)
+    return false;
+
   return true;
 }
 
