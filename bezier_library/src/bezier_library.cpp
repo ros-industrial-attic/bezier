@@ -112,6 +112,12 @@ void Bezier::displayMesh(const std::shared_ptr<ros::Publisher> &mesh_publisher,
                          const float a,
                          std::string frame_id)
 {
+  if (!mesh_publisher)
+  {
+    ROS_ERROR_STREAM("Bezier::displayMesh: Publisher is not initialized");
+    return;
+  }
+
   // Create a mesh marker from ply files
   visualization_msgs::Marker mesh_marker;
   mesh_marker.header.frame_id = frame_id;
