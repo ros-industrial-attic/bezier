@@ -530,28 +530,49 @@ bool Bezier::keepUpperPartofDilatedMesh(vtkSmartPointer<vtkPolyData> &base_polyd
     cell->EvaluateLocation(sub_id, pcoords, cell_center, weights);
     free(weights);
 
-    // Get closest point (in base_polydata)
-    vtkIdType id = kd_tree->FindClosestPoint(cell_center);
-    double closest_point[3];
-    base_polydata->GetPoint(id, closest_point);
-    // Get direction vector
-    Eigen::Vector3d direction_vector = Eigen::Vector3d(cell_center[0] - closest_point[0],
-                                                       cell_center[1] - closest_point[1],
-                                                       cell_center[2] - closest_point[2]);
+    // Looking for the 2 closest points of cellCenter
+    unsigned number_of_points = 2;
+    vtkSmartPointer<vtkIdList> id_closest_points = vtkSmartPointer<vtkIdList>::New();
+    kd_tree->FindClosestNPoints(number_of_points, cell_center, id_closest_points);
 
-    // Get closest point normal
-    double normal[3];
-    point_normal_array->GetTuple(id, normal);
-    Eigen::Vector3d normal_vector(normal);
-    direction_vector.normalize();
-    normal_vector.normalize();
+    std::vector<double> scalar_products_vector;
+    // Store variable into vectors
+    for(vtkIdType i = 0; i < number_of_points; ++i)
+    {
+      double closest_point_vector[3];
+      Eigen::Vector3d direction_vector;
+      double normal[3];
+
+      // Get the closest point i on base_polydata
+      base_polydata->GetPoint(id_closest_points->GetId(i), closest_point_vector);
+
+      // Compute vector between cell_center on dilated_polydata and closest_point i on base_polydata
+      direction_vector[0] = cell_center[0] - closest_point_vector[0];
+      direction_vector[1] = cell_center[1] - closest_point_vector[1];
+      direction_vector[2] = cell_center[2] - closest_point_vector[2];
+
+      // Get normal of closest_point i
+      point_normal_array->GetTuple(id_closest_points->GetId(i), normal);
+      direction_vector.normalize();
+      
+      Eigen::Vector3d normal_3d(normal);
+      scalar_products_vector.push_back(normal_3d.dot(direction_vector));
+    }
+
+    bool scalar_product_is_negative = true;
+    for(unsigned i = 0; i < scalar_products_vector.size(); ++i)
+    {
+      if(scalar_products_vector[i] >= 0)
+        scalar_product_is_negative = false;
+    }
 
     // Keep the cell only if it belongs to the upper part of the mesh
     if (!vtkMath::IsFinite(cell_center[0]) ||
         !vtkMath::IsFinite(cell_center[1]) ||
-        !vtkMath::IsFinite(cell_center[2])
-        || normal_vector.dot(direction_vector) <= 0)
+        !vtkMath::IsFinite(cell_center[2]) ||
+        scalar_product_is_negative)
       upper_part_dilated_polydata->DeleteCell(index_cell);
+
   }
 
   upper_part_dilated_polydata->RemoveDeletedCells();
