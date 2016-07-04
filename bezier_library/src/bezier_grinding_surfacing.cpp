@@ -66,7 +66,8 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
     std::string mesh_path(ros::package::getPath("bezier_library") + "/meshes/dilated_mesh.stl");
 
     if (saveMesh(mesh_path, dilated_mesh))
-      displayMesh(dilated_mesh_pub_, std::string("file://" + mesh_path), 0.1, 0.1, 0.1, 0.5);
+      if (dilated_mesh_pub_)
+        displayMesh(dilated_mesh_pub_, std::string("file://" + mesh_path), 0.1, 0.1, 0.1, 0.5);
     else
       ROS_WARN_STREAM("Could not save dilated mesh, aborting visualization of the dilated mesh!");
   }
@@ -86,7 +87,8 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
     std::string mesh_path(ros::package::getPath("bezier_library") + "/meshes/extrication_mesh.stl");
 
     if (saveMesh(mesh_path, extrication_mesh))
-      displayMesh(dilated_mesh_pub_, std::string("file://" + mesh_path), 0.1, 0.1, 0.1, 0.5);
+      if (dilated_mesh_pub_)
+        displayMesh(dilated_mesh_pub_, std::string("file://" + mesh_path), 0.1, 0.1, 0.1, 0.5);
     else
       ROS_WARN_STREAM("Could not save dilated mesh, aborting visualization of the extrication mesh!");
   }
