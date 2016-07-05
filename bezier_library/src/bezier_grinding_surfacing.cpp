@@ -127,6 +127,13 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
     grinding_trajectories.push_back(traj);
   }
 
+  // Application of the grinding lean angle
+  for (EigenSTL::vector_Affine3d poses : grinding_trajectories)
+  {
+    for (Eigen::Affine3d pose : poses)
+      applyLeanAngle(pose, axis_of_rotation_, lean_angle_);
+  }
+
   // Generate all extrication trajectories
   EigenSTL::vector_Vector4d extrication_planes_equations;
   EigenSTL::vector_Vector3d extrication_planes_origins;
@@ -497,8 +504,6 @@ bool BezierGrindingSurfacing::generateRobotPosesAlongStripper(const vtkSmartPoin
       //return false;
     }
 
-    // Application of the grinding lean angle
-    applyLeanAngle(pose, axis_of_rotation_, lean_angle_);
     // Keep the last pose in memory.
     // It is used to generate the orientation of the last pose of the line
     last_pose = pose;
