@@ -589,13 +589,25 @@ bool BezierGrindingSurfacing::filterNeighborPosesTooClose(BezierPointNormalTable
     }
   }
 
-  for (std::vector<unsigned>::iterator it(indices_to_be_removed.end() - 1); it != indices_to_be_removed.begin(); --it)
+  // Temporary buffer used to store non filtered point
+  BezierPointNormalTable tmp_trajectory;
+
+  unsigned position(0);
+  for (PointNormal value : trajectory)
   {
-    // We erase all the points which have their indices located into the indices_to_be_removed vector
-    // We do this from the end of the vector in order to guarantee a correct indexing of the trajectory
-    // vector while we erase the unwanted points
-    trajectory.erase(trajectory.begin() + (*it));
+    if (!(std::find(indices_to_be_removed.begin(), indices_to_be_removed.end(), position) != indices_to_be_removed.end()))
+    {
+      // The current index is not contained in the vector containing index to be removed
+      // so we can add it to the buffer storing non filtered points
+      tmp_trajectory.push_back(value);
+    }
+    position++;
   }
+
+  // At this stage, tmp_trajectory contains all the non filtered points
+  // so we clear the trajectory vector and we transfer all the points
+  trajectory.clear();
+  trajectory = tmp_trajectory;
 
   if (trajectory.size() <= 1)
     return false;
