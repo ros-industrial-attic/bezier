@@ -450,7 +450,6 @@ bool BezierGrindingSurfacing::generateRobotPosesAlongStripper(const vtkSmartPoin
 
   for (BezierPointNormalTable::iterator it(point_normal_table.begin()); it != point_normal_table.end(); ++it)
   {
-    //FIXME Problem with last pose linear part
     if (it == point_normal_table.end() - 1)
     {
       // The current pose is the last one of the line
@@ -459,8 +458,6 @@ bool BezierGrindingSurfacing::generateRobotPosesAlongStripper(const vtkSmartPoin
       Eigen::Affine3d pose(Eigen::Affine3d::Identity());
       pose.translation() << (*it).first;
       pose.linear() = last_pose.linear();
-      //ROS_ERROR_STREAM("Last pose " << endl << pose.matrix() << endl << endl);
-      applyLeanAngle(pose, axis_of_rotation_, lean_angle_);
       trajectory.push_back(pose);
       break;
     }
