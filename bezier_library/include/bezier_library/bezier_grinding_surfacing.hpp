@@ -139,7 +139,12 @@ public:
   bool generateRobotPosesAlongStripper(const vtkSmartPointer<vtkStripper> &line,
                                        EigenSTL::vector_Affine3d &trajectory);
 
-  // FIXME Document
+  /**
+   * Filters points that are too close from each others
+   * @param line the line to be filtered, it contains the point and the normal
+   * @param minimal_distance the minimal accepted distance between two consecutive points
+   * @return True if successful, false otherwise
+   */
   bool filterNeighborPosesTooClose(BezierPointNormalTable &line,
                                    const double minimal_distance);
 

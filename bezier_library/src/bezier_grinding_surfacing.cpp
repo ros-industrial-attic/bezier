@@ -71,7 +71,8 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
         displayMesh(dilated_mesh_pub_, std::string("file://" + mesh_path), 0.1, 0.1, 0.1, 0.5);
     }
     else
-      ROS_WARN_STREAM("Could not save dilated mesh, aborting visualization of the dilated mesh!");
+      ROS_WARN_STREAM(
+          "BezierGrindingSurfacing::generateTrajectory: Could not save the mesh, aborting visualization of the dilated mesh!");
   }
 
   vtkSmartPointer<vtkPolyData> extrication_mesh = vtkSmartPointer<vtkPolyData>::New();
@@ -94,7 +95,8 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
         displayMesh(dilated_mesh_pub_, std::string("file://" + mesh_path), 0.1, 0.1, 0.1, 0.5);
     }
     else
-      ROS_WARN_STREAM("Could not save dilated mesh, aborting visualization of the extrication mesh!");
+      ROS_WARN_STREAM(
+          "BezierGrindingSurfacing::generateTrajectory: Could not save the mesh, aborting visualization of the extrication mesh!");
   }
 
   // Compute the plane equations to slice the mesh
@@ -111,7 +113,8 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
   for (vtkSmartPointer<vtkStripper> stripper : grinding_strippers)
     if (stripper->GetOutput()->GetNumberOfLines() > 1)
     {
-      ROS_ERROR_STREAM("Grinding stripper has " << stripper->GetOutput()->GetNumberOfLines() << " lines");
+      ROS_ERROR_STREAM(
+          "BezierGrindingSurfacing::generateTrajectory: Grinding stripper has " << stripper->GetOutput()->GetNumberOfLines() << " lines");
       // FIXME Handle this case!
       //return "Grinding tripper has more than 1 line (mesh has a hole). Not implemented yet!";
     }
@@ -177,7 +180,8 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
 
       if (stripper->GetOutput()->GetNumberOfLines() > 1)
       {
-        ROS_ERROR_STREAM("Extrication stripper has " << stripper->GetOutput()->GetNumberOfLines() << " lines");
+      ROS_ERROR_STREAM(
+          "BezierGrindingSurfacing::generateTrajectory: Extrication stripper has " << stripper->GetOutput()->GetNumberOfLines() << " lines");
         // FIXME Handle this case!
         //return "Extrication stripper has more than 1 line (mesh has a hole). Not implemented yet!";
       }
@@ -233,17 +237,14 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
     {
       if (index > 11)
         index = 0;
-      displayTrajectory(traj, rviz_visual_tools::GREEN, true);
-      //displayTrajectory(traj, visualToolsColorFromIndex(index++), true);
+      displayTrajectory(traj, visualToolsColorFromIndex(index++), true);
     }
 
     index = 0;
-    // FIXME Display extrication trajectories
     for (EigenSTL::vector_Affine3d traj : extrication_trajectories)
     {
       if (index > 11)
         index = 0;
-      //displayTrajectory(traj, rviz_visual_tools::RED, true);
       displayTrajectory(traj, visualToolsColorFromIndex(index++), true);
     }
   }
@@ -274,7 +275,6 @@ void BezierGrindingSurfacing::estimateGrindingSlicingPlanes(const vtkSmartPointe
   vtkIdType max_point_index;
   double min = std::numeric_limits<double>::max();
   double max = std::numeric_limits<double>::min();
-  //cout << "Polydata center : " << endl << polydata_center << endl << endl;
   for (vtkIdType index = 0; index < polydata->GetNumberOfPoints(); index++)
   {
     double p[3];
@@ -283,7 +283,7 @@ void BezierGrindingSurfacing::estimateGrindingSlicingPlanes(const vtkSmartPointe
     Eigen::Vector3d vector_to_project(point - polydata_center);
     vector_to_project.normalize();
     double res = slicing_orientation.normalized().dot(vector_to_project);
-    //cout << res << endl;
+
     if (res > max)
     {
       max = res;
@@ -296,22 +296,14 @@ void BezierGrindingSurfacing::estimateGrindingSlicingPlanes(const vtkSmartPointe
     }
   }
 
-  //cout << "min : " << min << " max : " << max << endl;
-  //cout << "min index : " << min_point_index << " max index : " << max_point_index << endl;
-
   double max_point_coord[3], min_point_coord[3];
   polydata->GetPoint(max_point_index, max_point_coord);
   polydata->GetPoint(min_point_index, min_point_coord);
   Eigen::Vector3d max_point(max_point_coord);
   Eigen::Vector3d min_point(min_point_coord);
   Eigen::Vector3d distance(max_point - min_point);
-  //cout << "min point coord: " << endl << min_point << endl << endl;
-  //cout << "max point coord: " << endl << max_point << endl << endl;
-  //cout << "distance : " << distance.norm() << endl;
   double width = grinding_disk_machining_width_ * (1 - (double)covering_percentage_ / 100);
   double line_count = std::floor((distance.norm()) / width);
-  //cout << "Number of lines: " << (distance.norm()) / width << endl;
-  //cout << "Number of lines = " << line_count << endl;
 
   std::vector<double> offsets;
   offsets.push_back(0); // Add the plane at offset 0
@@ -425,7 +417,7 @@ bool BezierGrindingSurfacing::generateRobotPosesAlongStripper(const vtkSmartPoin
   if (vtk_observer_->GetError())
   {
     ROS_ERROR_STREAM(
-        "BezierGrindingSurfacing::generateRobotPosesAlongStripper: " << vtk_observer_->GetWarningMessage());
+        "BezierGrindingSurfacing::generateRobotPosesAlongStripper: " << vtk_observer_->GetErrorMessage());
     vtk_observer_->Clear();
     return false;
   }
@@ -445,7 +437,7 @@ bool BezierGrindingSurfacing::generateRobotPosesAlongStripper(const vtkSmartPoin
     if (vtk_observer_->GetError())
     {
       ROS_ERROR_STREAM(
-          "BezierGrindingSurfacing::generateRobotPosesAlongStripper: " << vtk_observer_->GetWarningMessage());
+          "BezierGrindingSurfacing::generateRobotPosesAlongStripper: " << vtk_observer_->GetErrorMessage());
       vtk_observer_->Clear();
       return false;
     }
@@ -471,7 +463,7 @@ bool BezierGrindingSurfacing::generateRobotPosesAlongStripper(const vtkSmartPoin
 
   if(!filterNeighborPosesTooClose(point_normal_table, 1e-2))
   {
-    ROS_ERROR_STREAM("BezierGrindingSurfacing::generateRobotPosesAlongStripper: cannot filter grinding trajectory");
+    ROS_ERROR_STREAM("BezierGrindingSurfacing::generateRobotPosesAlongStripper: Cannot filter grinding trajectory");
     return false;
   }
 
@@ -547,7 +539,6 @@ bool BezierGrindingSurfacing::generateRobotPosesAlongStripper(const vtkSmartPoin
     // Keep the last pose in memory.
     // It is used to generate the orientation of the last pose of the line
     last_pose = pose;
-    //ROS_ERROR_STREAM("Pose " << endl << pose.matrix());
     trajectory.push_back(pose);
   }
 
@@ -677,7 +668,7 @@ bool BezierGrindingSurfacing::filterExtricationTrajectory(const vtkSmartPointer<
 
   if (upper_tolerance <= lower_tolerance)
   {
-    ROS_ERROR_STREAM("BezierGrindingSurfacing::filterExtricationTrajectory: wrong tolerances");
+    ROS_ERROR_STREAM("BezierGrindingSurfacing::filterExtricationTrajectory: Wrong tolerances");
     return false;
   }
 
