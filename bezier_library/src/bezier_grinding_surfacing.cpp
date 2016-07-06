@@ -132,9 +132,9 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
   }
 
   // Application of the grinding lean angle
-  for (EigenSTL::vector_Affine3d poses : grinding_trajectories)
+  for (EigenSTL::vector_Affine3d &poses : grinding_trajectories)
   {
-    for (Eigen::Affine3d pose : poses)
+    for (Eigen::Affine3d &pose : poses)
       applyLeanAngle(pose, axis_of_rotation_, lean_angle_);
   }
 
