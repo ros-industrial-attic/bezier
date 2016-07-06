@@ -32,8 +32,7 @@ Dependencies
 ------------
 - [Robot Operating System](http://wiki.ros.org/ROS/Installation)
 - [`industrial-core`](http://wiki.ros.org/industrial_core)
-- [`fanuc`](https://github.com/InstitutMaupertuis/fanuc) :warning: Joint limits have been tweaked
-- [`fanuc experimental`](https://github.com/InstitutMaupertuis/fanuc_experimental) :warning: Joint limits have been tweaked
+- [`fanuc`](http://wiki.ros.org/fanuc)
 - [`Visualization Toolkit`](https://gitlab.kitware.com/vtk/vtk/) version `7.0` or later
 - [`Point Cloud Library`](https://github.com/PointCloudLibrary/pcl) version `1.8.0` or later. :warning: PCL has to be compiled against the same VTK version that is used for this package.
 - `C++11` is required 
@@ -56,14 +55,15 @@ git clone https://github.com/ros-industrial-consortium/bezier.git
 ```
 
 **Launch**
+
 ```bash
-roslaunch bezier_application bezier_application_r1000ia.launch mesh_cad:=plane/plane.ply surfacing_mode:=true
+roslaunch bezier_application bezier_application_m20ia.launch surfacing_mode:=true mesh_cad:=plane/plane_defect.ply
 ```
 
-In this example, `bezier_application` will be launched with `plane.ply` as the CAD mesh and the grinding will be done in surface mode, meaning that we only pass on the surface of the mesh to smooth it.
+In this example, `bezier_application` will be launched with `plane_defect.ply` as the CAD mesh and the grinding will be done in surface mode, meaning that we only pass on the surface of the mesh to smooth it.
 
 ```bash
-roslaunch bezier_application bezier_application_r1000ia.launch mesh_cad:=plane/plane.ply mesh_defect:=plane/plane_defect.ply
+roslaunch bezier_application bezier_application_m20ia.launch mesh_cad:=plane/plane.ply mesh_defect:=plane/plane_defect.ply
 ```
 
 In this example, `bezier_application` will be launched with `plane.ply` as the CAD mesh and `plane_defect.ply` as defect mesh.
