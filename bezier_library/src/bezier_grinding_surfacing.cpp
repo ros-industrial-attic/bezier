@@ -498,7 +498,7 @@ bool BezierGrindingSurfacing::generateRobotPosesAlongStripper(const vtkSmartPoin
       // Something goes wrong during the computation of the X normal of this point
       // We skip the generation for this pose
       ROS_ERROR_STREAM("BezierGrindingSurfacing::generateRobotPosesAlongStripper: Normal X is zero!");
-      //return false;
+      return false;
     }
 
     // The normal Y is generated through the cross product between Z and X
@@ -514,7 +514,7 @@ bool BezierGrindingSurfacing::generateRobotPosesAlongStripper(const vtkSmartPoin
     if (pose.matrix().hasNaN())
     {
       ROS_ERROR_STREAM("BezierGrindingSurfacing::generateRobotPosesAlongStripper: Generated pose has NaN!");
-      //return false;
+      return false;
     }
 
     // Keep the last pose in memory.
