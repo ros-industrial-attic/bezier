@@ -134,7 +134,7 @@ void Bezier::displayMesh(const std::shared_ptr<ros::Publisher> &mesh_publisher,
   mesh_marker.lifetime = ros::Duration();
 
   if (mesh_publisher->getNumSubscribers() < 1)
-    ROS_WARN_STREAM("Bezier::displayMesh: There is not subscriber to the \"" << mesh_publisher->getTopic() << "\" marker!");
+    ROS_WARN_STREAM("Bezier::displayMesh: There is no subscriber to the \"" << mesh_publisher->getTopic() << "\" marker!");
 
   mesh_publisher->publish(mesh_marker);
 }
@@ -180,13 +180,13 @@ bool Bezier::computeNormals(vtkSmartPointer<vtkPolyData> &polydata)
 
   if (vtk_observer_->GetWarning())
   {
-    ROS_WARN_STREAM("Bezier::computeNormals" << std::endl << vtk_observer_->GetWarningMessage());
+    ROS_WARN_STREAM("Bezier::computeNormals: " << vtk_observer_->GetWarningMessage());
     vtk_observer_->Clear();
     return false;
   }
   if (vtk_observer_->GetError())
   {
-    ROS_ERROR_STREAM("Bezier::computeNormals" << std::endl << vtk_observer_->GetErrorMessage());
+    ROS_ERROR_STREAM("Bezier::computeNormals: " << vtk_observer_->GetErrorMessage());
     vtk_observer_->Clear();
     return false;
   }
@@ -260,13 +260,11 @@ bool Bezier::estimateSlicingOrientation(vtkSmartPointer<vtkPolyData> &polydata,
                                         Eigen::Vector3d &mesh_normal,
                                         Eigen::Vector3d &orientation)
 {
-  // TODO The slicing orientation generated is not always optimal:
+  // FIXME The slicing orientation generated is not always optimal:
   // We can loop through all orientations (10 deg / 10 deg), find the
   // min/max point and compute the distance between the two.
   // After that, we keep the orientation that has the minimum distance = minimum slice number
   estimateGlobalMeshNormal(polydata, mesh_normal);
-  // FIXME Find a better solution
-  // We want to find a random vector perpendicular to this one
   orientation = Eigen::Vector3d(mesh_normal[2], 0, -mesh_normal[0]);
   orientation.normalize();
 
@@ -437,7 +435,7 @@ bool Bezier::dilate(vtkSmartPointer<vtkPolyData> &polydata,
   }
   if (vtk_observer_->GetError())
   {
-    ROS_ERROR_STREAM("Bezier::dilate: " << vtk_observer_->GetWarningMessage());
+    ROS_ERROR_STREAM("Bezier::dilate: " << vtk_observer_->GetErrorMessage());
     vtk_observer_->Clear();
     return false;
   }
@@ -459,7 +457,7 @@ bool Bezier::dilate(vtkSmartPointer<vtkPolyData> &polydata,
   }
   if (vtk_observer_->GetError())
   {
-    ROS_ERROR_STREAM("Bezier::dilate: " << vtk_observer_->GetWarningMessage());
+    ROS_ERROR_STREAM("Bezier::dilate: " << vtk_observer_->GetErrorMessage());
     vtk_observer_->Clear();
     return false;
   }
@@ -483,7 +481,7 @@ bool Bezier::dilate(vtkSmartPointer<vtkPolyData> &polydata,
   }
   if (vtk_observer_->GetError())
   {
-    ROS_ERROR_STREAM("Bezier::dilate: " << vtk_observer_->GetWarningMessage());
+    ROS_ERROR_STREAM("Bezier::dilate: " << vtk_observer_->GetErrorMessage());
     vtk_observer_->Clear();
     return false;
   }
