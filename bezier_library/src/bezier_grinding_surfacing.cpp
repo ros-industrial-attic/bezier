@@ -196,8 +196,35 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
     extrication_trajectories.push_back(traj);
   }
 
+  // Extrication filter parameters
+  double filter_tolerance(M_PI/8);
+  // Iterator allowing to move through the grinding trajectories
+  std::vector<EigenSTL::vector_Affine3d>::iterator grinding_iterator(grinding_trajectories.begin());
+
   for (unsigned i = 0; i < extrication_trajectories.size(); ++i)
+  {
     harmonizeLineOrientation(extrication_trajectories[i], extrication_direction_vector[i]);
+
+    // Last point and normal of the grinding line N
+    Eigen::Vector3d first_point((*grinding_iterator).back().translation());
+    Eigen::Vector3d first_point_normal((*grinding_iterator).back().linear().col(2));
+    first_point_normal *= -1; // FIXME: 2 options:
+    // Move ApplyLeanAngle AFTER this loop so that the grinding traj normal == polydata normal
+    // Use VTK polydata normal instead of the grinding normal (it has been modified by ApplyLeanAngle)
+
+    // Move the iterator to the next grinding line
+    grinding_iterator++;
+
+    // Last point and normal of the grinding line N + 1
+    Eigen::Vector3d last_point((*grinding_iterator).front().translation());
+    Eigen::Vector3d last_point_normal((*grinding_iterator).front().linear().col(2));
+    last_point_normal *= -1; // FIXME: See line 212 (first_point_normal *= -1;)
+
+    // Application of the extrication filter on the current extrication line
+    if (!filterExtricationTrajectory(dilated_mesh, first_point, first_point_normal, last_point, last_point_normal,
+                                     filter_tolerance, -filter_tolerance, extrication_trajectories[i]))
+      return "Could not filter extrication trajectory";
+  }
 
   unsigned index(0);
   if (display_markers)
@@ -625,39 +652,34 @@ bool BezierGrindingSurfacing::filterNeighborPosesTooClose(BezierPointNormalTable
   return true;
 }
 
-bool BezierGrindingSurfacing::filterExtricationTrajectory(const vtkSmartPointer<vtkPolyData> polydata,
-                                                          const Eigen::Vector3d first_point,
-                                                          const Eigen::Vector3d first_point_normal,
-                                                          const Eigen::Vector3d last_point,
-                                                          const Eigen::Vector3d last_point_normal,
-                                                          const double extrication_radius,
+bool BezierGrindingSurfacing::filterExtricationTrajectory(const vtkSmartPointer<vtkPolyData> &polydata,
+                                                          const Eigen::Vector3d &first_point,
+                                                          const Eigen::Vector3d &first_point_normal,
+                                                          const Eigen::Vector3d &last_point,
+                                                          const Eigen::Vector3d &last_point_normal,
+                                                          const double upper_tolerance,
+                                                          const double lower_tolerance,
                                                           EigenSTL::vector_Affine3d &trajectory)
 {
-  //FIXME Does not compile
-  /*
-  // Extrication Orientation Manager (EOM)
-  // For the N first point and N last point, we respectively keep the same orientation
-  // than the first point and the last point. In order to do that, we compute the scalar product
-  // between the normal of the first grinding point A for the first N points of the extrication path, and the normal of the last
-  // grinding point B and the last N points of the extrication path.
-  // N will be determined by the scalar product result. As long as the result is not about the dilated distance,
-  // we keep the orientation of the A or B.
-  // The extrication lines is divided into 3 part :
-  // - the first one contain all the poses having the same orientation than the start pose of the grinding line.
-  // - the intermediate part contain all poses having orientation generated depending on the normals of the mesh
-  // - the last one contain all the poses having the same orientation than the end pose of the grinding line.
-  // All the poses and their orientation are computed by the following 3 loops (respectively for the first part, the intermediate
-  // and the last one)
+  // The extrication filter compare the angle between a point of the grinding line and all the extrication
+  // points located in the side where the grinding point is placed.
+  // The filter works in two parts :
+  // - The first part use as a reference point the last point of the grinding line N. It compute the angle between
+  // the normal of this point and the vector between the reference point and the extrication point.
+  // as long as the value of the angle is outside the bounds defined by upper_tolerance and lower_tolerance,
+  // the extrication point is filtered. When the angle fall inside the bounds, the process for this side is stopped.
+  // - The same process is repeated on the other side of the extrication line, using as reference point, the first point
+  // of the grinding line N + 1
+  // At the end of theses process, all the point which haven't been filtered are removed from the trajectory vector
 
   if (trajectory.empty())
     return false;
 
-  if (extrication_radius <= 0)
+  if (upper_tolerance <= lower_tolerance)
+  {
+    ROS_ERROR_STREAM("BezierGrindingSurfacing::filterExtricationTrajectory: wrong tolerances");
     return false;
-
-  // Used to determine poses orientation in extrication path generation, see below (EOM)
-  const double upper_bound(extrication_radius * 10 / 100 + extrication_radius);
-  const double lower_bound(extrication_radius - extrication_radius * 5 / 100);
+  }
 
   // Get the first point of the grinding line
   Eigen::Vector3d line_first_point(first_point);
@@ -667,64 +689,61 @@ bool BezierGrindingSurfacing::filterExtricationTrajectory(const vtkSmartPointer<
   Eigen::Vector3d line_last_point(last_point);
   // Get the normal of the last point of the grinding line
   Eigen::Vector3d line_last_point_normal(last_point_normal);
+  // Array containing the coordinates of the first point of the line
+  double line_first_point_normal_coord[3] = {line_first_point_normal[0], line_first_point_normal[1],
+                                             line_first_point_normal[2]};
+  // Array containing the coordinates of the last point of the line
+  double line_last_point_normal_coord[3] = {line_last_point_normal[0], line_last_point_normal[1],
+                                            line_last_point_normal[2]};
 
-  // Index allowing to store the start of the intermediate part (see EOM explanation below)
-  EigenSTL::vector_Affine3d::iterator start_of_intermediate_part(trajectory.begin());
-
+  // Index allowing to store the start of the filtered line (see explanations above)
+  EigenSTL::vector_Affine3d::iterator start_of_filtered_line(trajectory.begin());
   for (EigenSTL::vector_Affine3d::iterator it(trajectory.begin()); it != trajectory.end(); it++)
   {
     // vect represent the vector between the first point of the grinding line and the current point of the extrication path
-    Eigen::Vector3d vect( (*it).translation() - line_first_point );
-    double scalar_res = line_first_point_normal.dot(vect);
-    if (scalar_res < upper_bound && scalar_res > lower_bound)
+    Eigen::Vector3d vect((*it).translation() - line_first_point);
+    double vect_coord[3] = {vect[0], vect[1], vect[2]};
+    double scalar_res = vtkMath::AngleBetweenVectors(line_first_point_normal_coord, vect_coord);
+    if (scalar_res < upper_tolerance && scalar_res > lower_tolerance)
     {
-      // the current point is near the point N, we start changing the orientation
-      // The orientation change is implicitly changed in the generateRobotPoses function
-      // so we just don't override it.
-      start_of_intermediate_part = it;
+      // If the angle is very small, the filtered line will start from this point
+      // (= we filter all the points before)
+      start_of_filtered_line = it;
       break; // Break the loop process
     }
   }
 
-  // Index allowing to store the end of the intermediate part (see EOM explanation below)
-  EigenSTL::vector_Affine3d::iterator end_of_intermediate_part(trajectory.end() - 1);
-
-  // FIXME Check if the reverse iterator works!
-  for (EigenSTL::vector_Affine3d::reverse_iterator it(trajectory.begin()); it != trajectory.begin(); it++)
+  // This is the same process as the first loop but reversed, we start from the end of the line
+  EigenSTL::vector_Affine3d::iterator end_of_filtered_line(trajectory.end() - 1);
+  for (EigenSTL::vector_Affine3d::reverse_iterator it(trajectory.rbegin()); it != trajectory.rend(); ++it)
   {
-    // Vect represent the vector between the last point of the grinding line and the current point of the extrication path
-    Eigen::Vector3d Vect((*it).translation() - line_last_point);
-    double scalar_res = line_last_point_normal.dot(Vect);
-    if (scalar_res < upper_bound && scalar_res > lower_bound)
+    Eigen::Vector3d vect((*it).translation() - line_last_point);
+    double vect_coord[3] = {vect[0], vect[1], vect[2]};
+    double scalar_res = vtkMath::AngleBetweenVectors(line_last_point_normal_coord, vect_coord);
+    if (scalar_res < upper_tolerance && scalar_res > lower_tolerance)
     {
-      // the current point is near the point N, we start changing the orientation
-      // The orientation change is implicitly changed in the generateRobotPoses function
-      // so we just don't override it.
-      end_of_intermediate_part = it;
-      break; // Break the loop process
+      end_of_filtered_line = (it.base() - 1);
+      break;
     }
   }
 
-  if (start_of_intermediate_part > end_of_intermediate_part)
+  if (start_of_filtered_line > end_of_filtered_line)
   {
     ROS_ERROR_STREAM("BezierGrindingSurfacing::filterExtricationTrajectory: Bad start/end indices!");
     return false;
   }
 
   EigenSTL::vector_Affine3d filtered_trajectory;
-  // Gather all the poses respecting the EOM condition into a vector of pose
-  while (start_of_intermediate_part <= end_of_intermediate_part)
+  while (start_of_filtered_line <= end_of_filtered_line)
   {
-    Eigen::Affine3d filtered_pose = *start_of_intermediate_part;
+    Eigen::Affine3d filtered_pose = *start_of_filtered_line;
     filtered_trajectory.push_back(filtered_pose);
-    start_of_intermediate_part++;
+    start_of_filtered_line++;
   }
   // Clear the current trajectory vector
   trajectory.clear();
-  trajectory.resize(filtered_trajectory.size());
   // Insert all the filtered points into the trajectory vector
   trajectory.insert(trajectory.begin(), filtered_trajectory.begin(), filtered_trajectory.end());
-  */
   return true;
 }
 

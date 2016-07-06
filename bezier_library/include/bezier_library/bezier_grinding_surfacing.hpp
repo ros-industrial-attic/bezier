@@ -144,22 +144,24 @@ public:
                                    const double minimal_distance);
 
   /**
-   *
+   * Filter extrications lines to remove the unwanted beginning and end points
    * @param[in] polydata
-   * @param[in] first_point
-   * @param[in] first_point_normal
-   * @param[in] last_point
-   * @param[in] last_point_normal
-   * @param[in] extrication_radius
+   * @param[in] first_point is the last point of the grinding line N
+   * @param[in] first_point_normal is the normal of the last point of the grinding line N
+   * @param[in] last_point is the first point of the grinding line N + 1
+   * @param[in] last_point_normal is the normal of the first point of the grinding line N + 1
+   * @param[in] upper_tolerance is the upper tolerance for the angle computation
+   * @param[in] lower_tolerance is the lower tolerance for the angle computation
    * @param[in/out] trajectory the trajectory to be filtered
-   * @return
+   * @return True if successful, false otherwise
    */
-  bool filterExtricationTrajectory(const vtkSmartPointer<vtkPolyData> polydata,
-                                   const Eigen::Vector3d first_point,
-                                   const Eigen::Vector3d first_point_normal,
-                                   const Eigen::Vector3d last_point,
-                                   const Eigen::Vector3d last_point_normal,
-                                   const double extrication_radius,
+  bool filterExtricationTrajectory(const vtkSmartPointer<vtkPolyData> &polydata,
+                                   const Eigen::Vector3d &first_point,
+                                   const Eigen::Vector3d &first_point_normal,
+                                   const Eigen::Vector3d &last_point,
+                                   const Eigen::Vector3d &last_point_normal,
+                                   const double upper_tolerance,
+                                   const double lower_tolerance,
                                    EigenSTL::vector_Affine3d &trajectory);
 
   /**
