@@ -142,9 +142,9 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
       it != grinding_trajectories.end() - 1; ++it)
   {
     // Last point of grinding N line
-    Eigen::Vector3d line_n_last_point((*it).front().translation());
+    Eigen::Vector3d line_n_last_point((*it).back().translation());
     // First point of grinding N+1 line
-    Eigen::Vector3d line_n1_first_point((*(it + 1)).back().translation());
+    Eigen::Vector3d line_n1_first_point((*(it + 1)).front().translation());
 
     Eigen::Vector4d plane_equation;
     Eigen::Vector3d plane_origin;
