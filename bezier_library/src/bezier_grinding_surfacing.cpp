@@ -117,12 +117,16 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
     }
 
   std::vector<EigenSTL::vector_Affine3d> grinding_trajectories;
+  Eigen::Vector3d direction_reference(slicing_orientation_.cross(global_mesh_normal));
   for (std::vector<vtkSmartPointer<vtkStripper> >::iterator it(grinding_strippers.begin());
       it != grinding_strippers.end(); ++it)
   {
     EigenSTL::vector_Affine3d traj;
     if (!generateRobotPosesAlongStripper(*it, traj))
       return "Could not generate robot poses for grinding trajectory";
+
+    if (!harmonizeLineOrientation(traj, direction_reference))
+      return "Could not harmonize grinding line orientation, trajectory is empty";
 
     grinding_trajectories.push_back(traj);
   }
@@ -137,6 +141,8 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
   // Generate all extrication trajectories
   EigenSTL::vector_Vector4d extrication_planes_equations;
   EigenSTL::vector_Vector3d extrication_planes_origins;
+  // Compute extrication direction vector orientation
+  EigenSTL::vector_Vector3d extrication_direction_vector;
 
   for (std::vector<EigenSTL::vector_Affine3d>::iterator it(grinding_trajectories.begin());
       it != grinding_trajectories.end() - 1; ++it)
@@ -145,6 +151,8 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
     Eigen::Vector3d line_n_last_point((*it).back().translation());
     // First point of grinding N+1 line
     Eigen::Vector3d line_n1_first_point((*(it + 1)).front().translation());
+
+    extrication_direction_vector.push_back(line_n1_first_point - line_n_last_point);
 
     Eigen::Vector4d plane_equation;
     Eigen::Vector3d plane_origin;
@@ -157,7 +165,8 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
     extrication_planes_origins.push_back(plane_origin);
   }
 
-  if (extrication_planes_equations.size() != extrication_planes_origins.size())
+  if (extrication_planes_equations.size() != extrication_planes_origins.size() ||
+      extrication_planes_equations.size() != extrication_direction_vector.size())
     return "Error: extrication plane equations/origins size are different!";
 
   std::vector<vtkSmartPointer<vtkStripper> > extrication_strippers;
@@ -186,6 +195,9 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
 
     extrication_trajectories.push_back(traj);
   }
+
+  for (unsigned i = 0; i < extrication_trajectories.size(); ++i)
+    harmonizeLineOrientation(extrication_trajectories[i], extrication_direction_vector[i]);
 
   unsigned index(0);
   if (display_markers)
@@ -713,6 +725,21 @@ bool BezierGrindingSurfacing::filterExtricationTrajectory(const vtkSmartPointer<
   // Insert all the filtered points into the trajectory vector
   trajectory.insert(trajectory.begin(), filtered_trajectory.begin(), filtered_trajectory.end());
   */
+  return true;
+}
+
+bool BezierGrindingSurfacing::harmonizeLineOrientation(EigenSTL::vector_Affine3d &poses_on_line,
+                                                       const Eigen::Vector3d &direction_ref)
+{
+  if(poses_on_line.size() <= 1)
+    return false;
+  // compare orientation of lines with reference
+  Eigen::Vector3d current_line_orientation(poses_on_line.back().translation() - poses_on_line.front().translation());
+
+  // if dot product < 0 we have to invert lines
+  if(direction_ref.dot(current_line_orientation) <= 0)
+    std::reverse(poses_on_line.begin(), poses_on_line.end());
+
   return true;
 }
 
