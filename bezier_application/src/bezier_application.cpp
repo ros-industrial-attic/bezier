@@ -88,8 +88,8 @@ int main(int argc,
 
   EigenSTL::vector_Affine3d way_points_vector;
   std::string error_message;
-
-  error_message = bezier_planner.generateTrajectory(way_points_vector);
+  std::vector<bool> is_grinding_pose;
+  error_message = bezier_planner.generateTrajectory(way_points_vector, is_grinding_pose);
 
   if (!error_message.empty() || way_points_vector.empty())
   {
