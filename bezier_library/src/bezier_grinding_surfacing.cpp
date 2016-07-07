@@ -249,11 +249,21 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
     }
   }
 
+  // Add one grinding traj, one extrication traj...
   trajectory.clear();
-  // FIXME Fill the trajectory
-  Eigen::Affine3d pose (Eigen::Affine3d::Identity());
-  pose.translation() << 1.0, 0.2, 0.5;
-  trajectory.push_back(pose);
+  std::vector<EigenSTL::vector_Affine3d>::iterator extrication_iterator(extrication_trajectories.begin());
+  for (EigenSTL::vector_Affine3d grinding_traj : grinding_trajectories)
+  {
+    for (Eigen::Affine3d grinding_pose : grinding_traj)
+      trajectory.push_back(grinding_pose);
+    if (extrication_iterator != extrication_trajectories.end())
+    {
+      for (Eigen::Affine3d extrication_pose : *extrication_iterator)
+        trajectory.push_back(extrication_pose);
+      extrication_iterator++;
+    }
+  }
+
   return "";
 }
 
