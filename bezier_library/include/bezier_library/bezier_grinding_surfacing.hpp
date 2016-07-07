@@ -55,16 +55,18 @@ public:
                            std::shared_ptr<ros::Publisher> &dilated_mesh_publisher);
 
   std::string generateTrajectory(EigenSTL::vector_Affine3d &trajectory,
+                                 std::vector<bool> &is_grinding_pose,
                                  const bool display_markers = true);
 
   std::string generateTrajectory(EigenSTL::vector_Affine3d &trajectory,
+                                 std::vector<bool> &is_grinding_pose,
                                  const double grinding_disk_machining_width,
                                  const unsigned covering_percentage,
                                  const double extrication_radius,
                                  const double lean_angle = 0.0,
                                  const AXIS_OF_ROTATION axis_of_rotation = AXIS_OF_ROTATION::Y,
                                  const Eigen::Vector3d &slicing_orientation = Eigen::Vector3d::Zero(),
-                                 const bool display_trajectory = true)
+                                 const bool display_markers = true)
   {
     grinding_disk_machining_width_ = grinding_disk_machining_width;
     covering_percentage_ = covering_percentage;
@@ -72,7 +74,7 @@ public:
     axis_of_rotation_ = axis_of_rotation;
     lean_angle_ = lean_angle;
     setSlicingOrientation(slicing_orientation);
-    return (generateTrajectory(trajectory, display_trajectory));
+    return (generateTrajectory(trajectory, is_grinding_pose, display_markers));
   }
 
   /**

@@ -89,10 +89,13 @@ public:
   /**
    * Generate a trajectory using the input mesh and parameters
    * @param[out] trajectory
+   * @param[out] is_grinding_pose whether the pose is a grinding or extrication one
    * @return An empty string on success, an error string otherwise
+   * @note trajectory and is_grinding_pose are always the same size
    */
   std::string virtual generateTrajectory(EigenSTL::vector_Affine3d &trajectory,
-                                         bool display_trajectory) = 0;
+                                         std::vector<bool> &is_grinding_pose,
+                                         bool display_markers) = 0;
 
   /**
    * Blocking call to make sure there is at least one subscriber to the RViz visual tool publisher

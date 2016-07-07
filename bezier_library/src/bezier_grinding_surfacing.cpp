@@ -36,6 +36,7 @@ void BezierGrindingSurfacing::setMeshesPublishers(std::shared_ptr<ros::Publisher
 }
 
 std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3d &trajectory,
+                                                        std::vector<bool> &is_grinding_pose,
                                                         const bool display_markers)
 {
   visual_tools_->deleteAllMarkers();
@@ -254,15 +255,22 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
 
   // Add one grinding traj, one extrication traj...
   trajectory.clear();
+  is_grinding_pose.clear();
   std::vector<EigenSTL::vector_Affine3d>::iterator extrication_iterator(extrication_trajectories.begin());
   for (EigenSTL::vector_Affine3d grinding_traj : grinding_trajectories)
   {
     for (Eigen::Affine3d grinding_pose : grinding_traj)
+    {
       trajectory.push_back(grinding_pose);
+      is_grinding_pose.push_back(true);
+    }
     if (extrication_iterator != extrication_trajectories.end())
     {
       for (Eigen::Affine3d extrication_pose : *extrication_iterator)
+      {
         trajectory.push_back(extrication_pose);
+        is_grinding_pose.push_back(false);
+      }
       extrication_iterator++;
     }
   }
