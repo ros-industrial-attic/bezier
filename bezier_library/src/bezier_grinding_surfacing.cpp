@@ -205,7 +205,7 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
   }
 
   // Extrication filter parameters
-  double filter_tolerance(M_PI/13);
+  double filter_tolerance(M_PI/8);
   // Iterator allowing to move through the grinding trajectories
   std::vector<EigenSTL::vector_Affine3d>::iterator grinding_iterator(grinding_trajectories.begin());
 
@@ -782,10 +782,18 @@ bool BezierGrindingSurfacing::harmonizeLineOrientation(EigenSTL::vector_Affine3d
   // compare orientation of lines with reference
   Eigen::Vector3d current_line_orientation(poses_on_line.back().translation() - poses_on_line.front().translation());
 
-  // if dot product < 0 we have to invert lines
-  if(direction_ref.dot(current_line_orientation) <= 0)
-    std::reverse(poses_on_line.begin(), poses_on_line.end());
+  // if dot product > 0 we don't invert the line
+  if(direction_ref.dot(current_line_orientation) > 0)
+    return true;
 
+  std::reverse(poses_on_line.begin(), poses_on_line.end());
+
+  // We reversed the line order so we need to reverse the axis X of each pose as well (this, the Y vector)
+  for (Eigen::Affine3d &pose: poses_on_line)
+  {
+    pose.linear().col(0) *= -1;
+    pose.linear().col(1) *= -1;
+  }
   return true;
 }
 
