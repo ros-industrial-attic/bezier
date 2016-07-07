@@ -148,15 +148,15 @@ void Bezier::displayTrajectory(const EigenSTL::vector_Affine3d &trajectory,
   for(Eigen::Affine3d tmp : trajectory)
     points.push_back(tmp.translation());
 
-  visual_tools_->publishPath(points, color, 0.0002);
+  visual_tools_->publishPath(points, color, 0.0005);
 
   unsigned index(0);
   if (display_normals)
   {
     for (Eigen::Affine3d tmp : trajectory)
     {
-      visual_tools_->publishXArrow(tmp, color, rviz_visual_tools::XXXXSMALL, 0.005);
-      visual_tools_->publishZArrow(tmp, color, rviz_visual_tools::XXXXSMALL, 0.005);
+      visual_tools_->publishXArrow(tmp, color, rviz_visual_tools::XXXXSMALL, 0.008);
+      visual_tools_->publishZArrow(tmp, color, rviz_visual_tools::XXXXSMALL, 0.008);
       if (display_labels)
       {
         tmp.translation() -= 0.01 * tmp.affine().col(2).head<3>();
@@ -249,9 +249,9 @@ bool Bezier::estimateGlobalMeshNormal(vtkSmartPointer<vtkPolyData> &polydata,
   pose.affine().col(0).head<3>() << mesh_normal;
   pose.affine().col(2).head<3>() << mesh_normal[2], 0, -mesh_normal[0];
   pose.affine().col(1).head<3>() << pose.affine().col(2).head<3>().cross(pose.affine().col(0).head<3>());
-  visual_tools_->publishArrow(pose, rviz_visual_tools::RED);
-  pose.translation() += 0.1 * pose.affine().col(0).head<3>();
-  visual_tools_->publishText(pose, "Global normal", rviz_visual_tools::RED, rviz_visual_tools::LARGE, false);
+  visual_tools_->publishArrow(pose, rviz_visual_tools::RED, rviz_visual_tools::XXSMALL);
+  pose.translation() += 0.07 * pose.affine().col(0).head<3>();
+  visual_tools_->publishText(pose, "Global normal", rviz_visual_tools::RED, rviz_visual_tools::SMALL, false);
   visual_tools_->triggerBatchPublish();
 #endif
   return true;
@@ -285,9 +285,9 @@ bool Bezier::estimateSlicingOrientation(vtkSmartPointer<vtkPolyData> &polydata,
   pose.affine().col(0).head<3>() << orientation;
   pose.affine().col(2).head<3>() << orientation[2], 0, -orientation[0];
   pose.affine().col(1).head<3>() << pose.affine().col(2).head<3>().cross(pose.affine().col(0).head<3>());
-  visual_tools_->publishArrow(pose, rviz_visual_tools::BLUE);
-  pose.translation() += 0.1 * pose.affine().col(0).head<3>();
-  visual_tools_->publishText(pose, "Slicing orientation", rviz_visual_tools::BLUE, rviz_visual_tools::LARGE, false);
+  visual_tools_->publishArrow(pose, rviz_visual_tools::BLUE, rviz_visual_tools::XXSMALL);
+  pose.translation() += 0.07 * pose.affine().col(0).head<3>();
+  visual_tools_->publishText(pose, "Slicing orientation", rviz_visual_tools::BLUE, rviz_visual_tools::SMALL, false);
   visual_tools_->triggerBatchPublish();
 #endif
 
