@@ -148,14 +148,15 @@ void Bezier::displayTrajectory(const EigenSTL::vector_Affine3d &trajectory,
   for(Eigen::Affine3d tmp : trajectory)
     points.push_back(tmp.translation());
 
-  visual_tools_->publishPath(points, color, 0.005);
+  visual_tools_->publishPath(points, color, 0.0002);
 
   unsigned index(0);
   if (display_normals)
   {
     for (Eigen::Affine3d tmp : trajectory)
     {
-      visual_tools_->publishZArrow(tmp, color, rviz_visual_tools::XXXSMALL, 0.03);
+      visual_tools_->publishXArrow(tmp, color, rviz_visual_tools::XXXXSMALL, 0.005);
+      visual_tools_->publishZArrow(tmp, color, rviz_visual_tools::XXXXSMALL, 0.005);
       if (display_labels)
       {
         tmp.translation() -= 0.01 * tmp.affine().col(2).head<3>();
