@@ -160,7 +160,7 @@ void Bezier::displayTrajectory(const EigenSTL::vector_Affine3d &trajectory,
       if (display_labels)
       {
         tmp.translation() -= 0.01 * tmp.affine().col(2).head<3>();
-        visual_tools_->publishText(tmp, boost::lexical_cast<std::string>(index++), rviz_visual_tools::GREEN, rviz_visual_tools::SMALL, false);
+        visual_tools_->publishText(tmp, boost::lexical_cast<std::string>(index++), color, rviz_visual_tools::SMALL, false);
       }
     }
   }
@@ -239,7 +239,7 @@ bool Bezier::estimateGlobalMeshNormal(vtkSmartPointer<vtkPolyData> &polydata,
   mesh_normal[2] = model_coefficients.values[2];
   mesh_normal.normalize();
 
-#ifdef VIZ_DEBUG
+  // RViz visual tools
   Eigen::Affine3d pose(Eigen::Affine3d::Identity());
   double centroid[3];
   centroid[0] = polydata->GetCenter()[0];
@@ -253,7 +253,6 @@ bool Bezier::estimateGlobalMeshNormal(vtkSmartPointer<vtkPolyData> &polydata,
   pose.translation() += 0.07 * pose.affine().col(0).head<3>();
   visual_tools_->publishText(pose, "Global normal", rviz_visual_tools::RED, rviz_visual_tools::SMALL, false);
   visual_tools_->triggerBatchPublish();
-#endif
   return true;
 }
 
@@ -275,7 +274,7 @@ bool Bezier::estimateSlicingOrientation(vtkSmartPointer<vtkPolyData> &polydata,
     return false;
   }
 
-#ifdef VIZ_DEBUG
+  // RViz visual tools
   Eigen::Affine3d pose(Eigen::Affine3d::Identity());
   double centroid[3];
   centroid[0] = polydata->GetCenter()[0];
@@ -289,8 +288,6 @@ bool Bezier::estimateSlicingOrientation(vtkSmartPointer<vtkPolyData> &polydata,
   pose.translation() += 0.07 * pose.affine().col(0).head<3>();
   visual_tools_->publishText(pose, "Slicing orientation", rviz_visual_tools::BLUE, rviz_visual_tools::SMALL, false);
   visual_tools_->triggerBatchPublish();
-#endif
-
   return true;
 }
 

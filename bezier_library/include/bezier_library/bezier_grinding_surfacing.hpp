@@ -175,7 +175,7 @@ public:
    * Harmonize grinding/extrication lines orientation.
    * @param[in/out] poses is a vector of poses on a line
    * @param[in] direction_ref is direction vector reference
-   * @return True if successful, false otherwise
+   * @return True if line was reversed, false otherwise
    */
   bool harmonizeLineOrientation(EigenSTL::vector_Affine3d &poses,
                                 const Eigen::Vector3d &direction_ref);

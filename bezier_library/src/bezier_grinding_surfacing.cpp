@@ -112,13 +112,15 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
     return "Could not slice polydata for grinding trajectories";
 
   for (vtkSmartPointer<vtkStripper> stripper : grinding_strippers)
+  {
     if (stripper->GetOutput()->GetNumberOfLines() > 1)
     {
       ROS_ERROR_STREAM(
           "BezierGrindingSurfacing::generateTrajectory: Grinding stripper has " << stripper->GetOutput()->GetNumberOfLines() << " lines");
       // FIXME Handle this case!
-      //return "Grinding tripper has more than 1 line (mesh has a hole). Not implemented yet!";
+      //return "Grinding stripper has more than 1 line (mesh has a hole). Not implemented yet!";
     }
+  }
 
   std::vector<EigenSTL::vector_Affine3d> grinding_trajectories;
   Eigen::Vector3d direction_reference(slicing_orientation_.cross(global_mesh_normal));
@@ -128,12 +130,13 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
     EigenSTL::vector_Affine3d traj;
     if (!generateRobotPosesAlongStripper(*it, traj))
     {
-      ROS_WARN_STREAM("Could not generate robot poses for grinding trajectory");
+      ROS_WARN_STREAM(
+          "BezierGrindingSurfacing::generateTrajectory: Could not generate robot poses for grinding trajectory");
       continue;
     }
 
-    if (!harmonizeLineOrientation(traj, direction_reference))
-      return "Could not harmonize grinding line orientation, trajectory is empty";
+    if (harmonizeLineOrientation(traj, direction_reference))
+      ROS_INFO_STREAM("BezierGrindingSurfacing::generateTrajectory: Grinding line reversed");
 
     grinding_trajectories.push_back(traj);
   }
@@ -211,7 +214,8 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
 
   for (unsigned i = 0; i < extrication_trajectories.size(); ++i)
   {
-    harmonizeLineOrientation(extrication_trajectories[i], extrication_direction_vector[i]);
+    //if (harmonizeLineOrientation(extrication_trajectories[i], direction_reference))
+      ROS_INFO_STREAM("BezierGrindingSurfacing::generateTrajectory: Extrication line reversed");
 
     // Last point and normal of the grinding line N
     Eigen::Vector3d first_point((*grinding_iterator).back().translation());
@@ -241,7 +245,7 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
     {
       if (index > 11)
         index = 0;
-      displayTrajectory(traj, visualToolsColorFromIndex(index++), true);
+      displayTrajectory(traj, visualToolsColorFromIndex(index++), true, true);
     }
 
     index = 0;
@@ -249,7 +253,7 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
     {
       if (index > 11)
         index = 0;
-      displayTrajectory(traj, visualToolsColorFromIndex(index++), true);
+      displayTrajectory(traj, visualToolsColorFromIndex(index++), true, true);
     }
   }
 
@@ -777,23 +781,25 @@ bool BezierGrindingSurfacing::filterExtricationTrajectory(const vtkSmartPointer<
 bool BezierGrindingSurfacing::harmonizeLineOrientation(EigenSTL::vector_Affine3d &poses_on_line,
                                                        const Eigen::Vector3d &direction_ref)
 {
-  if(poses_on_line.size() <= 1)
+  if (poses_on_line.size() <= 1)
     return false;
-  // compare orientation of lines with reference
+
+  // Compare orientation of lines with reference
   Eigen::Vector3d current_line_orientation(poses_on_line.back().translation() - poses_on_line.front().translation());
 
-  // if dot product > 0 we don't invert the line
-  if(direction_ref.dot(current_line_orientation) > 0)
-    return true;
+  // If dot product > 0 we don't invert the line
+  if (direction_ref.dot(current_line_orientation) > 0)
+    return false;
 
   std::reverse(poses_on_line.begin(), poses_on_line.end());
 
-  // We reversed the line order so we need to reverse the axis X of each pose as well (this, the Y vector)
-  for (Eigen::Affine3d &pose: poses_on_line)
+  // We reversed the line order so we need to reverse the axis X/Y of each pose as well
+  for (Eigen::Affine3d &pose : poses_on_line)
   {
     pose.linear().col(0) *= -1;
     pose.linear().col(1) *= -1;
   }
+
   return true;
 }
 
