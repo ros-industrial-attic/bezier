@@ -201,7 +201,7 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
   }
 
   // Extrication filter parameters
-  double filter_tolerance(M_PI/8);
+  double filter_tolerance(M_PI/13);
   // Iterator allowing to move through the grinding trajectories
   std::vector<EigenSTL::vector_Affine3d>::iterator grinding_iterator(grinding_trajectories.begin());
 
@@ -699,20 +699,29 @@ bool BezierGrindingSurfacing::filterExtricationTrajectory(const vtkSmartPointer<
 
   // Index allowing to store the start of the filtered line (see explanations above)
   EigenSTL::vector_Affine3d::iterator start_of_filtered_line(trajectory.begin());
+  bool enable_smooth_approach = false;
   for (EigenSTL::vector_Affine3d::iterator it(trajectory.begin()); it != trajectory.end(); it++)
   {
     // vect represent the vector between the first point of the grinding line and the current point of the extrication path
     Eigen::Vector3d vect((*it).translation() - line_first_point);
     double vect_coord[3] = {vect[0], vect[1], vect[2]};
     double scalar_res = vtkMath::AngleBetweenVectors(line_first_point_normal_coord, vect_coord);
-    if (scalar_res < upper_tolerance && scalar_res > lower_tolerance)
+    if (!enable_smooth_approach && scalar_res < upper_tolerance && scalar_res > lower_tolerance)
     {
       // If the angle is very small, the filtered line will start from this point
       // (= we filter all the points before)
       start_of_filtered_line = it;
-      break; // Break the loop process
+      enable_smooth_approach = true;
+    }
+
+    if(enable_smooth_approach && !(scalar_res < upper_tolerance && scalar_res > lower_tolerance))
+    {
+      start_of_filtered_line = it - 1;
+      break; // Break the filtering process for this side of the trajectory
     }
   }
+
+  enable_smooth_approach = false;
 
   // This is the same process as the first loop but reversed, we start from the end of the line
   EigenSTL::vector_Affine3d::iterator end_of_filtered_line(trajectory.end() - 1);
@@ -721,10 +730,16 @@ bool BezierGrindingSurfacing::filterExtricationTrajectory(const vtkSmartPointer<
     Eigen::Vector3d vect((*it).translation() - line_last_point);
     double vect_coord[3] = {vect[0], vect[1], vect[2]};
     double scalar_res = vtkMath::AngleBetweenVectors(line_last_point_normal_coord, vect_coord);
-    if (scalar_res < upper_tolerance && scalar_res > lower_tolerance)
+    if (!enable_smooth_approach && scalar_res < upper_tolerance && scalar_res > lower_tolerance)
     {
       end_of_filtered_line = (it.base() - 1);
-      break;
+      enable_smooth_approach = true;
+    }
+
+    if (enable_smooth_approach && !(scalar_res < upper_tolerance && scalar_res > lower_tolerance))
+    {
+      end_of_filtered_line = (it.base());
+      break; // Break the filtering process for this side of the trajectory
     }
   }
 
