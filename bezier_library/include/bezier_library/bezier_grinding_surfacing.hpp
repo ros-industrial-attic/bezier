@@ -142,6 +142,12 @@ public:
                                        EigenSTL::vector_Affine3d &trajectory);
 
   /**
+   * Invert the X axis orientation by inverting the X and Y vectors of the pose
+   * @param[in] line to be modified
+   */
+  void invertXAxisOfLinePoses(EigenSTL::vector_Affine3d &line);
+
+  /**
    * Filters points that are too close from each others
    * @param line the line to be filtered, it contains the point and the normal
    * @param minimal_distance the minimal accepted distance between two consecutive points

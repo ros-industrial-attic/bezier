@@ -204,6 +204,11 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
     if (!generateRobotPosesAlongStripper(*it, traj))
       return "Could not generate robot poses for extrication trajectory";
 
+    // We generated the pose from N to N+1 but when extricating the grinder
+    // the orientation should stay the same as the one when grinding.
+    // So we revert the X axis to travel backwards:
+    invertXAxisOfLinePoses(traj);
+
     extrication_trajectories.push_back(traj);
   }
 
@@ -570,6 +575,17 @@ bool BezierGrindingSurfacing::generateRobotPosesAlongStripper(const vtkSmartPoin
   return true;
 }
 
+void BezierGrindingSurfacing::invertXAxisOfLinePoses(EigenSTL::vector_Affine3d &line)
+{
+  // Reverse X and Y vectors for each pose of the line
+  // Z stays untouched, this is a PI rotation on the Z axis
+  for (Eigen::Affine3d &pose : line)
+  {
+    pose.linear().col(0) *= -1;
+    pose.linear().col(1) *= -1;
+  }
+}
+
 bool BezierGrindingSurfacing::filterNeighborPosesTooClose(BezierPointNormalTable &trajectory,
                                                           const double minimal_distance)
 {
@@ -794,12 +810,7 @@ bool BezierGrindingSurfacing::harmonizeLineOrientation(EigenSTL::vector_Affine3d
   std::reverse(poses_on_line.begin(), poses_on_line.end());
 
   // We reversed the line order so we need to reverse the axis X/Y of each pose as well
-  for (Eigen::Affine3d &pose : poses_on_line)
-  {
-    pose.linear().col(0) *= -1;
-    pose.linear().col(1) *= -1;
-  }
-
+  invertXAxisOfLinePoses(poses_on_line);
   return true;
 }
 
