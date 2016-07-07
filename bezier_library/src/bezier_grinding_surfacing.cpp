@@ -126,7 +126,10 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
   {
     EigenSTL::vector_Affine3d traj;
     if (!generateRobotPosesAlongStripper(*it, traj))
-      return "Could not generate robot poses for grinding trajectory";
+    {
+      ROS_WARN_STREAM("Could not generate robot poses for grinding trajectory");
+      continue;
+    }
 
     if (!harmonizeLineOrientation(traj, direction_reference))
       return "Could not harmonize grinding line orientation, trajectory is empty";
