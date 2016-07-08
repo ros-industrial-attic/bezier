@@ -58,10 +58,10 @@ int main(int argc,
   }
 
   // Generate trajectory
-  double grinder_width = 0.05; // meters
+  double grinder_width = 0.031; // meters
   unsigned covering_percentage = 0; // %
-  double extrication_radius = 0.05; // meters
-  double angle_value = -0.4; // radians
+  double extrication_radius = 0.04; // meters
+  double angle_value = -0.22; // radians
   BezierGrindingSurfacing::AXIS_OF_ROTATION axis = BezierGrindingSurfacing::AXIS_OF_ROTATION::Y;
   BezierGrindingSurfacing bezier_planner(mesh_cad_path, grinder_width, covering_percentage, extrication_radius,
                                          angle_value, axis);

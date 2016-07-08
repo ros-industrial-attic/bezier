@@ -112,13 +112,15 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
     return "Could not slice polydata for grinding trajectories";
 
   for (vtkSmartPointer<vtkStripper> stripper : grinding_strippers)
+  {
     if (stripper->GetOutput()->GetNumberOfLines() > 1)
     {
       ROS_ERROR_STREAM(
           "BezierGrindingSurfacing::generateTrajectory: Grinding stripper has " << stripper->GetOutput()->GetNumberOfLines() << " lines");
       // FIXME Handle this case!
-      //return "Grinding tripper has more than 1 line (mesh has a hole). Not implemented yet!";
+      //return "Grinding stripper has more than 1 line (mesh has a hole). Not implemented yet!";
     }
+  }
 
   std::vector<EigenSTL::vector_Affine3d> grinding_trajectories;
   Eigen::Vector3d direction_reference(slicing_orientation_.cross(global_mesh_normal));
@@ -128,12 +130,13 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
     EigenSTL::vector_Affine3d traj;
     if (!generateRobotPosesAlongStripper(*it, traj))
     {
-      ROS_WARN_STREAM("Could not generate robot poses for grinding trajectory");
+      ROS_WARN_STREAM(
+          "BezierGrindingSurfacing::generateTrajectory: Could not generate robot poses for grinding trajectory");
       continue;
     }
 
-    if (!harmonizeLineOrientation(traj, direction_reference))
-      return "Could not harmonize grinding line orientation, trajectory is empty";
+    if (harmonizeLineOrientation(traj, direction_reference))
+      ROS_INFO_STREAM("BezierGrindingSurfacing::generateTrajectory: Grinding line reversed");
 
     grinding_trajectories.push_back(traj);
   }
@@ -201,17 +204,23 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
     if (!generateRobotPosesAlongStripper(*it, traj))
       return "Could not generate robot poses for extrication trajectory";
 
+    // We generated the pose from N to N+1 but when extricating the grinder
+    // the orientation should stay the same as the one when grinding.
+    // So we revert the X axis to travel backwards:
+    invertXAxisOfLinePoses(traj);
+
     extrication_trajectories.push_back(traj);
   }
 
   // Extrication filter parameters
-  double filter_tolerance(M_PI/13);
+  double filter_tolerance(M_PI/8);
   // Iterator allowing to move through the grinding trajectories
   std::vector<EigenSTL::vector_Affine3d>::iterator grinding_iterator(grinding_trajectories.begin());
 
   for (unsigned i = 0; i < extrication_trajectories.size(); ++i)
   {
-    harmonizeLineOrientation(extrication_trajectories[i], extrication_direction_vector[i]);
+    //if (harmonizeLineOrientation(extrication_trajectories[i], direction_reference))
+      ROS_INFO_STREAM("BezierGrindingSurfacing::generateTrajectory: Extrication line reversed");
 
     // Last point and normal of the grinding line N
     Eigen::Vector3d first_point((*grinding_iterator).back().translation());
@@ -233,6 +242,59 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
                                      filter_tolerance, -filter_tolerance, extrication_trajectories[i]))
       return "Could not filter extrication trajectory";
   }
+
+  // Generate last extrication trajectory from last grinding point to first grinding point
+  if (grinding_trajectories.empty())
+    return "Grinding trajectories are empty, could not generate last extrication trajectory";
+
+  if (grinding_trajectories.front().empty() || grinding_trajectories.back().empty())
+    return "First or last grinding trajectory is empty, could not generate last extrication trajectory";
+
+  Eigen::Vector3d grinding_first_point (grinding_trajectories.front().front().translation());
+  Eigen::Vector3d grinding_last_point (grinding_trajectories.back().back().translation());
+
+  Eigen::Vector4d last_extrication_plane_eq;
+  Eigen::Vector3d last_extrication_plane_origin;
+  estimateExtricationSlicingPlane(grinding_last_point, grinding_first_point, global_mesh_normal,
+                                  last_extrication_plane_eq, last_extrication_plane_origin);
+
+  vtkSmartPointer<vtkStripper> last_extrication_stripper = vtkSmartPointer<vtkStripper>::New();
+  if(!sliceMeshWithPlane(extrication_mesh, last_extrication_plane_eq, last_extrication_plane_origin, last_extrication_stripper))
+    return "Could not slice mesh for last extrication trajectory";
+
+  if (last_extrication_stripper->GetOutput()->GetNumberOfLines() > 1)
+  {
+    ROS_ERROR_STREAM(
+        "BezierGrindingSurfacing::generateTrajectory: Extrication stripper has " <<
+        last_extrication_stripper->GetOutput()->GetNumberOfLines() << " lines");
+    // FIXME Handle this case!
+    //return "Extrication stripper has more than 1 line (mesh has a hole). Not implemented yet!";
+  }
+
+  EigenSTL::vector_Affine3d last_extrication_traj;
+  if (!generateRobotPosesAlongStripper(last_extrication_stripper, last_extrication_traj))
+    return "Could not generate robot poses for last extrication trajectory";
+
+  if (harmonizeLineOrientation(last_extrication_traj, -last_extrication_plane_eq.head<3>()))
+    ROS_INFO_STREAM("BezierGrindingSurfacing::generateTrajectory: Last extrication line reversed");
+
+  // Last point and normal of the last grinding line
+  Eigen::Vector3d first_point(grinding_trajectories.back().back().translation());
+  Eigen::Vector3d first_point_normal(grinding_trajectories.back().back().linear().col(2));
+  first_point_normal *= -1;
+
+  // First point and normal of the first grinding line
+  Eigen::Vector3d last_point(grinding_trajectories.front().front().translation());
+  Eigen::Vector3d last_point_normal(grinding_trajectories.front().front().linear().col(2));
+  last_point_normal *= -1;
+
+  // Application of the extrication filter on the last extrication line
+  if (!filterExtricationTrajectory(dilated_mesh, first_point, first_point_normal, last_point, last_point_normal,
+                                   filter_tolerance, -filter_tolerance, last_extrication_traj))
+    return "Could not filter last extrication trajectory";
+
+  invertXAxisOfLinePoses(last_extrication_traj);
+  extrication_trajectories.push_back(last_extrication_traj);
 
   unsigned index(0);
   if (display_markers)
@@ -292,8 +354,8 @@ void BezierGrindingSurfacing::estimateGrindingSlicingPlanes(const vtkSmartPointe
                                                             const Eigen::Vector3d &polydata_center,
                                                             EigenSTL::vector_Vector4d &planes_equations)
 {
-  vtkIdType min_point_index;
-  vtkIdType max_point_index;
+  vtkIdType min_point_index(0);
+  vtkIdType max_point_index(0);
   double min = std::numeric_limits<double>::max();
   double max = std::numeric_limits<double>::min();
   for (vtkIdType index = 0; index < polydata->GetNumberOfPoints(); index++)
@@ -482,7 +544,7 @@ bool BezierGrindingSurfacing::generateRobotPosesAlongStripper(const vtkSmartPoin
     }
   }
 
-  if(!filterNeighborPosesTooClose(point_normal_table, 1e-2))
+  if(!filterNeighborPosesTooClose(point_normal_table, 5e-3))
   {
     ROS_ERROR_STREAM("BezierGrindingSurfacing::generateRobotPosesAlongStripper: Cannot filter grinding trajectory");
     return false;
@@ -564,6 +626,17 @@ bool BezierGrindingSurfacing::generateRobotPosesAlongStripper(const vtkSmartPoin
   }
 
   return true;
+}
+
+void BezierGrindingSurfacing::invertXAxisOfLinePoses(EigenSTL::vector_Affine3d &line)
+{
+  // Reverse X and Y vectors for each pose of the line
+  // Z stays untouched, this is a PI rotation on the Z axis
+  for (Eigen::Affine3d &pose : line)
+  {
+    pose.linear().col(0) *= -1;
+    pose.linear().col(1) *= -1;
+  }
 }
 
 bool BezierGrindingSurfacing::filterNeighborPosesTooClose(BezierPointNormalTable &trajectory,
@@ -777,15 +850,20 @@ bool BezierGrindingSurfacing::filterExtricationTrajectory(const vtkSmartPointer<
 bool BezierGrindingSurfacing::harmonizeLineOrientation(EigenSTL::vector_Affine3d &poses_on_line,
                                                        const Eigen::Vector3d &direction_ref)
 {
-  if(poses_on_line.size() <= 1)
+  if (poses_on_line.size() <= 1)
     return false;
-  // compare orientation of lines with reference
+
+  // Compare orientation of lines with reference
   Eigen::Vector3d current_line_orientation(poses_on_line.back().translation() - poses_on_line.front().translation());
 
-  // if dot product < 0 we have to invert lines
-  if(direction_ref.dot(current_line_orientation) <= 0)
-    std::reverse(poses_on_line.begin(), poses_on_line.end());
+  // If dot product > 0 we don't invert the line
+  if (direction_ref.dot(current_line_orientation) > 0)
+    return false;
 
+  std::reverse(poses_on_line.begin(), poses_on_line.end());
+
+  // We reversed the line order so we need to reverse the axis X/Y of each pose as well
+  invertXAxisOfLinePoses(poses_on_line);
   return true;
 }
 

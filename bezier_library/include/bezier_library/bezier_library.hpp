@@ -45,9 +45,6 @@
 // ROS
 #include <rviz_visual_tools/rviz_visual_tools.h>
 
-// Allows to visually debug everything computed
-#define VIZ_DEBUG
-
 /**
  * Because it's missing in Eigen
  */
