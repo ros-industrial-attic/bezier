@@ -243,6 +243,59 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
       return "Could not filter extrication trajectory";
   }
 
+  // Generate last extrication trajectory from last grinding point to first grinding point
+  if (grinding_trajectories.empty())
+    return "Grinding trajectories are empty, could not generate last extrication trajectory";
+
+  if (grinding_trajectories.front().empty() || grinding_trajectories.back().empty())
+    return "First or last grinding trajectory is empty, could not generate last extrication trajectory";
+
+  Eigen::Vector3d grinding_first_point (grinding_trajectories.front().front().translation());
+  Eigen::Vector3d grinding_last_point (grinding_trajectories.back().back().translation());
+
+  Eigen::Vector4d last_extrication_plane_eq;
+  Eigen::Vector3d last_extrication_plane_origin;
+  estimateExtricationSlicingPlane(grinding_last_point, grinding_first_point, global_mesh_normal,
+                                  last_extrication_plane_eq, last_extrication_plane_origin);
+
+  vtkSmartPointer<vtkStripper> last_extrication_stripper = vtkSmartPointer<vtkStripper>::New();
+  if(!sliceMeshWithPlane(extrication_mesh, last_extrication_plane_eq, last_extrication_plane_origin, last_extrication_stripper))
+    return "Could not slice mesh for last extrication trajectory";
+
+  if (last_extrication_stripper->GetOutput()->GetNumberOfLines() > 1)
+  {
+    ROS_ERROR_STREAM(
+        "BezierGrindingSurfacing::generateTrajectory: Extrication stripper has " <<
+        last_extrication_stripper->GetOutput()->GetNumberOfLines() << " lines");
+    // FIXME Handle this case!
+    //return "Extrication stripper has more than 1 line (mesh has a hole). Not implemented yet!";
+  }
+
+  EigenSTL::vector_Affine3d last_extrication_traj;
+  if (!generateRobotPosesAlongStripper(last_extrication_stripper, last_extrication_traj))
+    return "Could not generate robot poses for last extrication trajectory";
+
+  if (harmonizeLineOrientation(last_extrication_traj, -last_extrication_plane_eq.head<3>()))
+    ROS_INFO_STREAM("BezierGrindingSurfacing::generateTrajectory: Last extrication line reversed");
+
+  // Last point and normal of the last grinding line
+  Eigen::Vector3d first_point(grinding_trajectories.back().back().translation());
+  Eigen::Vector3d first_point_normal(grinding_trajectories.back().back().linear().col(2));
+  first_point_normal *= -1;
+
+  // First point and normal of the first grinding line
+  Eigen::Vector3d last_point(grinding_trajectories.front().front().translation());
+  Eigen::Vector3d last_point_normal(grinding_trajectories.front().front().linear().col(2));
+  last_point_normal *= -1;
+
+  // Application of the extrication filter on the last extrication line
+  if (!filterExtricationTrajectory(dilated_mesh, first_point, first_point_normal, last_point, last_point_normal,
+                                   filter_tolerance, -filter_tolerance, last_extrication_traj))
+    return "Could not filter last extrication trajectory";
+
+  invertXAxisOfLinePoses(last_extrication_traj);
+  extrication_trajectories.push_back(last_extrication_traj);
+
   unsigned index(0);
   if (display_markers)
   {
