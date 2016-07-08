@@ -354,8 +354,8 @@ void BezierGrindingSurfacing::estimateGrindingSlicingPlanes(const vtkSmartPointe
                                                             const Eigen::Vector3d &polydata_center,
                                                             EigenSTL::vector_Vector4d &planes_equations)
 {
-  vtkIdType min_point_index;
-  vtkIdType max_point_index;
+  vtkIdType min_point_index(0);
+  vtkIdType max_point_index(0);
   double min = std::numeric_limits<double>::max();
   double max = std::numeric_limits<double>::min();
   for (vtkIdType index = 0; index < polydata->GetNumberOfPoints(); index++)
