@@ -303,7 +303,7 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
     {
       if (index > 11)
         index = 0;
-      displayTrajectory(traj, visualToolsColorFromIndex(index++), true, true);
+      displayTrajectory(traj, visualToolsColorFromIndex(index++), true);
     }
 
     index = 0;
@@ -311,7 +311,7 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
     {
       if (index > 11)
         index = 0;
-      displayTrajectory(traj, visualToolsColorFromIndex(index++), true, true);
+      displayTrajectory(traj, visualToolsColorFromIndex(index++), true);
     }
   }
 
@@ -544,7 +544,7 @@ bool BezierGrindingSurfacing::generateRobotPosesAlongStripper(const vtkSmartPoin
     }
   }
 
-  if(!filterNeighborPosesTooClose(point_normal_table, 1e-2))
+  if(!filterNeighborPosesTooClose(point_normal_table, 5e-3))
   {
     ROS_ERROR_STREAM("BezierGrindingSurfacing::generateRobotPosesAlongStripper: Cannot filter grinding trajectory");
     return false;
