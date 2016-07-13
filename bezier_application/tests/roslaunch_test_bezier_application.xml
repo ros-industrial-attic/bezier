@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="surfacing_mode_str" value="true" />
+  <arg name="mesh_cad_str" value="plane/plane_defect.ply" />
+
+  <group ns="bezier_application__">
+    <include file="$(find bezier_application)/launch/fanuc_m20ia.launch">
+      <arg name="sim" value="false" />
+      <arg name="robot_ip" value="127.0.0.1" />
+      <arg name="mesh_cad" value="$(arg mesh_cad_str)" />
+      <arg name="surfacing_mode" value="$(arg surfacing_mode_str)" />
+    </include>
+  </group>
+</launch>
+

@@ -29,3 +29,7 @@ else()
   target_link_libraries(${PROJECT_NAME} bezier_library bezier_grinding_surfacing ${catkin_LIBRARIES} vtkHybrid vtkWidgets ${PCL_LIBRARIES})
 endif()
 
+if (CATKIN_ENABLE_TESTING)
+  find_package(roslaunch REQUIRED)
+  roslaunch_add_file_check(tests/roslaunch_test_bezier_application.xml)
+endif()
