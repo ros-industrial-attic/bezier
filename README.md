@@ -33,6 +33,7 @@ Dependencies
 - [Robot Operating System](http://wiki.ros.org/ROS/Installation)
 - [`industrial-core`](http://wiki.ros.org/industrial_core)
 - [`fanuc`](http://wiki.ros.org/fanuc)
+- [`rviz_visual_tools`](https://github.com/davetcoleman/rviz_visual_tools)
 - [`Visualization Toolkit`](https://gitlab.kitware.com/vtk/vtk/) version `7.0` or later
 - [`Point Cloud Library`](https://github.com/PointCloudLibrary/pcl) version `1.8.0` or later. :warning: PCL has to be compiled against the same VTK version that is used for this package.
 - `C++11` is required 
@@ -46,16 +47,33 @@ Please read [bezier_library/doc/README.md](bezier_library/doc/README.md).
 Quick help
 ----------
 
-**Build**
+**Build using [wstool](http://wiki.ros.org/wstool) and [catkin_tools](http://catkin-tools.readthedocs.io/en/latest/)**
 
-Clone this repository into your catkin source folder and build the workspace:
+Install wstool in order manage the repos inside the workspace
 ```bash
-cd $(catkin_workspace)/src
-git clone https://github.com/ros-industrial-consortium/bezier.git
+sudo apt-get install python-wstool
 ```
+
+```bash
+mkdir catkin_workspace
+mkdir -p catkin_workspace/src
+cd catkin_workspace/src
+```
+
+```bash
+wstool init .
+wstool merge https://github.com/ros-industrial-consortium/bezier/raw/indigo-devel/bezier.rosinstall
+wstool update
+rosdep install --from-paths . --ignore-src
+cd ..
+catkin build
+```
+
+If you have troubles with `rviz_visual_tools` not finding Eigen, please revert this commit [rviz_visual_tools/commit/425d208b2719cafeae3e4f3ccdd6b44853400a32](https://github.com/davetcoleman/rviz_visual_tools/commit/425d208b2719cafeae3e4f3ccdd6b44853400a32) in the `rviz_visual_tools` clone.
 
 **Launch**
 
+Source the `devel/setup.bash` file and launch:
 ```bash
 roslaunch bezier_application bezier_application_m20ia.launch surfacing_mode:=true mesh_cad:=plane/plane_defect.ply
 ```
