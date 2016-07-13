@@ -125,8 +125,22 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
     }
   }
 
-  std::vector<EigenSTL::vector_Affine3d> grinding_trajectories;
+  // Compute the vector used to harmonize all the trajectories directions and display it
   Eigen::Vector3d direction_reference(slicing_orientation_.cross(global_mesh_normal));
+  Eigen::Affine3d pose_dir_reference(Eigen::Affine3d::Identity());
+  double centroid[3];
+  centroid[0] = input_meshes_[SURFACE_MESH]->GetCenter()[0];
+  centroid[1] = input_meshes_[SURFACE_MESH]->GetCenter()[1];
+  centroid[2] = input_meshes_[SURFACE_MESH]->GetCenter()[2];
+  pose_dir_reference.translation() << centroid[0], centroid[1], centroid[2];
+  pose_dir_reference.affine().col(0).head<3>() << direction_reference;
+  pose_dir_reference.affine().col(2).head<3>() << direction_reference[2], 0, -direction_reference[0];
+  pose_dir_reference.affine().col(1).head<3>() << pose_dir_reference.affine().col(2).head<3>().cross(pose_dir_reference.affine().col(0).head<3>());
+  visual_tools_->publishArrow(pose_dir_reference, rviz_visual_tools::GREEN, rviz_visual_tools::XXSMALL);
+  pose_dir_reference.translation() += 0.07 * pose_dir_reference.affine().col(0).head<3>();
+  visual_tools_->publishText(pose_dir_reference, "Direction reference", rviz_visual_tools::GREEN, rviz_visual_tools::SMALL, false);
+
+  std::vector<EigenSTL::vector_Affine3d> grinding_trajectories;
   for (std::vector<vtkSmartPointer<vtkStripper> >::iterator it(grinding_strippers.begin());
       it != grinding_strippers.end(); ++it)
   {
@@ -216,13 +230,13 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
   }
 
   // Extrication filter parameters
-  double filter_tolerance(M_PI/8);
+  double filter_tolerance(M_PI/6);
   // Iterator allowing to move through the grinding trajectories
   std::vector<EigenSTL::vector_Affine3d>::iterator grinding_iterator(grinding_trajectories.begin());
 
   for (unsigned i = 0; i < extrication_trajectories.size(); ++i)
   {
-    //if (harmonizeLineOrientation(extrication_trajectories[i], direction_reference))
+    if (harmonizeLineOrientation(extrication_trajectories[i], -direction_reference))
       ROS_INFO_STREAM("BezierGrindingSurfacing::generateTrajectory: Extrication line reversed");
 
     // Last point and normal of the grinding line N
@@ -243,7 +257,9 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
     // Application of the extrication filter on the current extrication line
     if (!filterExtricationTrajectory(dilated_mesh, first_point, first_point_normal, last_point, last_point_normal,
                                      filter_tolerance, -filter_tolerance, extrication_trajectories[i]))
+    {
       return "Could not filter extrication trajectory";
+    }
   }
 
   // Generate last extrication trajectory from last grinding point to first grinding point
