@@ -45,6 +45,9 @@
 // ROS
 #include <rviz_visual_tools/rviz_visual_tools.h>
 
+// Exceptions
+#include "append_bezier_exception.hpp"
+
 /**
  * Because it's missing in Eigen
  */

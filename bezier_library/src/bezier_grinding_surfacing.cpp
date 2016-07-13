@@ -15,8 +15,11 @@ BezierGrindingSurfacing::BezierGrindingSurfacing(const std::string input_mesh,
         axis_of_rotation_(axis_of_rotation),
         slicing_orientation_(slicing_orientation)
 {
-  // FIXME Throw exception here!
-  appendInputMesh(input_mesh);
+  if(!appendInputMesh(input_mesh))
+  {
+    AppendBezierException load_mesh_exception("BezierLibrary::appendInputMesh: Cannot load input mesh");
+    throw load_mesh_exception;
+  }
   input_mesh_absolute_path_ = input_mesh;
 }
 

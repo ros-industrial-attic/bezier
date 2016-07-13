@@ -63,8 +63,18 @@ int main(int argc,
   double extrication_radius = 0.04; // meters
   double angle_value = -0.22; // radians
   BezierGrindingSurfacing::AXIS_OF_ROTATION axis = BezierGrindingSurfacing::AXIS_OF_ROTATION::Y;
-  BezierGrindingSurfacing bezier_planner(mesh_cad_path, grinder_width, covering_percentage, extrication_radius,
-                                         angle_value, axis);
+  std::shared_ptr<BezierGrindingSurfacing> bezier_planner;
+  try
+  {
+    bezier_planner.reset(
+        new BezierGrindingSurfacing(mesh_cad_path, grinder_width, covering_percentage, extrication_radius, angle_value,
+                                    axis));
+  }
+  catch (std::exception &bezier_exception)
+  {
+    ROS_ERROR_STREAM(bezier_exception.what());
+    return 0;
+  }
 
   // Set-up publishers for the visualization
   std::shared_ptr<ros::Publisher> cad_mesh_pub;
@@ -83,13 +93,13 @@ int main(int argc,
     sleep(1);
   }
 
-  bezier_planner.setMeshesPublishers(cad_mesh_pub, dilated_mesh_pub);
-  bezier_planner.waitForRvizVisualToolsSubscriber();
+  bezier_planner->setMeshesPublishers(cad_mesh_pub, dilated_mesh_pub);
+  bezier_planner->waitForRvizVisualToolsSubscriber();
 
   EigenSTL::vector_Affine3d way_points_vector;
   std::string error_message;
   std::vector<bool> is_grinding_pose;
-  error_message = bezier_planner.generateTrajectory(way_points_vector, is_grinding_pose);
+  error_message = bezier_planner->generateTrajectory(way_points_vector, is_grinding_pose);
 
   if (!error_message.empty() || way_points_vector.empty())
   {
