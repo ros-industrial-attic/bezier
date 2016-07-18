@@ -508,7 +508,7 @@ bool BezierGrindingSurfacing::generateRobotPosesAlongStripper(const vtkSmartPoin
     return false;
   }
 
-  vtkIdType* indices; // FIXME Use a vtkSmartPointer
+  vtkIdType* indices;
   vtkIdType number_of_points;
   vtk_observer_->Clear();
   while (cells->GetNextCell(number_of_points, indices))
@@ -546,6 +546,7 @@ bool BezierGrindingSurfacing::generateRobotPosesAlongStripper(const vtkSmartPoin
       point_normal_table.push_back(pn);
     }
   }
+  free(indices);
 
   if(!filterNeighborPosesTooClose(point_normal_table, 5e-3))
   {
