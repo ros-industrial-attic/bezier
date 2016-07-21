@@ -55,7 +55,6 @@ sudo apt-get install python-wstool
 ```
 
 ```bash
-mkdir catkin_workspace
 mkdir -p catkin_workspace/src
 cd catkin_workspace/src
 ```
