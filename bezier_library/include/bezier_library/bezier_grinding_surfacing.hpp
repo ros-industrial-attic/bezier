@@ -145,7 +145,7 @@ public:
    * Invert the X axis orientation by inverting the X and Y vectors of the pose
    * @param[in] line to be modified
    */
-  void invertXAxisOfLinePoses(EigenSTL::vector_Affine3d &line);
+  void invertXAxisOfPoses(EigenSTL::vector_Affine3d &line);
 
   /**
    * Filters points that are too close from each others
