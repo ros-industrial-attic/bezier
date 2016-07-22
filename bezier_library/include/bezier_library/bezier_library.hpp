@@ -90,6 +90,7 @@ public:
    * Generate a trajectory using the input mesh and parameters
    * @param[out] trajectory
    * @param[out] is_grinding_pose whether the pose is a grinding or extrication one
+   * @param[in] display_markers
    * @return An empty string on success, an error string otherwise
    * @note trajectory and is_grinding_pose are always the same size
    */
@@ -133,6 +134,7 @@ protected:
   /**
    * Save a mesh file on the disk, supported formats are PLY and STL
    * @param[in] file_absolute_path
+   * @param[in] polydata the mesh to be saved
    * @return True if successful, false otherwise
    */
   bool saveMesh(const std::string file_absolute_path,
@@ -228,7 +230,7 @@ protected:
   bool computeNormals(vtkSmartPointer<vtkPolyData> &polydata);
 
   /** @brief This function uses vtkImplicitModeller in order to dilate the polydata surface/mesh
-   *  @param[in/out] dilated_polydata the mesh to be dilated
+   *  @param[in,out] polydata the mesh to be dilated
    *  @param[in] radius of the dilation
    *  @return True if successful, false otherwise
    *  @bug Dilation problem happens when the radius is too high, the dilated mesh has unexpected holes.

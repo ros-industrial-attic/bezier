@@ -165,7 +165,7 @@ public:
    * @param[in] last_point_normal is the normal of the first point of the grinding line N + 1
    * @param[in] upper_tolerance is the upper tolerance for the angle computation
    * @param[in] lower_tolerance is the lower tolerance for the angle computation
-   * @param[in/out] trajectory the trajectory to be filtered
+   * @param[in,out] trajectory the trajectory to be filtered
    * @return True if successful, false otherwise
    */
   bool filterExtricationTrajectory(const vtkSmartPointer<vtkPolyData> &polydata,
@@ -179,7 +179,7 @@ public:
 
   /**
    * Harmonize grinding/extrication lines orientation.
-   * @param[in/out] poses is a vector of poses on a line
+   * @param[in,out] poses is a vector of poses on a line
    * @param[in] direction_ref is direction vector reference
    * @return True if line was reversed, false otherwise
    */

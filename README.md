@@ -1,12 +1,12 @@
  [![Institut Maupertuis logo](https://avatars1.githubusercontent.com/u/12760694?v=3&s=80)](http://www.institutmaupertuis.fr) Bezier
-=============================
+===
 
 ROS-Industrial Special Project: 6D tool path planner
 
 [Pierre Étienne Bézier](https://en.wikipedia.org/wiki/Pierre_B%C3%A9zier) September 1, 1910 – November 25, 1999; *was a French engineer and one of the founders of the fields of solid, geometric and physical modeling as well as in the field of representing curves, especially in CAD/CAM systems. As an engineer at Renault, he became a leader in the transformation of design and manufacturing, through mathematics and computing tools, into computer-aided design and three-dimensional modeling. Bézier patented and popularized, but did not invent the Bézier curves and Bézier surfaces that are now used in most computer-aided design and computer graphics systems.*
 
 Travis CI
-=========
+===
 [![Build Status](https://travis-ci.org/ros-industrial-consortium/bezier.svg?branch=indigo-devel)](https://travis-ci.org/ros-industrial-consortium/bezier)
 
 General information
@@ -25,7 +25,7 @@ Directories in the project
 | Directory  | Description
 ------------ | -----------
 `bezier` | Meta-package
-`bezier_application` | Example usage of the `bezier_library` for grinding operations on a Fanuc R-1000iA robot.
+`bezier_application` | Example usage of the `bezier_library` for grinding operations on a Fanuc R-1000iA robot
 `bezier_library` | Library containing several path planning algorithms
 
 Dependencies
@@ -35,7 +35,8 @@ Dependencies
 - [`fanuc`](http://wiki.ros.org/fanuc)
 - [`rviz_visual_tools`](https://github.com/davetcoleman/rviz_visual_tools)
 - [`Visualization Toolkit`](https://gitlab.kitware.com/vtk/vtk/) version `7.0` or later
-- [`Point Cloud Library`](https://github.com/PointCloudLibrary/pcl) version `1.8.0` or later. :warning: PCL has to be compiled against the same VTK version that is used for this package.
+- [`Point Cloud Library`](https://github.com/PointCloudLibrary/pcl) version `1.8.0` or later. :warning: PCL has to be compiled against the same VTK version that is used for this package
+- [`Rviz Visual Tools`](https://github.com/davetcoleman/rviz_visual_tools)
 - `C++11` is required 
 
 This package has been tested with Ubuntu 14.04 and ROS Indigo.
