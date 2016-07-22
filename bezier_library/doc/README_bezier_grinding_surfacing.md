@@ -91,7 +91,7 @@ This operation generates all extrications lines which are then converted to robo
 
 14. Invert X axis of poses: Extrication
 ---
-[invertXAxisOfPoses](README_invert_x_axis_of_line_poses.md) reverse the x axe of the extrications poses thus allowing to keep the tool with the same orientation than the grinding lines on the extrications trajectories.
+[invertXAxisOfPoses](README_invert_x_axis_of_poses.md) reverse the x axe of the extrications poses thus allowing to keep the tool with the same orientation than the grinding lines on the extrications trajectories.
 
 15. Harmonize line orientation: Extrication
 ---
@@ -138,7 +138,7 @@ first grinding line.
 
 22. Invert X axis of poses: Last extrication pass
 ---
-[invertXAxisOfPoses](README_invert_x_axis_of_line_poses.md) reverse the x axe of the last extrication trajectory poses thus avoiding the tools to make a PI rotation on himself to reach the initial start point.
+[invertXAxisOfPoses](README_invert_x_axis_of_poses.md) reverse the x axe of the last extrication trajectory poses thus avoiding the tools to make a PI rotation on himself to reach the initial start point.
 
 23. Result
 ---
