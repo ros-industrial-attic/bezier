@@ -25,7 +25,7 @@ Directories in the project
 | Directory  | Description
 ------------ | -----------
 `bezier` | Meta-package
-`bezier_application` | Example usage of the `bezier_library` for grinding operations on a Fanuc R-1000iA robot
+`bezier_application` | Example usage of the `bezier_library` package on a Fanuc robot
 `bezier_library` | Library containing several path planning algorithms
 
 Dependencies
