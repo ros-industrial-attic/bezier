@@ -36,7 +36,6 @@ Dependencies
 - [`rviz_visual_tools`](https://github.com/davetcoleman/rviz_visual_tools)
 - [`Visualization Toolkit`](https://gitlab.kitware.com/vtk/vtk/) version `7.0` or later
 - [`Point Cloud Library`](https://github.com/PointCloudLibrary/pcl) version `1.8.0` or later. :warning: PCL has to be compiled against the same VTK version that is used for this package
-- [`Rviz Visual Tools`](https://github.com/davetcoleman/rviz_visual_tools)
 - `C++11` is required 
 
 This package has been tested with Ubuntu 14.04 and ROS Indigo.
