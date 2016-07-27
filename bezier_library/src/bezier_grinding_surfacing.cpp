@@ -294,7 +294,11 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
   if (!generateRobotPosesAlongStripper(last_extrication_stripper, last_extrication_traj))
     return "Could not generate robot poses for last extrication trajectory";
 
-  if (harmonizeLineOrientation(last_extrication_traj, -last_extrication_plane_eq.head<3>()))
+  const Eigen::Vector3d last_extrication_orientation_reference(grinding_first_point - grinding_last_point);
+  if (last_extrication_orientation_reference == Eigen::Vector3d::Zero())
+    return "Could not harmonize last extrication trajectory, reference vector is Zero !";
+
+  if (harmonizeLineOrientation(last_extrication_traj, last_extrication_orientation_reference))
     ROS_INFO_STREAM("BezierGrindingSurfacing::generateTrajectory: Last extrication line reversed");
 
   // Last point and normal of the last grinding line
