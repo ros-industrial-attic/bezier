@@ -778,8 +778,11 @@ bool BezierGrindingSurfacing::filterExtricationTrajectory(const vtkSmartPointer<
   // The formula used to project the vector is : A - (A.n)n with A the vector to project and N the normal of the plane
   // The formula used to compute the 2D angle is : arctan(determinant, (dot product))
 
-  if (trajectory.size() <= 4)
+  if (trajectory.size() <= 2)
+  {
+    ROS_ERROR_STREAM("BezierGrindingSurfacing::filterExtricationTrajectory: Trajectory is too small!");
     return false;
+  }
 
   // Get the first point of the grinding line
   Eigen::Vector3d line_first_point(first_point);
