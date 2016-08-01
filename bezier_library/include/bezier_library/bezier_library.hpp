@@ -262,7 +262,7 @@ protected:
    * inferior to a minimum number specified by parameter
    * @param [in,out] polydata is the mesh to be cleaned
    * @param [in] minimal_number_of_cells a set of triangles has to match to pass the filter
-   * @return
+   * @return True if successful, false otherwise
    */
   bool removeIsolatedTrianglesFilter(vtkSmartPointer<vtkPolyData> &polydata, const unsigned minimal_number_of_cells);
 

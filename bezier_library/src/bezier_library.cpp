@@ -578,18 +578,14 @@ bool Bezier::keepUpperPartofDilatedMesh(vtkSmartPointer<vtkPolyData> &base_polyd
   return true;
 }
 
-bool Bezier::removeIsolatedTrianglesFilter(vtkSmartPointer<vtkPolyData> &polydata, const unsigned minimal_number_of_cells)
+bool Bezier::removeIsolatedTrianglesFilter(vtkSmartPointer<vtkPolyData> &polydata,
+                                           const unsigned minimal_number_of_cells)
 {
-  //FIXME add Operation observer
   vtkSmartPointer<vtkPolyDataConnectivityFilter> connectivityFilter =
       vtkSmartPointer<vtkPolyDataConnectivityFilter>::New();
   connectivityFilter->SetExtractionModeToAllRegions();
   connectivityFilter->ColorRegionsOff();
-#if VTK_MAJOR_VERSION <= 5
-  connectivityFilter->SetInput(polydata);
-#else
   connectivityFilter->SetInputData(polydata);
-#endif
   connectivityFilter->AddObserver(vtkCommand::ErrorEvent, vtk_observer_);
   connectivityFilter->AddObserver(vtkCommand::WarningEvent, vtk_observer_);
   connectivityFilter->Update();
