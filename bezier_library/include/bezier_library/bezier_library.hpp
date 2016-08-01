@@ -35,6 +35,8 @@
 #include <vtkKdTreePointLocator.h>
 #include <vtkReverseSense.h>
 #include <vtkPointData.h>
+#include <vtkPolyDataConnectivityFilter.h>
+#include <vtkAppendPolyData.h>
 #include "error_observer.h"
 
 // PCL
@@ -254,6 +256,15 @@ protected:
   bool keepUpperPartofDilatedMesh(vtkSmartPointer<vtkPolyData> &base_polydata_,
                                   const vtkSmartPointer<vtkPolyData> &dilated_polydata,
                                   vtkSmartPointer<vtkPolyData> &upper_part_dilated_polydata);
+
+  /**
+   * This function clean a polydata by deleting all set of triangles which have a total number of cells
+   * inferior to a minimum number specified by parameter
+   * @param [in,out] polydata is the mesh to be cleaned
+   * @param [in] minimal_number_of_cells a set of triangles has to match to pass the filter
+   * @return
+   */
+  bool removeIsolatedTrianglesFilter(vtkSmartPointer<vtkPolyData> &polydata, const unsigned minimal_number_of_cells);
 
   /**
    * Get an rviz_visual_tool color given an index

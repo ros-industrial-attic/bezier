@@ -578,6 +578,103 @@ bool Bezier::keepUpperPartofDilatedMesh(vtkSmartPointer<vtkPolyData> &base_polyd
   return true;
 }
 
+bool Bezier::removeIsolatedTrianglesFilter(vtkSmartPointer<vtkPolyData> &polydata, const unsigned minimal_number_of_cells)
+{
+  //FIXME add Operation observer
+  vtkSmartPointer<vtkPolyDataConnectivityFilter> connectivityFilter =
+      vtkSmartPointer<vtkPolyDataConnectivityFilter>::New();
+  connectivityFilter->SetExtractionModeToAllRegions();
+  connectivityFilter->ColorRegionsOff();
+#if VTK_MAJOR_VERSION <= 5
+  connectivityFilter->SetInput(polydata);
+#else
+  connectivityFilter->SetInputData(polydata);
+#endif
+  connectivityFilter->AddObserver(vtkCommand::ErrorEvent, vtk_observer_);
+  connectivityFilter->AddObserver(vtkCommand::WarningEvent, vtk_observer_);
+  connectivityFilter->Update();
+
+  if (vtk_observer_->GetWarning())
+  {
+    ROS_WARN_STREAM("Bezier::removeIsolatedTrianglesFilter: " << vtk_observer_->GetWarningMessage());
+    vtk_observer_->Clear();
+    return false;
+  }
+  if (vtk_observer_->GetError())
+  {
+    ROS_ERROR_STREAM("Bezier::removeIsolatedTrianglesFilter: " << vtk_observer_->GetErrorMessage());
+    vtk_observer_->Clear();
+    return false;
+  }
+
+  unsigned regions_number = connectivityFilter->GetNumberOfExtractedRegions();
+  if (regions_number == 0)
+  {
+    ROS_ERROR_STREAM("Bezier::removeIsolatedTrianglesFilter: This mesh is empty !");
+    return false;
+  }
+
+  connectivityFilter->SetExtractionModeToSpecifiedRegions();
+  connectivityFilter->InitializeSpecifiedRegionList();
+
+  vtkSmartPointer<vtkAppendPolyData> appendFilter = vtkSmartPointer<vtkAppendPolyData>::New();
+  unsigned number_of_regions_added(0);
+  for (unsigned index(0); index < regions_number; index++)
+  {
+    connectivityFilter->AddSpecifiedRegion(index);
+    vtk_observer_->Clear();
+    vtkSmartPointer<vtkPolyData> region = vtkSmartPointer<vtkPolyData>::New();
+    connectivityFilter->SetOutput(region);
+    connectivityFilter->Update();
+
+    if (vtk_observer_->GetWarning())
+    {
+      ROS_WARN_STREAM("Bezier::removeIsolatedTrianglesFilter: " << vtk_observer_->GetWarningMessage());
+      vtk_observer_->Clear();
+      return false;
+    }
+    if (vtk_observer_->GetError())
+    {
+      ROS_ERROR_STREAM("Bezier::removeIsolatedTrianglesFilter: " << vtk_observer_->GetErrorMessage());
+      vtk_observer_->Clear();
+      return false;
+    }
+
+    if (region->GetNumberOfCells() > minimal_number_of_cells)
+    {
+      number_of_regions_added++;
+      appendFilter->AddInputData(region);
+    }
+    connectivityFilter->DeleteSpecifiedRegion(index);
+  }
+
+  if (number_of_regions_added == 0)
+  {
+    ROS_ERROR_STREAM("Bezier::removeIsolatedTrianglesFilter: The output polydata is empty !");
+    return false;
+  }
+  appendFilter->SetOutput(polydata);
+  appendFilter->AddObserver(vtkCommand::ErrorEvent, vtk_observer_);
+  appendFilter->AddObserver(vtkCommand::WarningEvent, vtk_observer_);
+  vtk_observer_->Clear();
+  appendFilter->Update();
+
+  if (vtk_observer_->GetWarning())
+  {
+    ROS_WARN_STREAM("Bezier::removeIsolatedTrianglesFilter: " << vtk_observer_->GetWarningMessage());
+    vtk_observer_->Clear();
+    return false;
+  }
+  if (vtk_observer_->GetError())
+  {
+    ROS_ERROR_STREAM("Bezier::removeIsolatedTrianglesFilter: " << vtk_observer_->GetErrorMessage());
+    vtk_observer_->Clear();
+    return false;
+  }
+
+  return true;
+}
+
 /**
  * Get an rviz_visual_tool color given an index
  * @param[in] index of the color
