@@ -343,6 +343,23 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
   trajectory.clear();
   is_grinding_pose.clear();
   std::vector<EigenSTL::vector_Affine3d>::iterator extrication_iterator(extrication_trajectories.begin());
+
+  // The first pose of the trajectory is a point located above the first grinding pose.
+  // We use the last pose of the last extrication trajectory which is located above the
+  // first pose of the first grinding line. This point is stored as the first pose of the trajectory.
+  Eigen::Affine3d start_pose (extrication_trajectories.back().back());
+  // We keep the same orientation than the one of the first grinding pose of the first grinding line
+  start_pose.linear() << grinding_trajectories.front().front().linear();
+  trajectory.push_back(start_pose);
+  is_grinding_pose.push_back(false);
+
+  visual_tools_->publishXArrow(start_pose, rviz_visual_tools::GREEN, rviz_visual_tools::XXXXSMALL, 0.008);
+  visual_tools_->publishZArrow(start_pose, rviz_visual_tools::GREEN, rviz_visual_tools::XXXXSMALL, 0.008);
+
+  start_pose.translation() -= 0.01 * start_pose.affine().col(2).head<3>();
+  visual_tools_->publishText(start_pose, "Start pose", rviz_visual_tools::GREEN, rviz_visual_tools::SMALL, false);
+  visual_tools_->triggerBatchPublish();
+
   for (EigenSTL::vector_Affine3d grinding_traj : grinding_trajectories)
   {
     for (Eigen::Affine3d grinding_pose : grinding_traj)
