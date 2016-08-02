@@ -158,13 +158,6 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
     grinding_trajectories.push_back(traj);
   }
 
-  // Application of the grinding lean angle
-  for (EigenSTL::vector_Affine3d &poses : grinding_trajectories)
-  {
-    for (Eigen::Affine3d &pose : poses)
-      applyLeanAngle(pose, axis_of_rotation_, lean_angle_);
-  }
-
   // Generate all extrication trajectories
   EigenSTL::vector_Vector4d extrication_planes_equations;
   EigenSTL::vector_Vector3d extrication_planes_origins;
@@ -229,8 +222,6 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
     extrication_trajectories.push_back(traj);
   }
 
-  // Extrication filter parameters
-  double filter_tolerance(M_PI/6);
   // Iterator allowing to move through the grinding trajectories
   std::vector<EigenSTL::vector_Affine3d>::iterator grinding_iterator(grinding_trajectories.begin());
 
@@ -256,7 +247,7 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
 
     // Application of the extrication filter on the current extrication line
     if (!filterExtricationTrajectory(dilated_mesh, first_point, first_point_normal, last_point, last_point_normal,
-                                     filter_tolerance, -filter_tolerance, extrication_trajectories[i]))
+                                     extrication_planes_equations[i], extrication_trajectories[i]))
     {
       return "Could not filter extrication trajectory";
     }
@@ -313,11 +304,18 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
 
   // Application of the extrication filter on the last extrication line
   if (!filterExtricationTrajectory(dilated_mesh, first_point, first_point_normal, last_point, last_point_normal,
-                                   filter_tolerance, -filter_tolerance, last_extrication_traj))
+                                   last_extrication_plane_eq, last_extrication_traj))
     return "Could not filter last extrication trajectory";
 
   invertXAxisOfPoses(last_extrication_traj);
   extrication_trajectories.push_back(last_extrication_traj);
+
+  // Application of the grinding lean angle
+  for (EigenSTL::vector_Affine3d &poses : grinding_trajectories)
+  {
+    for (Eigen::Affine3d &pose : poses)
+      applyLeanAngle(pose, axis_of_rotation_, lean_angle_);
+  }
 
   unsigned index(0);
   if (display_markers)
@@ -762,92 +760,101 @@ bool BezierGrindingSurfacing::filterNeighborPosesTooClose(BezierPointNormalTable
 }
 
 bool BezierGrindingSurfacing::filterExtricationTrajectory(const vtkSmartPointer<vtkPolyData> &polydata,
-                                                          const Eigen::Vector3d &first_point,
-                                                          const Eigen::Vector3d &first_point_normal,
-                                                          const Eigen::Vector3d &last_point,
-                                                          const Eigen::Vector3d &last_point_normal,
-                                                          const double upper_tolerance,
-                                                          const double lower_tolerance,
-                                                          EigenSTL::vector_Affine3d &trajectory)
+                                   const Eigen::Vector3d &first_point,
+                                   const Eigen::Vector3d &first_point_normal,
+                                   const Eigen::Vector3d &last_point,
+                                   const Eigen::Vector3d &last_point_normal,
+                                   const Eigen::Vector4d &plane_equation,
+                                   EigenSTL::vector_Affine3d &trajectory)
 {
-  // The extrication filter compare the angle between a point of the grinding line and all the extrication
-  // points located in the side where the grinding point is placed.
-  // The filter works in two parts :
-  // - The first part use as a reference point the last point of the grinding line N. It compute the angle between
-  // the normal of this point and the vector between the reference point and the extrication point.
-  // as long as the value of the angle is outside the bounds defined by upper_tolerance and lower_tolerance,
-  // the extrication point is filtered. When the angle fall inside the bounds, the process for this side is stopped.
-  // - The same process is repeated on the other side of the extrication line, using as reference point, the first point
-  // of the grinding line N + 1
-  // At the end of theses process, all the point which haven't been filtered are removed from the trajectory vector
+  // The extrication filter use a 2D angle comparison method to reject inaccessible points from the extrication trajectory.
+  // The filter apply the comparison algorithm on both side of the extrication trajectory :
+  // - At the beginning of the trajectory, it takes the normal (Nor) of the last grinding point of the current grinding line (GN)
+  // - and make a projection of this vector onto the plane used to slice the mesh and generate the extrication trajectory.
+  // - It then computes a vector (AN) between the last grinding point A a extrication point N. Thanks to the projection made before,
+  // - the normal (Nor) and the vector (AN) are located into the same 2D plane. An angle computation it's performed.
+  // - The sign of the first angle computed is taken as reference. The operation is then repeated with the
+  // - following points (N+1, N+2 ...) as long as the current angle computed has the same sign than the reference angle.
+  // - A change of sign occur when we reach a point (T) located just above the grinding point, thus
+  // - accessible for the robot. Finally all the point located before (T) are removed from the trajectory.
+  // - The same process is repeated at the end side of the trajectory, but the normal (Nor) is the normal at the first point of the
+  // - next grinding line (GN +1) trajectory.
+  // The formula used to project the vector is : A - (A.n)n with A the vector to project and N the normal of the plane
+  // The formula used to compute the 2D angle is : arctan(determinant, (dot product))
 
-  if (trajectory.empty())
-    return false;
-
-  if (upper_tolerance <= lower_tolerance)
+  if (trajectory.size() <= 2)
   {
-    ROS_ERROR_STREAM("BezierGrindingSurfacing::filterExtricationTrajectory: Wrong tolerances");
+    ROS_ERROR_STREAM("BezierGrindingSurfacing::filterExtricationTrajectory: Trajectory is too small!");
     return false;
   }
 
   // Get the first point of the grinding line
   Eigen::Vector3d line_first_point(first_point);
   // Get the normal of the first point of the grinding line
-  Eigen::Vector3d line_first_point_normal(first_point_normal);
+  Eigen::Vector3d line_first_point_normal(first_point_normal.normalized());
   // Get the last point of the grinding line
   Eigen::Vector3d line_last_point(last_point);
   // Get the normal of the last point of the grinding line
-  Eigen::Vector3d line_last_point_normal(last_point_normal);
-  // Array containing the coordinates of the first point of the line
-  double line_first_point_normal_coord[3] = {line_first_point_normal[0], line_first_point_normal[1],
-                                             line_first_point_normal[2]};
-  // Array containing the coordinates of the last point of the line
-  double line_last_point_normal_coord[3] = {line_last_point_normal[0], line_last_point_normal[1],
-                                            line_last_point_normal[2]};
+  Eigen::Vector3d line_last_point_normal(last_point_normal.normalized());
 
-  // Index allowing to store the start of the filtered line (see explanations above)
+  // References vectors being projected onto the plane containing the extrication trajectory
+  Eigen::Vector3d line_first_point_normal_projected(Eigen::Vector3d::Identity());
+  Eigen::Vector3d line_last_point_normal_projected(Eigen::Vector3d::Identity());
+
+  // Computation of the vectors being projected using : A - (A.n)n with A the vector to be project and n the plane normal
+  line_first_point_normal_projected = (line_first_point_normal
+          - (line_first_point_normal.dot(plane_equation.head<3>().normalized())) * plane_equation.head<3>().normalized()).normalized();
+
+  line_last_point_normal_projected = (line_last_point_normal
+          - (line_last_point_normal.dot(plane_equation.head<3>().normalized())) * plane_equation.head<3>().normalized()).normalized();
+
+  // Iterator containing the index of the first point of the filtered trajectory
   EigenSTL::vector_Affine3d::iterator start_of_filtered_line(trajectory.begin());
-  bool enable_smooth_approach = false;
-  for (EigenSTL::vector_Affine3d::iterator it(trajectory.begin()); it != trajectory.end(); it++)
-  {
-    // vect represent the vector between the first point of the grinding line and the current point of the extrication path
-    Eigen::Vector3d vect((*it).translation() - line_first_point);
-    double vect_coord[3] = {vect[0], vect[1], vect[2]};
-    double scalar_res = vtkMath::AngleBetweenVectors(line_first_point_normal_coord, vect_coord);
-    if (!enable_smooth_approach && scalar_res < upper_tolerance && scalar_res > lower_tolerance)
-    {
-      // If the angle is very small, the filtered line will start from this point
-      // (= we filter all the points before)
-      start_of_filtered_line = it;
-      enable_smooth_approach = true;
-    }
+  // Iterator containing the index of the last point of the filtered trajectory
+  EigenSTL::vector_Affine3d::iterator end_of_filtered_line(trajectory.end() - 1);
 
-    if(enable_smooth_approach && !(scalar_res < upper_tolerance && scalar_res > lower_tolerance))
+  // Boolean allowing to compare the sign of the angles computed
+  bool sign = false;
+
+  // We compute the the first angle to get the reference sign
+  Eigen::Vector3d vect((trajectory.front().translation() - line_first_point).normalized());
+  double dot = line_first_point_normal_projected[0] * line_first_point_normal_projected[1] + vect[0] * vect[1];
+  double det = line_first_point_normal_projected[0] * vect[1] - vect[0] * line_first_point_normal_projected[1];
+  double angle = atan2(det, dot);
+  sign = std::signbit(angle);
+
+  for (EigenSTL::vector_Affine3d::iterator it(trajectory.begin() + 1); it != trajectory.end(); it++)
+  {
+    Eigen::Vector3d vect(((*it).translation() - line_first_point).normalized());
+    double dot = line_first_point_normal_projected[0] * line_first_point_normal_projected[1] + vect[0] * vect[1];
+    double det = line_first_point_normal_projected[0] * vect[1] - vect[0] * line_first_point_normal_projected[1];
+    double angle = atan2(det, dot);
+    if (std::signbit(angle) != sign)
     {
-      start_of_filtered_line = it - 1;
-      break; // Break the filtering process for this side of the trajectory
+      // The sign has toggled, we save the index of the current point and we stop the process
+      start_of_filtered_line = it;
+      break;
     }
   }
 
-  enable_smooth_approach = false;
+  // We compute the first angle to get the reference sign
+  vect = (trajectory.back().translation() - line_last_point).normalized();
+  dot = line_last_point_normal_projected[0] * line_last_point_normal_projected[1] + vect[0] * vect[1];
+  det = line_last_point_normal_projected[0] * vect[1] - vect[0] * line_last_point_normal_projected[1];
+  angle = atan2(det, dot);
+  sign = std::signbit(angle);
 
-  // This is the same process as the first loop but reversed, we start from the end of the line
-  EigenSTL::vector_Affine3d::iterator end_of_filtered_line(trajectory.end() - 1);
-  for (EigenSTL::vector_Affine3d::reverse_iterator it(trajectory.rbegin()); it != trajectory.rend(); ++it)
+  for (EigenSTL::vector_Affine3d::reverse_iterator it(trajectory.rbegin() + 1); it != trajectory.rend(); ++it)
   {
-    Eigen::Vector3d vect((*it).translation() - line_last_point);
-    double vect_coord[3] = {vect[0], vect[1], vect[2]};
-    double scalar_res = vtkMath::AngleBetweenVectors(line_last_point_normal_coord, vect_coord);
-    if (!enable_smooth_approach && scalar_res < upper_tolerance && scalar_res > lower_tolerance)
+    Eigen::Vector3d vect(((*it).translation() - line_last_point).normalized());
+    double dot = line_last_point_normal_projected[0] * line_last_point_normal_projected[1] + vect[0] * vect[1];
+    double det = line_last_point_normal_projected[0] * vect[1] - vect[0] * line_last_point_normal_projected[1];
+    double angle = atan2(det, dot);
+    if (std::signbit(angle) != sign)
     {
-      end_of_filtered_line = (it.base() - 1);
-      enable_smooth_approach = true;
-    }
-
-    if (enable_smooth_approach && !(scalar_res < upper_tolerance && scalar_res > lower_tolerance))
-    {
-      end_of_filtered_line = (it.base());
-      break; // Break the filtering process for this side of the trajectory
+      // The sign has toggled, we save the index of the current point and we stop the process
+      end_of_filtered_line = it.base() - 1;
+      break;
     }
   }
 

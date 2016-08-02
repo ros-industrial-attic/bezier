@@ -163,8 +163,7 @@ public:
    * @param[in] first_point_normal is the normal of the last point of the grinding line N
    * @param[in] last_point is the first point of the grinding line N + 1
    * @param[in] last_point_normal is the normal of the first point of the grinding line N + 1
-   * @param[in] upper_tolerance is the upper tolerance for the angle computation
-   * @param[in] lower_tolerance is the lower tolerance for the angle computation
+   * @param[in] plane_equation is the equation of the plane used to slice the mesh thus generating the extrication trajectory
    * @param[in,out] trajectory the trajectory to be filtered
    * @return True if successful, false otherwise
    */
@@ -173,8 +172,7 @@ public:
                                    const Eigen::Vector3d &first_point_normal,
                                    const Eigen::Vector3d &last_point,
                                    const Eigen::Vector3d &last_point_normal,
-                                   const double upper_tolerance,
-                                   const double lower_tolerance,
+                                   const Eigen::Vector4d &plane_equation,
                                    EigenSTL::vector_Affine3d &trajectory);
 
   /**
