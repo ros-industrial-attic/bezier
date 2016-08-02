@@ -157,7 +157,6 @@ public:
 
   /**
    * Filter extrications lines to remove the unwanted beginning and end points
-   * @param[in] polydata
    * @param[in] first_point is the last point of the grinding line N
    * @param[in] first_point_normal is the normal of the last point of the grinding line N
    * @param[in] last_point is the first point of the grinding line N + 1
@@ -166,8 +165,7 @@ public:
    * @param[in,out] trajectory the trajectory to be filtered
    * @return True if successful, false otherwise
    */
-  bool filterExtricationTrajectory(const vtkSmartPointer<vtkPolyData> &polydata,
-                                   const Eigen::Vector3d &first_point,
+  bool filterExtricationTrajectory(const Eigen::Vector3d &first_point,
                                    const Eigen::Vector3d &first_point_normal,
                                    const Eigen::Vector3d &last_point,
                                    const Eigen::Vector3d &last_point_normal,
@@ -182,6 +180,18 @@ public:
    */
   bool harmonizeLineOrientation(EigenSTL::vector_Affine3d &poses,
                                 const Eigen::Vector3d &direction_ref);
+
+  /**
+   * Generate a set of points on a line between a start and a end point
+   * @param[out] poses is a vector of poses generated on a line
+   * @param[in] start_point is the start point of the line
+   * @param[in] end_point is the end point of the line
+   * @param[in] number_of_poses is the number of poses to be generated
+   */
+  void generateIntermediatePoseOnLine(EigenSTL::vector_Affine3d &poses,
+                                      const Eigen::Vector3d &start_point,
+                                      const Eigen::Vector3d &end_point,
+                                      const unsigned number_of_poses);
 
 private:
   std::string
