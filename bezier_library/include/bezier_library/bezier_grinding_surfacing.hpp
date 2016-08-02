@@ -2,6 +2,7 @@
 #define BEZIER_GRINDING_SURFACING_HPP
 
 #include <bezier_library/bezier_library.hpp>
+#include <bezier_library/bezier_params_observer.hpp>
 #include <ros/package.h>
 #include <memory>
 
@@ -101,10 +102,22 @@ private:
   Bezier::AXIS_OF_ROTATION axis_of_rotation_;
 
   // Internals
+  std::shared_ptr<BezierParamsObserver> params_observer_;
   Eigen::Vector3d slicing_orientation_;
+  Eigen::Vector3d input_mesh_centroid_;
   std::string input_mesh_absolute_path_;
   std::shared_ptr<ros::Publisher> input_mesh_pub_;
   std::shared_ptr<ros::Publisher> dilated_mesh_pub_;
+
+  // PolyData
+  vtkSmartPointer<vtkPolyData> dilated_mesh;
+  vtkSmartPointer<vtkPolyData> extrication_mesh;
+
+  // Vector of generated poses (trajectories)
+  std::vector<EigenSTL::vector_Affine3d> grinding_trajectories;
+  std::vector<EigenSTL::vector_Affine3d> extrication_trajectories;
+  std::vector<EigenSTL::vector_Affine3d> start_intermediate_poses_trajectories;
+  std::vector<EigenSTL::vector_Affine3d> end_intermediate_poses_trajectories;
 
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
