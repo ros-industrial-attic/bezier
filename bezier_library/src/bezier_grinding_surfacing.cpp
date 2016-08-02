@@ -249,7 +249,7 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
     last_point_normal *= -1; // FIXME: See line 212 (first_point_normal *= -1;)
 
     // Application of the extrication filter on the current extrication line
-    if (!filterExtricationTrajectory(dilated_mesh, first_point, first_point_normal, last_point, last_point_normal,
+    if (!filterExtricationTrajectory(first_point, first_point_normal, last_point, last_point_normal,
                                      extrication_planes_equations[i], extrication_trajectories[i]))
     {
       return "Could not filter extrication trajectory";
@@ -306,7 +306,7 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
   last_point_normal *= -1;
 
   // Application of the extrication filter on the last extrication line
-  if (!filterExtricationTrajectory(dilated_mesh, first_point, first_point_normal, last_point, last_point_normal,
+  if (!filterExtricationTrajectory(first_point, first_point_normal, last_point, last_point_normal,
                                    last_extrication_plane_eq, last_extrication_traj))
     return "Could not filter last extrication trajectory";
 
@@ -749,8 +749,7 @@ void BezierGrindingSurfacing::filterNeighborPosesTooClose(BezierPointNormalTable
 
 }
 
-bool BezierGrindingSurfacing::filterExtricationTrajectory(const vtkSmartPointer<vtkPolyData> &polydata,
-                                   const Eigen::Vector3d &first_point,
+bool BezierGrindingSurfacing::filterExtricationTrajectory(const Eigen::Vector3d &first_point,
                                    const Eigen::Vector3d &first_point_normal,
                                    const Eigen::Vector3d &last_point,
                                    const Eigen::Vector3d &last_point_normal,
