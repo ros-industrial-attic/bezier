@@ -83,6 +83,9 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
   if (!keepUpperPartofDilatedMesh(input_meshes_[SURFACE_MESH], dilated_mesh, extrication_mesh))
     return "Failed to extract upper part of dilated mesh";
 
+  if(!removeIsolatedTrianglesFilter(extrication_mesh, 20))
+    return "Failed to filter isolated triangles in extrication mesh";
+
   // Compute normals
   if (!computeNormals(input_meshes_[SURFACE_MESH]))
     return "Error computing normals in surface mesh";
