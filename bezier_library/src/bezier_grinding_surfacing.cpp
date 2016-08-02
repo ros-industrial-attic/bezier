@@ -569,11 +569,7 @@ bool BezierGrindingSurfacing::generateRobotPosesAlongStripper(const vtkSmartPoin
   }
   free(indices);
 
-  if(!filterNeighborPosesTooClose(point_normal_table, 5e-3))
-  {
-    ROS_ERROR_STREAM("BezierGrindingSurfacing::generateRobotPosesAlongStripper: Cannot filter grinding trajectory");
-    return false;
-  }
+  filterNeighborPosesTooClose(point_normal_table, 5e-3);
 
   if (point_normal_table.empty())
   {
@@ -664,19 +660,19 @@ void BezierGrindingSurfacing::invertXAxisOfPoses(EigenSTL::vector_Affine3d &line
   }
 }
 
-bool BezierGrindingSurfacing::filterNeighborPosesTooClose(BezierPointNormalTable &trajectory,
+void BezierGrindingSurfacing::filterNeighborPosesTooClose(BezierPointNormalTable &trajectory,
                                                           const double minimal_distance)
 {
 
   if (trajectory.size() <= 1)
-    return false;
+    return;
 
   // Vector that contain the indices for all points to be removed from the trajectory vector
   std::vector<unsigned> indices_to_be_removed;
   // The offset variable allows to count how much point will be skipped before reaching a point
   // located far enough from the current point. Every point located between the index of the
   // current point and the next point located at index of current point + offset is deleted.
-  // The offset is set to 1 at initialization, so the next point will be immediately the one
+  // The offset is set to 1 at initialisation, so the next point will be immediately the one
   // following the current into the trajectory vector
   int offset = 1;
   // Main loop through the trajectory vector
@@ -689,10 +685,8 @@ bool BezierGrindingSurfacing::filterNeighborPosesTooClose(BezierPointNormalTable
       Eigen::Vector3d point(trajectory[index].first);
       // Next point from which the distance is computed
       Eigen::Vector3d next_point(trajectory[index + 1].first);
-      double point_values[3] = {point[0], point[1], point[2]};
-      double next_point_values[3] = {next_point[0], next_point[1], next_point[2]};
       // Distance computing between the current point and the designated next point
-      double distance = sqrt(vtkMath::Distance2BetweenPoints(point_values, next_point_values));
+      double distance = (point - next_point).norm();
       if (distance < minimal_distance)
       {
         // The distance is less than minimal distant constraint of the filter
@@ -708,11 +702,8 @@ bool BezierGrindingSurfacing::filterNeighborPosesTooClose(BezierPointNormalTable
           offset++;
           // the next point index is the current point index plus the offset
           next_point = trajectory[index + offset].first;
-          next_point_values[0] = next_point[0];
-          next_point_values[1] = next_point[1];
-          next_point_values[2] = next_point[2];
           // The new distance between the current point and the next point is computed
-          distance = sqrt(vtkMath::Distance2BetweenPoints(point_values, next_point_values));
+          distance = (point - next_point).norm();
           // if the distance doesn't match our criteria, we loop back and take as next point, a
           // point located at the position index of the next point + 1
         }
@@ -756,10 +747,6 @@ bool BezierGrindingSurfacing::filterNeighborPosesTooClose(BezierPointNormalTable
   trajectory.clear();
   trajectory = tmp_trajectory;
 
-  if (trajectory.size() <= 1)
-    return false;
-
-  return true;
 }
 
 bool BezierGrindingSurfacing::filterExtricationTrajectory(const vtkSmartPointer<vtkPolyData> &polydata,
