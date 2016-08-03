@@ -181,6 +181,18 @@ public:
   bool harmonizeLineOrientation(EigenSTL::vector_Affine3d &poses,
                                 const Eigen::Vector3d &direction_ref);
 
+  /**
+   * Generate a set of points on a line between a start and a end point
+   * @param[out] poses is a vector of poses generated on a line
+   * @param[in] start_point is the start point of the line
+   * @param[in] end_point is the end point of the line
+   * @param[in] number_of_poses is the number of poses to be generated
+   */
+  void generateIntermediatePoseOnLine(EigenSTL::vector_Affine3d &poses,
+                                      const Eigen::Vector3d &start_point,
+                                      const Eigen::Vector3d &end_point,
+                                      const unsigned number_of_poses);
+
 private:
   std::string
   validateParameters();

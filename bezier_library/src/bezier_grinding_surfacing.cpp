@@ -320,6 +320,63 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
       applyLeanAngle(pose, axis_of_rotation_, lean_angle_);
   }
 
+  // The first pose of the trajectory is a point located above the first grinding pose.
+  // We use the last pose of the last extrication trajectory which is located above the
+  // first pose of the first grinding line. This point is stored as the first pose of the trajectory.
+  Eigen::Affine3d start_pose(extrication_trajectories.back().back());
+  // We keep the same orientation than the one of the first grinding pose of the first grinding line
+  start_pose.linear() << grinding_trajectories.front().front().linear();
+
+  // Generate Intermediate poses between the start pose of the trajectory and the first grinding line
+  EigenSTL::vector_Affine3d first_grinding_line_intermediate_poses;
+  Eigen::Vector3d end_pose(grinding_trajectories.front().front().translation());
+  generateIntermediatePoseOnLine(first_grinding_line_intermediate_poses, start_pose.translation(), end_pose, 2);
+  for (Eigen::Affine3d &pose : first_grinding_line_intermediate_poses)
+  {
+    // The intermediate poses have the same orientation than the first pose of the first grinding line
+    pose.linear() << grinding_trajectories.front().front().linear();
+  }
+
+  // Generate intermediate poses between last extrication pose and first grinding pose
+  // of each trajectories
+  std::vector<EigenSTL::vector_Affine3d> end_intermediate_poses_trajectories;
+  std::vector<EigenSTL::vector_Affine3d>::iterator grinding_it(grinding_trajectories.begin() + 1);
+  for (std::vector<EigenSTL::vector_Affine3d>::iterator extrication_traj(extrication_trajectories.begin());
+      extrication_traj != extrication_trajectories.end() - 1; extrication_traj++)
+  {
+    EigenSTL::vector_Affine3d intermediate_poses;
+    Eigen::Vector3d start_pose((*extrication_traj).back().translation());
+    Eigen::Vector3d end_pose((*grinding_it).front().translation());
+    generateIntermediatePoseOnLine(intermediate_poses, start_pose, end_pose, 2);
+    for (Eigen::Affine3d &pose : intermediate_poses)
+    {
+      //The intermediate pose has the same orientation than the first grinding line
+      pose.linear() << (*grinding_it).front().linear();
+    }
+    end_intermediate_poses_trajectories.push_back(intermediate_poses);
+    grinding_it++;
+  }
+
+  // Generate intermediate poses between last grinding pose and first extrication pose
+  // of each trajectories
+  std::vector<EigenSTL::vector_Affine3d> start_intermediate_poses_trajectories;
+  std::vector<EigenSTL::vector_Affine3d>::iterator extrication_it(extrication_trajectories.begin());
+  for (std::vector<EigenSTL::vector_Affine3d>::iterator grinding_traj(grinding_trajectories.begin());
+      grinding_traj != grinding_trajectories.end(); grinding_traj++)
+  {
+    EigenSTL::vector_Affine3d intermediate_poses;
+    Eigen::Vector3d start_pose((*grinding_traj).back().translation());
+    Eigen::Vector3d end_pose((*extrication_it).front().translation());
+    generateIntermediatePoseOnLine(intermediate_poses, start_pose, end_pose, 2);
+    for (Eigen::Affine3d &pose : intermediate_poses)
+    {
+      // The intermediate pose has the same orientation than the first pose of the extrication line
+      pose.linear() << (*extrication_it).front().linear();
+    }
+    start_intermediate_poses_trajectories.push_back(intermediate_poses);
+    extrication_it++;
+  }
+
   unsigned index(0);
   if (display_markers)
   {
@@ -337,6 +394,54 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
         index = 0;
       displayTrajectory(traj, visualToolsColorFromIndex(index++), true);
     }
+
+    for (EigenSTL::vector_Affine3d traj : end_intermediate_poses_trajectories)
+    {
+      if (index > 11)
+        index = 0;
+      displayTrajectory(traj, visualToolsColorFromIndex(index++), true);
+    }
+
+    for (EigenSTL::vector_Affine3d traj : start_intermediate_poses_trajectories)
+    {
+      if (index > 11)
+        index = 0;
+      displayTrajectory(traj, visualToolsColorFromIndex(index++), true);
+    }
+
+    // Display the start pose of the trajectory
+    Eigen::Affine3d display_start_pose(start_pose);
+    visual_tools_->publishXArrow(display_start_pose, rviz_visual_tools::GREEN, rviz_visual_tools::XXXXSMALL, 0.008);
+    visual_tools_->publishZArrow(display_start_pose, rviz_visual_tools::GREEN, rviz_visual_tools::XXXXSMALL, 0.008);
+    start_pose.translation() -= 0.01 * display_start_pose.affine().col(2).head<3>();
+    visual_tools_->publishText(display_start_pose, "Start pose", rviz_visual_tools::GREEN, rviz_visual_tools::SMALL,
+                               false);
+    visual_tools_->triggerBatchPublish();
+
+    // Display intermediates poses between trajectory start point and the first grinding point of the first grinding line
+    displayTrajectory(first_grinding_line_intermediate_poses, visualToolsColorFromIndex(index++), true);
+  }
+
+  // Add intermediates poses to extrication trajectories
+  std::vector<EigenSTL::vector_Affine3d>::iterator end_intermediate_poses_it(
+      end_intermediate_poses_trajectories.begin());
+  for (std::vector<EigenSTL::vector_Affine3d>::iterator extrication_traj(extrication_trajectories.begin());
+      extrication_traj != extrication_trajectories.end() - 1; extrication_traj++)
+  {
+    (*extrication_traj).insert((*extrication_traj).end(), (*end_intermediate_poses_it).begin(),
+                               (*end_intermediate_poses_it).end());
+    end_intermediate_poses_it++;
+  }
+
+  // Add intermediates poses to extrication trajectories
+  std::vector<EigenSTL::vector_Affine3d>::iterator start_intermediate_poses_it(
+      start_intermediate_poses_trajectories.begin());
+  for (std::vector<EigenSTL::vector_Affine3d>::iterator extrication_traj(extrication_trajectories.begin());
+      extrication_traj != extrication_trajectories.end(); extrication_traj++)
+  {
+    (*extrication_traj).insert((*extrication_traj).begin(), (*start_intermediate_poses_it).begin(),
+                               (*start_intermediate_poses_it).end());
+    start_intermediate_poses_it++;
   }
 
   // Add one grinding traj, one extrication traj...
@@ -344,21 +449,14 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
   is_grinding_pose.clear();
   std::vector<EigenSTL::vector_Affine3d>::iterator extrication_iterator(extrication_trajectories.begin());
 
-  // The first pose of the trajectory is a point located above the first grinding pose.
-  // We use the last pose of the last extrication trajectory which is located above the
-  // first pose of the first grinding line. This point is stored as the first pose of the trajectory.
-  Eigen::Affine3d start_pose (extrication_trajectories.back().back());
-  // We keep the same orientation than the one of the first grinding pose of the first grinding line
-  start_pose.linear() << grinding_trajectories.front().front().linear();
   trajectory.push_back(start_pose);
   is_grinding_pose.push_back(false);
-
-  visual_tools_->publishXArrow(start_pose, rviz_visual_tools::GREEN, rviz_visual_tools::XXXXSMALL, 0.008);
-  visual_tools_->publishZArrow(start_pose, rviz_visual_tools::GREEN, rviz_visual_tools::XXXXSMALL, 0.008);
-
-  start_pose.translation() -= 0.01 * start_pose.affine().col(2).head<3>();
-  visual_tools_->publishText(start_pose, "Start pose", rviz_visual_tools::GREEN, rviz_visual_tools::SMALL, false);
-  visual_tools_->triggerBatchPublish();
+  for (Eigen::Affine3d &pose : first_grinding_line_intermediate_poses)
+  {
+    // Add intermediate poses between the start pose of the trajectory and the first grinding pose
+    trajectory.push_back(pose);
+    is_grinding_pose.push_back(false);
+  }
 
   for (EigenSTL::vector_Affine3d grinding_traj : grinding_trajectories)
   {
@@ -902,6 +1000,33 @@ bool BezierGrindingSurfacing::harmonizeLineOrientation(EigenSTL::vector_Affine3d
   // We reversed the line order so we need to reverse the axis X/Y of each pose as well
   invertXAxisOfPoses(poses_on_line);
   return true;
+}
+
+void BezierGrindingSurfacing::generateIntermediatePoseOnLine(EigenSTL::vector_Affine3d &poses,
+                                      const Eigen::Vector3d &start_point,
+                                      const Eigen::Vector3d &end_point,
+                                      const unsigned number_of_poses)
+{
+  // This function generates a specified number of point between a start and an end point along a line.
+  // Each point is located at an equally far away position of his predecessor.
+  // Each point is generated using the formula : Point = StartPoint + d*LineVector
+  // with d the distance between the start point and the generated point and LineVector the vector between the
+  // start point and the end point of the line.
+
+  // Direction vector of the line
+  Eigen::Vector3d direction(end_point - start_point);
+  // Distance between each point
+  double distance = direction.norm() / (number_of_poses + 1);
+  direction.normalize();
+  poses.clear();
+  for (unsigned index(1); index <= number_of_poses; index++)
+  {
+    double d = distance * (index);
+    Eigen::Vector3d point(start_point + d * direction);
+    Eigen::Affine3d pose(Eigen::Affine3d::Identity());
+    pose.translation() << point;
+    poses.push_back(pose);
+  }
 }
 
 std::string BezierGrindingSurfacing::validateParameters()
