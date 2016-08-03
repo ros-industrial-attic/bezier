@@ -1000,34 +1000,6 @@ bool BezierGrindingSurfacing::harmonizeLineOrientation(EigenSTL::vector_Affine3d
   return true;
 }
 
-void BezierGrindingSurfacing::generateIntermediatePoseOnLine(EigenSTL::vector_Affine3d &poses,
-                                      const Eigen::Vector3d &start_point,
-                                      const Eigen::Vector3d &end_point,
-                                      const unsigned number_of_poses)
-{
-  // This function generates a specified number of point between a start and an end point along a line.
-  // Each point is located at an equally far away position of his predecessor.
-  // Each point is generated using the formula : Point = StartPoint + d*LineVector
-  // with d the distance between the start point and the generated point and LineVector the vector between the
-  // start point and the end point of the line.
-
-  // Direction vector of the line
-  Eigen::Vector3d direction(end_point - start_point);
-  // Distance between each point
-  double distance = direction.norm()/(number_of_poses + 1);
-  direction.normalize();
-  poses.clear();
-  for (unsigned index(1); index <= number_of_poses; index++)
-  {
-      double d = distance * (index);
-      Eigen::Vector3d point(start_point + d*direction);
-      Eigen::Affine3d pose(Eigen::Affine3d::Identity());
-      pose.translation() << point;
-      poses.push_back(pose);
-  }
-
-}
-
 std::string BezierGrindingSurfacing::validateParameters()
 {
   if (grinding_disk_machining_width_ <= 0.0)
