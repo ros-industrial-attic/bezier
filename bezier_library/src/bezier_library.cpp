@@ -264,14 +264,19 @@ bool Bezier::estimateSlicingOrientation(vtkSmartPointer<vtkPolyData> &polydata,
   // We can loop through all orientations (10 deg / 10 deg), find the
   // min/max point and compute the distance between the two.
   // After that, we keep the orientation that has the minimum distance = minimum slice number
-  estimateGlobalMeshNormal(polydata, mesh_normal);
-  orientation = Eigen::Vector3d(mesh_normal[2], 0, -mesh_normal[0]);
-  orientation.normalize();
-
-  if (mesh_normal.dot(orientation) > 1e-10) // Numerical issues
-  {
-    ROS_ERROR_STREAM("Bezier::estimateSlicingOrientation: Scalar product is not 0! " << mesh_normal.dot(orientation));
+  if(!estimateGlobalMeshNormal(polydata, mesh_normal))
     return false;
+
+  if (orientation == Eigen::Vector3d::Zero())
+  {
+    orientation = Eigen::Vector3d(mesh_normal[2], 0, -mesh_normal[0]);
+    orientation.normalize();
+
+    if (mesh_normal.dot(orientation) > 1e-10) // Numerical issues
+    {
+      ROS_ERROR_STREAM("Bezier::estimateSlicingOrientation: Scalar product is not 0! " << mesh_normal.dot(orientation));
+      return false;
+    }
   }
 
   // RViz visual tools

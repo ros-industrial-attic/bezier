@@ -53,11 +53,8 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
   // Estimate a slicing orientation if it was not provided
   // Otherwise, use the last/provided slicing orientation
   Eigen::Vector3d global_mesh_normal;
-  if (slicing_orientation_ == Eigen::Vector3d::Zero())
-  {
-    if (!estimateSlicingOrientation(input_meshes_[SURFACE_MESH], global_mesh_normal, slicing_orientation_))
-      return "Error estimating slicing orientation";
-  }
+  if (!estimateSlicingOrientation(input_meshes_[SURFACE_MESH], global_mesh_normal, slicing_orientation_))
+    return "Error estimating slicing orientation and global mesh normal";
 
   // Dilate the mesh using the extrication radius
   vtkSmartPointer<vtkPolyData> dilated_mesh = vtkSmartPointer<vtkPolyData>::New();
