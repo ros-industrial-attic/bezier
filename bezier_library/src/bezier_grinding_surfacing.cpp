@@ -236,17 +236,14 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
     // Last point and normal of the grinding line N
     Eigen::Vector3d first_point((*grinding_iterator).back().translation());
     Eigen::Vector3d first_point_normal((*grinding_iterator).back().linear().col(2));
-    first_point_normal *= -1; // FIXME: 2 options:
-    // Move ApplyLeanAngle AFTER this loop so that the grinding traj normal == polydata normal
-    // Use VTK polydata normal instead of the grinding normal (it has been modified by ApplyLeanAngle)
-
+    first_point_normal *= -1;
     // Move the iterator to the next grinding line
     grinding_iterator++;
 
     // Last point and normal of the grinding line N + 1
     Eigen::Vector3d last_point((*grinding_iterator).front().translation());
     Eigen::Vector3d last_point_normal((*grinding_iterator).front().linear().col(2));
-    last_point_normal *= -1; // FIXME: See line 212 (first_point_normal *= -1;)
+    last_point_normal *= -1;
 
     // Application of the extrication filter on the current extrication line
     if (!filterExtricationTrajectory(first_point, first_point_normal, last_point, last_point_normal,
