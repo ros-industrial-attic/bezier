@@ -144,7 +144,14 @@ first grinding line.
 ---
 [invertXAxisOfPoses](README_invert_x_axis_of_poses.md) reverse the x axe of the last extrication trajectory poses thus avoiding the tools to make a PI rotation on himself to reach the initial start point.
 
-24. Result
+24. Generate intermediate poses between extrication and grinding paths
+---
+[generateIntermediatePoseOnLine](README_generate_intermediate_poses_on_line.md) generates a specified number of poses between each last pose of extrication line and first pose of grinding line. It's 
+allows to smooth the descending of the grinder tool onto the mechanical part when transiting from extrication to grinding paths. The generated poses have the same orientation than the first pose of the grinding line. Intermediates poses are also generated at the end of grinding trajectories to smooth the transition between the last point of a grinding trajectory and the first point of an extrication trajectory, however these poses have the same orientation than the first extrication point of the extrication path.  
+
+![intermediate_poses](intermediate_poses.gif)
+
+25. Result
 ---
 After all these steps, here is the result given on a little part of an input mesh:
 
