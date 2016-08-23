@@ -7,6 +7,7 @@ Bezier::Bezier()
                   "and the topic name is 'rviz_visual_tools'");
   visual_tools_.reset(new rviz_visual_tools::RvizVisualTools("base_link"));
   visual_tools_->enableBatchPublishing(); // Call triggerBatchPublish() to publish everything
+  setDilationParameters(); // Load default dilation parameters
 }
 
 void Bezier::waitForRvizVisualToolsSubscriber()
@@ -401,9 +402,36 @@ bool Bezier::sliceMeshWithPlanes(const vtkSmartPointer<vtkPolyData> &polydata,
   return true;
 }
 
+void Bezier::setDilationParameters(const double i, const double j, const double k,
+                                   const double max_distance)
+{
+  dilation_sample_dimensions_i_ = i;
+  dilation_sample_dimensions_j_ = j;
+  dilation_sample_dimensions_k_ = k;
+  dilation_maximum_distance_ = max_distance;
+}
+
+void Bezier::setDilationParameters(const double * sample_dimensions,
+                                   const double max_distance)
+{
+  dilation_sample_dimensions_i_ = sample_dimensions[0];
+  dilation_sample_dimensions_j_ = sample_dimensions[1];
+  dilation_sample_dimensions_k_ = sample_dimensions[2];
+  dilation_maximum_distance_ = max_distance;
+}
+
 bool Bezier::dilate(vtkSmartPointer<vtkPolyData> &polydata,
                     const double radius)
 {
+
+  if ((dilation_sample_dimensions_i_ == 50) &&
+     (dilation_sample_dimensions_j_ == 50) &&
+     (dilation_sample_dimensions_k_ == 50) &&
+     (dilation_maximum_distance_ == 0))
+  {
+    ROS_INFO_STREAM("Bezier::dilate: default parameters will be used to dilate the mesh");
+  }
+
   // Bounding box of the polydata
   double bounds[6];
   polydata->GetBounds(bounds);
@@ -415,15 +443,25 @@ bool Bezier::dilate(vtkSmartPointer<vtkPolyData> &polydata,
   // FIXME Make sure these parameters are smart and never need to be tweaked!
   vtkSmartPointer<vtkImplicitModeller> implicit_modeller = vtkSmartPointer<vtkImplicitModeller>::New();
   implicit_modeller->SetProcessModeToPerVoxel();  // Optimize process -> per voxel and not per cell
-  implicit_modeller->SetSampleDimensions(50, 50, 50);
+  implicit_modeller->SetSampleDimensions(dilation_sample_dimensions_i_,
+                                         dilation_sample_dimensions_j_,
+                                         dilation_sample_dimensions_k_);
   implicit_modeller->SetInputData(polydata);
   implicit_modeller->AdjustBoundsOn();
   implicit_modeller->SetAdjustDistance(threshold);
-  if (2 * threshold > 1.0)
-    implicit_modeller->SetMaximumDistance(1.0);
-  else
-    implicit_modeller->SetMaximumDistance(2 * threshold); // 2*threshold in order to be sure -> long time but smoothed dilation
 
+
+  if (dilation_maximum_distance_ == 0)
+  {
+    if (2 * threshold > 1.0)
+      implicit_modeller->SetMaximumDistance(1.0);
+    else
+      implicit_modeller->SetMaximumDistance(2 * threshold); // 2*threshold in order to be sure -> long time but smoothed dilation
+  }
+  else
+  {
+    implicit_modeller->SetMaximumDistance(dilation_maximum_distance_);
+  }
   implicit_modeller->ComputeModelBounds(polydata);
   implicit_modeller->AddObserver(vtkCommand::ErrorEvent, vtk_observer_);
   implicit_modeller->AddObserver(vtkCommand::WarningEvent, vtk_observer_);

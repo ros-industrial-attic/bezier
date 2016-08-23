@@ -127,6 +127,26 @@ protected:
   std::string virtual validateParameters() = 0;
 
   /**
+   * Sample dimension i parameter of the dilation
+   */
+  double dilation_sample_dimensions_i_;
+
+  /**
+   * Sample dimension j parameter of the dilation
+   */
+  double dilation_sample_dimensions_j_;
+
+  /**
+   * Sample dimension k parameter of the dilation
+   */
+  double dilation_sample_dimensions_k_;
+
+  /**
+   * Maximum distance parameter of the dilation
+   */
+  double dilation_maximum_distance_;
+
+  /**
    * Append a OBJ, PLY or STL mesh into the vector of meshes input_meshes_
    * @param[in] file_absolute_path
    * @return True if successful, false otherwise
@@ -230,6 +250,24 @@ protected:
    * @return True if successful, false otherwise
    */
   bool computeNormals(vtkSmartPointer<vtkPolyData> &polydata);
+
+  /**
+   * @brief This function allows to specify the parameters of the dilation process
+   * @param i sample dimension i
+   * @param j sample dimension j
+   * @param k sample dimension k
+   * @param max_distance is the distance away from surface of input geometry to sample
+   */
+  void setDilationParameters(const double i = 50, const double j = 50, const double k = 50,
+                             const double max_distance = 0);
+
+  /**
+   * @brief This function allows to specify the parameters of the dilation process
+   * @param sample_dimensions is an array containing the sample dimensions i, j and k
+   * @param max_distance is the distance away from surface of input geometry to sample
+   */
+  void setDilationParameters(const double * sample_dimensions,
+                             const double max_distance = 0);
 
   /** @brief This function uses vtkImplicitModeller in order to dilate the polydata surface/mesh
    *  @param[in,out] polydata the mesh to be dilated
