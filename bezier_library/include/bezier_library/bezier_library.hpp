@@ -73,6 +73,16 @@ public:
    * Convenience typedef
    */
   typedef pcl::PointCloud<PointT> PointCloudT;
+  typedef std::pair<Eigen::Vector3d, Eigen::Vector3d> PointNormal;
+  typedef std::vector<PointNormal> BezierPointNormalTable;
+
+  enum AXIS_OF_ROTATION
+  {
+    X,
+    Y,
+    Z
+  };
+
 protected:
 
 public:
@@ -104,6 +114,24 @@ public:
    * Blocking call to make sure there is at least one subscriber to the RViz visual tool publisher
    */
   void waitForRvizVisualToolsSubscriber();
+
+  /**
+   * @brief This function allows to specify the parameters of the dilation process
+   * @param i sample dimension i
+   * @param j sample dimension j
+   * @param k sample dimension k
+   * @param max_distance is the distance away from surface of input geometry to sample
+   */
+  void setDilationParameters(const double i = 50, const double j = 50, const double k = 50,
+                             const double max_distance = 0);
+
+  /**
+   * @brief This function allows to specify the parameters of the dilation process
+   * @param sample_dimensions is an array containing the sample dimensions i, j and k
+   * @param max_distance is the distance away from surface of input geometry to sample
+   */
+  void setDilationParameters(const double * sample_dimensions,
+                             const double max_distance = 0);
 
 protected:
   /**
@@ -216,6 +244,98 @@ protected:
                                   Eigen::Vector3d &orientation);
 
   /**
+   * Computes all the plane equations we need to slice the whole part given the polydata and the covering percentage.\n
+   * This function computes the bound of the polydata and determines the number of slices using covering_percentage_\n
+   * The planes equations are ordered from one side to another (plane @c n+1 is a neighbor of plane @c n)
+   * @param[in] polydata
+   * @param[in] slicing_orientation
+   * @param[in] polydata_center the origin used to compute all the planes
+   * @param[in] tool_effective_diameter is the width of the effective part of the tool
+   * @param[in] covering_percentage is the covering percentage between two successive path
+   * @param[out] planes_equations the equations of the planes
+   */
+  void estimateGrindingSlicingPlanes(const vtkSmartPointer<vtkPolyData> &polydata,
+                                     const Eigen::Vector3d &slicing_orientation,
+                                     const Eigen::Vector3d &polydata_center,
+                                     const double tool_effective_diameter,
+                                     const unsigned covering_percentage,
+                                     EigenSTL::vector_Vector4d &planes_equations);
+
+  /**
+   * Estimate a slicing plane between line N and line N+1
+   * @param[in] line_n_last_point
+   * @param[in] line_n1_first_point
+   * @param[in] global_mesh_normal
+   * @param[out] plane_equation_normal
+   * @param[out] plane_origin
+   */
+  void estimateExtricationSlicingPlane(const Eigen::Vector3d &line_n_last_point,
+                                       const Eigen::Vector3d &line_n1_first_point,
+                                       const Eigen::Vector3d &global_mesh_normal,
+                                       Eigen::Vector4d &plane_equation_normal,
+                                       Eigen::Vector3d &plane_origin);
+
+  /**
+   * Apply a lean angle to a pose
+   * @param pose to be modified
+   * @param lean_angle_axis
+   * @param angle_value in radians
+   */
+  void applyLeanAngle(Eigen::Affine3d &pose,
+                      const AXIS_OF_ROTATION lean_angle_axis,
+                      const double angle_value);
+
+  /**
+   * Generate robot poses along a line. Uses the stripper normal to generate the Z axis.
+   * The X axis is generated from the current point to the next point.
+   * @param[in] line
+   * @param[out] trajectory
+   * @return True if successful, false otherwise
+   */
+  bool generateRobotPosesAlongStripper(const vtkSmartPointer<vtkStripper> &line,
+                                       EigenSTL::vector_Affine3d &trajectory);
+
+  /**
+   * Invert the X axis orientation by inverting the X and Y vectors of the pose
+   * @param[in] line to be modified
+   */
+  void invertXAxisOfPoses(EigenSTL::vector_Affine3d &line);
+
+  /**
+   * Filters points that are too close from each others
+   * @param line the line to be filtered, it contains the point and the normal
+   * @param minimal_distance the minimal accepted distance between two consecutive points
+   */
+  void filterNeighborPosesTooClose(BezierPointNormalTable &line,
+                                   const double minimal_distance);
+
+  /**
+   * Filter extrications lines to remove the unwanted beginning and end points
+   * @param[in] first_point is the last point of the grinding line N
+   * @param[in] first_point_normal is the normal of the last point of the grinding line N
+   * @param[in] last_point is the first point of the grinding line N + 1
+   * @param[in] last_point_normal is the normal of the first point of the grinding line N + 1
+   * @param[in] plane_equation is the equation of the plane used to slice the mesh thus generating the extrication trajectory
+   * @param[in,out] trajectory the trajectory to be filtered
+   * @return True if successful, false otherwise
+   */
+  bool filterExtricationTrajectory(const Eigen::Vector3d &first_point,
+                                   const Eigen::Vector3d &first_point_normal,
+                                   const Eigen::Vector3d &last_point,
+                                   const Eigen::Vector3d &last_point_normal,
+                                   const Eigen::Vector4d &plane_equation,
+                                   EigenSTL::vector_Affine3d &trajectory);
+
+  /**
+   * Harmonize grinding/extrication lines orientation.
+   * @param[in,out] poses is a vector of poses on a line
+   * @param[in] direction_ref is direction vector reference
+   * @return True if line was reversed, false otherwise
+   */
+  bool harmonizeLineOrientation(EigenSTL::vector_Affine3d &poses,
+                                const Eigen::Vector3d &direction_ref);
+
+  /**
    * Slice a mesh with a plane and get the output stripper
    * @param[in] polydata
    * @param[in] plane_equation
@@ -250,24 +370,6 @@ protected:
    * @return True if successful, false otherwise
    */
   bool computeNormals(vtkSmartPointer<vtkPolyData> &polydata);
-
-  /**
-   * @brief This function allows to specify the parameters of the dilation process
-   * @param i sample dimension i
-   * @param j sample dimension j
-   * @param k sample dimension k
-   * @param max_distance is the distance away from surface of input geometry to sample
-   */
-  void setDilationParameters(const double i = 50, const double j = 50, const double k = 50,
-                             const double max_distance = 0);
-
-  /**
-   * @brief This function allows to specify the parameters of the dilation process
-   * @param sample_dimensions is an array containing the sample dimensions i, j and k
-   * @param max_distance is the distance away from surface of input geometry to sample
-   */
-  void setDilationParameters(const double * sample_dimensions,
-                             const double max_distance = 0);
 
   /** @brief This function uses vtkImplicitModeller in order to dilate the polydata surface/mesh
    *  @param[in,out] polydata the mesh to be dilated

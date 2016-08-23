@@ -62,7 +62,7 @@ int main(int argc,
   unsigned covering_percentage = 0; // %
   double extrication_radius = 0.04; // meters
   double angle_value = -0.22; // radians
-  BezierGrindingSurfacing::AXIS_OF_ROTATION axis = BezierGrindingSurfacing::AXIS_OF_ROTATION::Y;
+  Bezier::AXIS_OF_ROTATION axis = Bezier::AXIS_OF_ROTATION::Y;
   std::shared_ptr<BezierGrindingSurfacing> bezier_planner;
   try
   {
