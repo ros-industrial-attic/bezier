@@ -1,14 +1,8 @@
 <?xml version="1.0"?>
 <launch>
-  <!-- Choose the grinding mode for the Bezier library -->
-  <arg name="surfacing_mode" default="false"/>
-  <param name="surfacing_mode_param" value="$(arg surfacing_mode)" />
   <!-- Specify CAD mesh for Bezier -->
   <arg name="mesh_cad" />
   <param name="mesh_cad_param" value="$(arg mesh_cad)" />
-  <!-- Specify defect mesh for Bezier (only required if NOT using surfacing mode) -->
-  <arg name="mesh_defect" default="" />
-  <param name="mesh_defect_param" value="$(arg mesh_defect)" />
 
   <!-- The planning and execution components of MoveIt! configured to run -->
   <!-- using the ROS-Industrial interface. -->

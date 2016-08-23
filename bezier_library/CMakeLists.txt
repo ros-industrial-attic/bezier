@@ -28,9 +28,15 @@ set_property(TARGET bezier_grinding_surfacing_obj APPEND_STRING PROPERTY COMPILE
 add_library(bezier_grinding_surfacing $<TARGET_OBJECTS:bezier_grinding_surfacing_obj>)
 target_link_libraries(bezier_grinding_surfacing ${PROJECT_NAME} ${PCL_LIBRARIES} ${VTK_LIBRARIES} ${catkin_LIBRARIES})
 
+add_library(bezier_painting_obj OBJECT src/bezier_painting.cpp)
+set_property(TARGET bezier_painting_obj APPEND_STRING PROPERTY COMPILE_FLAGS "-std=c++11 -fPIC -Wall")
+add_library(bezier_painting $<TARGET_OBJECTS:bezier_painting_obj>)
+target_link_libraries(bezier_painting ${PROJECT_NAME} ${PCL_LIBRARIES} ${VTK_LIBRARIES} ${catkin_LIBRARIES})
+
 install(
     TARGETS ${PROJECT_NAME}
             bezier_grinding_surfacing
+            bezier_painting
     LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION})
 
 install(
