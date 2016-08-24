@@ -58,7 +58,7 @@ int main(int argc,
   }
 
   // Generate trajectory
-  double grinder_width = 0.062; // meters
+  double grinder_width = 0.031; // meters
   unsigned covering_percentage = 0; // %
   double extrication_radius = 0.04; // meters
   double angle_value = -0.22; // radians
