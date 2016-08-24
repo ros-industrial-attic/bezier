@@ -1,40 +1,40 @@
-#ifndef BEZIER_GRINDING_SURFACING_HPP
-#define BEZIER_GRINDING_SURFACING_HPP
+#ifndef BEZIER_PAINTING_HPP
+#define BEZIER_PAINTING_HPP
 
 #include <bezier_library/bezier_library.hpp>
 #include <ros/package.h>
 #include <memory>
 
+
 /**
- * Bezier grinding surfacing class
+ * Bezier painting class
  */
-class BezierGrindingSurfacing : public Bezier
-{
+class BezierPainting : public Bezier {
 
 public:
 
   enum INPUT_MESHES
-    {
-      SURFACE_MESH
-    };
+  {
+    PAINTING_MESH
+  };
 
-  BezierGrindingSurfacing(const std::string input_mesh,
-                          const double grinding_disk_machining_width,
-                          const unsigned covering_percentage,
-                          const double extrication_radius,
-                          const double lean_angle = 0.0,
-                          const Bezier::AXIS_OF_ROTATION axis_of_rotation = Bezier::AXIS_OF_ROTATION::Y,
-                          const Eigen::Vector3d &slicing_orientation = Eigen::Vector3d::Zero());
+  BezierPainting(const std::string input_mesh,
+                 const double painting_cone_width,
+                 const unsigned covering_percentage,
+                 const double extrication_radius,
+                 const double lean_angle = 0.0,
+                 const Bezier::AXIS_OF_ROTATION axis_of_rotation = Bezier::AXIS_OF_ROTATION::Y,
+                 const Eigen::Vector3d &slicing_orientation = Eigen::Vector3d::Zero());
 
-  BezierGrindingSurfacing(const std::string input_mesh);
+  BezierPainting(const std::string input_mesh);
 
-  virtual ~BezierGrindingSurfacing()
+  virtual ~BezierPainting()
   {
   }
 
   std::string name()
   {
-    return "BezierGrindingSurfacing";
+    return "BezierPainting";
   }
 
   /**
@@ -52,7 +52,7 @@ public:
 
   std::string generateTrajectory(EigenSTL::vector_Affine3d &trajectory,
                                  std::vector<bool> &is_grinding_pose,
-                                 const double grinding_disk_machining_width,
+                                 const double painting_cone_width,
                                  const unsigned covering_percentage,
                                  const double extrication_radius,
                                  const double lean_angle = 0.0,
@@ -60,7 +60,7 @@ public:
                                  const Eigen::Vector3d &slicing_orientation = Eigen::Vector3d::Zero(),
                                  const bool display_markers = true)
   {
-    grinding_disk_machining_width_ = grinding_disk_machining_width;
+    painting_cone_width_ = painting_cone_width;
     covering_percentage_ = covering_percentage;
     extrication_radius_ = extrication_radius;
     axis_of_rotation_ = axis_of_rotation;
@@ -77,24 +77,12 @@ public:
    */
   void setSlicingOrientation(const Eigen::Vector3d &cutting_plane_normal);
 
-  /**
-   * Generate a set of points on a line between a start and a end point
-   * @param[out] poses is a vector of poses generated on a line
-   * @param[in] start_point is the start point of the line
-   * @param[in] end_point is the end point of the line
-   * @param[in] number_of_poses is the number of poses to be generated
-   */
-  void generateIntermediatePoseOnLine(EigenSTL::vector_Affine3d &poses,
-                                      const Eigen::Vector3d &start_point,
-                                      const Eigen::Vector3d &end_point,
-                                      const unsigned number_of_poses);
-
 private:
   std::string
   validateParameters();
 
   // Parameters
-  double grinding_disk_machining_width_;
+  double painting_cone_width_;
   unsigned covering_percentage_;
   double extrication_radius_;
   double lean_angle_;
@@ -111,4 +99,3 @@ public:
 };
 
 #endif
-

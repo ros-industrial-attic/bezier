@@ -10,7 +10,7 @@
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
 
-#include "bezier_library/bezier_grinding_surfacing.hpp"
+#include "bezier_library/bezier_painting.hpp"
 
 /** Name of the move_group used to move the robot */
 const std::string move_group_name("manipulator");
@@ -35,11 +35,7 @@ int main(int argc,
 
   // Parameters defined in the launch file
   std::string mesh_cad_filename;
-  std::string mesh_defect_filename;
-  bool surfacing_mode(false);
-  nh.getParam("surfacing_mode_param", surfacing_mode);
   nh.getParam("mesh_cad_param", mesh_cad_filename);
-  nh.getParam("mesh_defect_param", mesh_defect_filename);
 
   if (mesh_cad_filename.size() > 4) // size > ".ply"
     ROS_INFO_STREAM("CAD mesh file:" << mesh_cad_filename);
@@ -51,24 +47,18 @@ int main(int argc,
   std::string mesh_cad_path = meshes_path + mesh_cad_filename;
 
   std::string mesh_defect_path("");
-  if (!surfacing_mode)
-  {
-    ROS_ERROR_STREAM("Not implemented yet! (only surface mode working now)");
-    return -1;
-  }
 
   // Generate trajectory
   double grinder_width = 0.031; // meters
   unsigned covering_percentage = 0; // %
   double extrication_radius = 0.04; // meters
   double angle_value = -0.22; // radians
-  BezierGrindingSurfacing::AXIS_OF_ROTATION axis = BezierGrindingSurfacing::AXIS_OF_ROTATION::Y;
-  std::shared_ptr<BezierGrindingSurfacing> bezier_planner;
+  Bezier::AXIS_OF_ROTATION axis = Bezier::AXIS_OF_ROTATION::Y;
+  std::shared_ptr<BezierPainting> bezier_planner;
   try
   {
     bezier_planner.reset(
-        new BezierGrindingSurfacing(mesh_cad_path, grinder_width, covering_percentage, extrication_radius, angle_value,
-                                    axis));
+        new BezierPainting(mesh_cad_path, grinder_width, covering_percentage, extrication_radius, angle_value, axis));
   }
   catch (std::exception &bezier_exception)
   {
@@ -148,7 +138,7 @@ int main(int argc,
     {
       ROS_ERROR_STREAM(
           "Bezier application: A solution could not be found to move the robot along the trajectory, aborting.");
-      break;
+      //break;
     }
     executeKnownTrajectoryServiceClient.call(srv);
 
