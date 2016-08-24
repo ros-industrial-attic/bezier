@@ -138,7 +138,7 @@ int main(int argc,
     {
       ROS_ERROR_STREAM(
           "Bezier application: A solution could not be found to move the robot along the trajectory, aborting.");
-      break;
+      //break;
     }
     executeKnownTrajectoryServiceClient.call(srv);
 
