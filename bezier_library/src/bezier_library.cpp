@@ -838,14 +838,17 @@ bool Bezier::filterExtricationTrajectory(const Eigen::Vector3d &first_point,
   // Boolean allowing to compare the sign of the angles computed
   bool sign = false;
 
+  // Computation of the middle index of the trajectory vector
+  unsigned middle_index = std::ceil((trajectory.size() / 2));
+
   // We compute the the first angle to get the reference sign
-  Eigen::Vector3d vect((trajectory.front().translation() - line_first_point).normalized());
+  Eigen::Vector3d vect((trajectory[middle_index].translation() - line_first_point).normalized());
   double dot = line_first_point_normal_projected[0] * line_first_point_normal_projected[1] + vect[0] * vect[1];
   double det = line_first_point_normal_projected[0] * vect[1] - vect[0] * line_first_point_normal_projected[1];
   double angle = atan2(det, dot);
   sign = std::signbit(angle);
 
-  for (EigenSTL::vector_Affine3d::iterator it(trajectory.begin() + 1); it != trajectory.end(); it++)
+  for (EigenSTL::vector_Affine3d::iterator it(trajectory.begin() + middle_index); it != trajectory.begin(); it--)
   {
     Eigen::Vector3d vect(((*it).translation() - line_first_point).normalized());
     double dot = line_first_point_normal_projected[0] * line_first_point_normal_projected[1] + vect[0] * vect[1];
@@ -860,13 +863,13 @@ bool Bezier::filterExtricationTrajectory(const Eigen::Vector3d &first_point,
   }
 
   // We compute the first angle to get the reference sign
-  vect = (trajectory.back().translation() - line_last_point).normalized();
+  vect = (trajectory[middle_index].translation() - line_last_point).normalized();
   dot = line_last_point_normal_projected[0] * line_last_point_normal_projected[1] + vect[0] * vect[1];
   det = line_last_point_normal_projected[0] * vect[1] - vect[0] * line_last_point_normal_projected[1];
   angle = atan2(det, dot);
   sign = std::signbit(angle);
 
-  for (EigenSTL::vector_Affine3d::reverse_iterator it(trajectory.rbegin() + 1); it != trajectory.rend(); ++it)
+  for (EigenSTL::vector_Affine3d::iterator it(trajectory.begin() + middle_index); it != trajectory.end(); it++)
   {
     Eigen::Vector3d vect(((*it).translation() - line_last_point).normalized());
     double dot = line_last_point_normal_projected[0] * line_last_point_normal_projected[1] + vect[0] * vect[1];
@@ -875,7 +878,7 @@ bool Bezier::filterExtricationTrajectory(const Eigen::Vector3d &first_point,
     if (std::signbit(angle) != sign)
     {
       // The sign has toggled, we save the index of the current point and we stop the process
-      end_of_filtered_line = it.base() - 1;
+      end_of_filtered_line = it;
       break;
     }
   }
