@@ -19,7 +19,7 @@ It is able to create rectilinear trajectories on complicated surfaces (3D surfac
 
 ![bezier_application](bezier_library/doc/bezier_application.png)
 
-[![Fanuc grinding Youtube video](https://github.com/InstitutMaupertuis/fanuc_grinding/raw/indigo-devel/documentation/fanuc_grinding.jpg)](https://www.youtube.com/watch?v=4MaANUry81A)
+[![Fanuc grinding Youtube video](https://github.com/InstitutMaupertuis/fanuc_grinding/raw/indigo-devel/documentation/fanuc_grinding.jpg)](https://www.youtube.com/watch?v=aLp8zxx1PnU)
 Click the image to see a video of a Fanuc robot grinding thanks to the Bezier library, the project is [fanuc_grinding](https://github.com/InstitutMaupertuis/fanuc_grinding).
 
 Directories in the project
