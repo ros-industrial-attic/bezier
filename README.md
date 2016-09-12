@@ -5,10 +5,6 @@ ROS-Industrial Special Project: 6D tool path planner
 
 [Pierre Étienne Bézier](https://en.wikipedia.org/wiki/Pierre_B%C3%A9zier) September 1, 1910 – November 25, 1999; *was a French engineer and one of the founders of the fields of solid, geometric and physical modeling as well as in the field of representing curves, especially in CAD/CAM systems. As an engineer at Renault, he became a leader in the transformation of design and manufacturing, through mathematics and computing tools, into computer-aided design and three-dimensional modeling. Bézier patented and popularized, but did not invent the Bézier curves and Bézier surfaces that are now used in most computer-aided design and computer graphics systems.*
 
-Travis CI
-===
-[![Build Status](https://travis-ci.org/ros-industrial-consortium/bezier.svg?branch=indigo-devel)](https://travis-ci.org/ros-industrial-consortium/bezier)
-
 General information
 -------------------
 This project has been developed by the [Institut Maupertuis](http://www.institutmaupertuis.fr), a French research institute that is working on robotic industrial processes.
@@ -19,7 +15,7 @@ It is able to create rectilinear trajectories on complicated surfaces (3D surfac
 
 ![bezier_application](bezier_library/doc/bezier_application.png)
 
-[![Fanuc grinding Youtube video](https://github.com/InstitutMaupertuis/fanuc_grinding/raw/indigo-devel/documentation/fanuc_grinding.jpg)](https://www.youtube.com/watch?v=4MaANUry81A)
+[![Fanuc grinding Youtube video](https://github.com/InstitutMaupertuis/fanuc_grinding/raw/indigo-devel/documentation/fanuc_grinding.jpg)](https://www.youtube.com/watch?v=aLp8zxx1PnU)
 Click the image to see a video of a Fanuc robot grinding thanks to the Bezier library, the project is [fanuc_grinding](https://github.com/InstitutMaupertuis/fanuc_grinding).
 
 Directories in the project
@@ -41,7 +37,9 @@ Dependencies
 - [`Point Cloud Library`](https://github.com/PointCloudLibrary/pcl) version `1.8.0` or later. :warning: PCL has to be compiled against the same VTK version that is used for this package
 - `C++11` is required 
 
-This package has been tested with Ubuntu 14.04 and ROS Indigo.
+This package has been tested with the following setups:
+- `indigo-devel` branch: Ubuntu 14.04 and ROS Indigo.
+- `kinetic-devel` branch: Ubuntu 16.04 and ROS Kinetic.
 
 Documentation
 -------------
@@ -64,7 +62,7 @@ cd catkin_workspace/src
 
 ```bash
 wstool init .
-wstool merge https://github.com/ros-industrial-consortium/bezier/raw/indigo-devel/bezier.rosinstall
+wstool merge https://github.com/ros-industrial-consortium/bezier/raw/kinetic-devel/bezier.rosinstall
 wstool update
 rosdep install --from-paths . --ignore-src
 cd ..
