@@ -6,7 +6,6 @@ Bezier::Bezier()
   ROS_INFO_STREAM("Bezier::Bezier: RViz visualization tool is initialized in 'base' "
                   "and the topic name is 'rviz_visual_tools'");
   visual_tools_.reset(new rviz_visual_tools::RvizVisualTools("base_link"));
-  visual_tools_->enableBatchPublishing(); // Call triggerBatchPublish() to publish everything
   setDilationParameters(); // Load default dilation parameters
 }
 
@@ -165,7 +164,7 @@ void Bezier::displayTrajectory(const EigenSTL::vector_Affine3d &trajectory,
       }
     }
   }
-  visual_tools_->triggerBatchPublish();
+  visual_tools_->trigger();
 }
 
 bool Bezier::computeNormals(vtkSmartPointer<vtkPolyData> &polydata)
@@ -253,7 +252,7 @@ bool Bezier::estimateGlobalMeshNormal(vtkSmartPointer<vtkPolyData> &polydata,
   visual_tools_->publishArrow(pose, rviz_visual_tools::RED, rviz_visual_tools::XXSMALL);
   pose.translation() += 0.07 * pose.affine().col(0).head<3>();
   visual_tools_->publishText(pose, "Global normal", rviz_visual_tools::RED, rviz_visual_tools::SMALL, false);
-  visual_tools_->triggerBatchPublish();
+  visual_tools_->trigger();
   return true;
 }
 
@@ -293,7 +292,7 @@ bool Bezier::estimateSlicingOrientation(vtkSmartPointer<vtkPolyData> &polydata,
   visual_tools_->publishArrow(pose, rviz_visual_tools::BLUE, rviz_visual_tools::XXSMALL);
   pose.translation() += 0.07 * pose.affine().col(0).head<3>();
   visual_tools_->publishText(pose, "Slicing orientation", rviz_visual_tools::BLUE, rviz_visual_tools::SMALL, false);
-  visual_tools_->triggerBatchPublish();
+  visual_tools_->trigger();
   return true;
 }
 

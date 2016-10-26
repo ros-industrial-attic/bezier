@@ -469,7 +469,7 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
     visual_tools_->publishZArrow(display_start_pose, rviz_visual_tools::GREEN, rviz_visual_tools::XXXXSMALL, 0.008);
     start_pose.translation() -= 0.01 * display_start_pose.affine().col(2).head<3>();
     visual_tools_->publishText(display_start_pose, "Start pose", rviz_visual_tools::GREEN, rviz_visual_tools::SMALL, false);
-    visual_tools_->triggerBatchPublish();
+    visual_tools_->trigger();
     // Display intermediates poses between trajectory start point and the first grinding point of the first grinding line
     displayTrajectory(first_grinding_line_intermediate_poses, visualToolsColorFromIndex(index++), true);
   }
