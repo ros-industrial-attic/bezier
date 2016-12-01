@@ -2,7 +2,7 @@
 #include <ros/ros.h>
 #include <ros/package.h>
 #include <eigen_conversions/eigen_msg.h>
-#include <moveit/move_group_interface/move_group.h>
+#include <moveit/move_group_interface/move_group_interface.h>
 #include <moveit/planning_interface/planning_interface.h>
 #include <tf/transform_listener.h>
 #include <tf_conversions/tf_eigen.h>
@@ -129,7 +129,7 @@ int main(int argc,
   spinner.start();
 
   // Initialize move group
-  move_group_interface::MoveGroup group(move_group_name);
+  moveit::planning_interface::MoveGroupInterface group(move_group_name);
   group.setPoseReferenceFrame("/base_link");
   group.setPlannerId("RRTConnectkConfigDefault");
   group.setPlanningTime(2);
