@@ -7,7 +7,11 @@ ROS-Industrial Special Project: 6D tool path planner
 
 Travis CI
 ===
-[![Build Status](https://travis-ci.org/ros-industrial-consortium/bezier.svg?branch=indigo-devel)](https://travis-ci.org/ros-industrial-consortium/bezier)
+
+Indigo | Kinetic |
+--|--|
+[![Build Status](https://travis-ci.org/ros-industrial-consortium/bezier.svg?branch=indigo-devel)](https://travis-ci.org/ros-industrial-consortium/bezier) |
+[![Build Status](https://travis-ci.org/ros-industrial-consortium/bezier.svg?branch=kinetic-devel)](https://travis-ci.org/ros-industrial-consortium/bezier) |
 
 General information
 -------------------
@@ -41,7 +45,9 @@ Dependencies
 - [`Point Cloud Library`](https://github.com/PointCloudLibrary/pcl) version `1.8.0` or later. :warning: PCL has to be compiled against the same VTK version that is used for this package
 - `C++11` is required 
 
-This package has been tested with Ubuntu 14.04 and ROS Indigo.
+This package has been tested with the following setups:
+- `indigo-devel` branch: Ubuntu 14.04 and ROS Indigo.
+- `kinetic-devel` branch: Ubuntu 16.04 and ROS Kinetic.
 
 Documentation
 -------------
@@ -64,7 +70,7 @@ cd catkin_workspace/src
 
 ```bash
 wstool init .
-wstool merge https://github.com/ros-industrial-consortium/bezier/raw/indigo-devel/bezier.rosinstall
+wstool merge https://github.com/ros-industrial-consortium/bezier/raw/kinetic-devel/bezier.rosinstall
 wstool update
 rosdep install --from-paths . --ignore-src
 cd ..
