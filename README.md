@@ -37,9 +37,7 @@ Dependencies
 - [`Point Cloud Library`](https://github.com/PointCloudLibrary/pcl) version `1.8.0` or later. :warning: PCL has to be compiled against the same VTK version that is used for this package
 - `C++11` is required 
 
-This package has been tested with the following setups:
-- `indigo-devel` branch: Ubuntu 14.04 and ROS Indigo.
-- `kinetic-devel` branch: Ubuntu 16.04 and ROS Kinetic.
+This package has been tested with Ubuntu 16.04 and ROS Kinetic.
 
 Documentation
 -------------
