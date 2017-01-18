@@ -1,0 +1,31 @@
+sudo: required
+dist: trusty
+language: generic
+
+compiler:
+  - gcc
+
+notifications:
+  email:
+    on_failure: never
+
+env:
+  global:
+    - BEFORE_SCRIPT='git clone https://github.com/InstitutMaupertuis/advanced_industrial_ci.git .advanced_ci_config && .advanced_ci_config/travis_pcl.sh'
+  matrix:
+    - USE_DEB=true
+      ROS_DISTRO="indigo"
+      ROS_REPOSITORY_PATH=http://packages.ros.org/ros/ubuntu
+      NOT_TEST_INSTALL=true
+    - USE_DEB=true
+      ROS_DISTRO="indigo"
+      ROS_REPOSITORY_PATH=http://packages.ros.org/ros-shadow-fixed/ubuntu
+      NOT_TEST_INSTALL=true
+
+install:
+  - git clone https://github.com/ros-industrial/industrial_ci.git .ci_config
+  - git clone https://github.com/davetcoleman/rviz_visual_tools.git
+
+script:
+  - source .ci_config/travis.sh
+
