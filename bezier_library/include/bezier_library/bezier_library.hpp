@@ -40,7 +40,10 @@
 #include "error_observer.h"
 
 // PCL
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #include <pcl/segmentation/sac_segmentation.h>
+#pragma GCC diagnostic pop
 #include <pcl/surface/vtk_smoothing/vtk_utils.h>
 #include <pcl/PolygonMesh.h>
 
@@ -418,3 +421,4 @@ public:
 };
 
 #endif
+

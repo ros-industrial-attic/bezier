@@ -4,7 +4,10 @@
 #include <eigen_conversions/eigen_msg.h>
 #include <moveit/move_group_interface/move_group_interface.h>
 #include <moveit/planning_interface/planning_interface.h>
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 #include <tf/transform_listener.h>
+#pragma GCC diagnostic pop
 #include <tf_conversions/tf_eigen.h>
 #include <moveit_msgs/ExecuteKnownTrajectory.h>
 #include <visualization_msgs/Marker.h>
