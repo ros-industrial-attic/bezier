@@ -67,7 +67,7 @@ std::string BezierPainting::generateTrajectory(EigenSTL::vector_Affine3d &trajec
   // Compute the plane equations to slice the mesh
   EigenSTL::vector_Vector4d grinding_planes_equations;
   Eigen::Vector3d input_mesh_centroid(input_meshes_[PAINTING_MESH]->GetCenter());
-  estimateGrindingSlicingPlanes(input_meshes_[PAINTING_MESH], slicing_orientation_, input_mesh_centroid,
+  estimateSlicingPlanes(input_meshes_[PAINTING_MESH], slicing_orientation_, input_mesh_centroid,
                                 painting_cone_width_, covering_percentage_, grinding_planes_equations);
 
   // Generate all grinding trajectories
