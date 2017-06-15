@@ -16,6 +16,7 @@ catkin_package(CATKIN_DEPENDS
                ${PROJECT_NAME}
                bezier_grinding_surfacing
                bezier_painting
+               bezier_tire_machining
                roscpp 
                rviz_visual_tools)
 
@@ -34,10 +35,15 @@ add_library(bezier_painting_obj OBJECT src/bezier_painting.cpp)
 add_library(bezier_painting $<TARGET_OBJECTS:bezier_painting_obj>)
 target_link_libraries(bezier_painting ${PROJECT_NAME} ${PCL_LIBRARIES} ${VTK_LIBRARIES} ${catkin_LIBRARIES})
 
+add_library(bezier_tire_machining_obj OBJECT src/bezier_tire_machining.cpp)
+add_library(bezier_tire_machining $<TARGET_OBJECTS:bezier_tire_machining_obj>)
+target_link_libraries(bezier_tire_machining ${PROJECT_NAME} ${PCL_LIBRARIES} ${VTK_LIBRARIES} ${catkin_LIBRARIES})
+
 install(
     TARGETS ${PROJECT_NAME}
             bezier_grinding_surfacing
             bezier_painting
+            bezier_tire_machining
     LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION})
 
 install(

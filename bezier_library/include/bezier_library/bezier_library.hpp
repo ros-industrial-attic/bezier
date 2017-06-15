@@ -257,7 +257,7 @@ protected:
    * @param[in] covering_percentage is the covering percentage between two successive path
    * @param[out] planes_equations the equations of the planes
    */
-  void estimateGrindingSlicingPlanes(const vtkSmartPointer<vtkPolyData> &polydata,
+  void estimateSlicingPlanes(const vtkSmartPointer<vtkPolyData> &polydata,
                                      const Eigen::Vector3d &slicing_orientation,
                                      const Eigen::Vector3d &polydata_center,
                                      const double tool_effective_diameter,

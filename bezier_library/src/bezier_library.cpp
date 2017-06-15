@@ -155,8 +155,7 @@ void Bezier::displayTrajectory(const EigenSTL::vector_Affine3d &trajectory,
   {
     for (Eigen::Affine3d tmp : trajectory)
     {
-      visual_tools_->publishXArrow(tmp, color, rviz_visual_tools::XXXXSMALL, 0.008);
-      visual_tools_->publishZArrow(tmp, color, rviz_visual_tools::XXXXSMALL, 0.008);
+      visual_tools_->publishAxis(tmp, 0.003, 0.0005);
       if (display_labels)
       {
         tmp.translation() -= 0.01 * tmp.affine().col(2).head<3>();
@@ -296,13 +295,13 @@ bool Bezier::estimateSlicingOrientation(vtkSmartPointer<vtkPolyData> &polydata,
   return true;
 }
 
-// FIXME estimateGrindingSlicingPlanes does not find the exact number of planes
-void Bezier::estimateGrindingSlicingPlanes(const vtkSmartPointer<vtkPolyData> &polydata,
-                                           const Eigen::Vector3d &slicing_orientation,
-                                           const Eigen::Vector3d &polydata_center,
-                                           const double tool_effective_diameter,
-                                           const unsigned covering_percentage,
-                                           EigenSTL::vector_Vector4d &planes_equations)
+// FIXME estimateSlicingPlanes does not find the exact number of planes
+void Bezier::estimateSlicingPlanes(const vtkSmartPointer<vtkPolyData> &polydata,
+                                   const Eigen::Vector3d &slicing_orientation,
+                                   const Eigen::Vector3d &polydata_center,
+                                   const double tool_effective_diameter,
+                                   const unsigned covering_percentage,
+                                   EigenSTL::vector_Vector4d &planes_equations)
 {
   vtkIdType min_point_index(0);
   vtkIdType max_point_index(0);

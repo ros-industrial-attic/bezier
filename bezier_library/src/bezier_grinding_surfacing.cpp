@@ -139,7 +139,7 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
     ROS_INFO_STREAM("BezierGrindingSurfacing::generateTrajectory: Generating grinding trajectories");
     // Compute the plane equations to slice the mesh
     EigenSTL::vector_Vector4d grinding_planes_equations;
-    estimateGrindingSlicingPlanes(input_meshes_[SURFACE_MESH], slicing_orientation_, input_mesh_centroid_,
+    estimateSlicingPlanes(input_meshes_[SURFACE_MESH], slicing_orientation_, input_mesh_centroid_,
                                   grinding_disk_machining_width_, covering_percentage_, grinding_planes_equations);
 
     // Generate all grinding trajectories
