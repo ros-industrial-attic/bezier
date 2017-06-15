@@ -78,7 +78,7 @@ std::string BezierTireMachining::generateTrajectory(EigenSTL::vector_Affine3d &t
   warp->SetInputArrayToProcess(0, 0, 0,
                                vtkDataObject::FIELD_ASSOCIATION_POINTS,
                                vtkDataSetAttributes::NORMALS);
-  warp->SetScaleFactor(0.05); // 5 cm
+  warp->SetScaleFactor(tool_radius_); // 5 cm
   warp->Update();
 
   dilated_mesh = warp->GetPolyDataOutput();
@@ -112,19 +112,11 @@ std::string BezierTireMachining::generateTrajectory(EigenSTL::vector_Affine3d &t
                            machining_strippers))
     return "Could not slice polydata for machining trajectories";
 
-  for (vtkSmartPointer<vtkStripper> stripper : machining_strippers)
-  {
-    if (stripper->GetOutput()->GetNumberOfLines() > 1)
-    {
-      ROS_ERROR_STREAM(
-          "BezierTireMachining::generateTrajectory: Machining stripper has " << stripper->GetOutput()->GetNumberOfLines() << " lines");
-      // FIXME Handle this case!
-      //return "Machining stripper has more than 1 line (mesh has a hole). Not implemented yet!";
-    }
-  }
-
   // Compute the vector used to harmonize all the trajectories directions and display it
   Eigen::Vector3d direction_reference(slicing_orientation_.cross(global_mesh_normal));
+  if (direction_reference.x() > 0)
+    direction_reference = -direction_reference;
+
   Eigen::Affine3d pose_dir_reference(Eigen::Affine3d::Identity());
   double centroid[3];
   centroid[0] = dilated_mesh->GetCenter()[0];
@@ -145,6 +137,15 @@ std::string BezierTireMachining::generateTrajectory(EigenSTL::vector_Affine3d &t
   for (std::vector<vtkSmartPointer<vtkStripper> >::iterator it(machining_strippers.begin());
       it != machining_strippers.end(); ++it)
   {
+      if (it->Get()->GetOutput()->GetNumberOfLines() > 1)
+      {
+        ROS_ERROR_STREAM(
+            "BezierTireMachining::generateTrajectory: Machining stripper has " << it->Get()->GetOutput()->GetNumberOfLines() << " lines");
+        // FIXME Handle this case!
+        //return "Machining stripper has more than 1 line (mesh has a hole). Not implemented yet!";
+        continue;
+      }
+
     EigenSTL::vector_Affine3d traj;
     if (!generateRobotPosesAlongStripper(*it, traj))
     {
@@ -169,6 +170,9 @@ std::string BezierTireMachining::generateTrajectory(EigenSTL::vector_Affine3d &t
       else
         direction = Eigen::Vector3d::UnitZ();
       pose.linear() = rot * Eigen::AngleAxisd(lean_angle_, direction);
+
+      // Lean forward
+      pose.linear() = pose.linear() * Eigen::AngleAxisd(0.2, Eigen::Vector3d::UnitY());
     }
 
     harmonizeLineOrientation(traj, direction_reference);
