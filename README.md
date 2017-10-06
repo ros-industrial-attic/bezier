@@ -1,6 +1,8 @@
  [![Institut Maupertuis logo](https://avatars1.githubusercontent.com/u/12760694?v=3&s=80)](http://www.institutmaupertuis.fr) Bezier
 ===
 
+[![Build Status](https://travis-ci.org/ros-industrial-consortium/bezier.svg?branch=kinetic-devel)](https://travis-ci.org/ros-industrial-consortium/bezier)
+
 # Overview
 This repository is part of the [ROS-Industrial](http://wiki.ros.org/Industrial) program.
 
