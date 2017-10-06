@@ -12,11 +12,10 @@ notifications:
 
 env:
   global:
-    - ROS_DISTRO=kinetic
+    - ROS_DISTRO=kinetic UPSTREAM_WORKSPACE=file $ROSINSTALL_FILENAME="bezier.rosinstall"
     - DOCKER_IMAGE=rosindustrial/noether:kinetic
     - NOT_TEST_BUILD=true
     - BEFORE_SCRIPT='catkin config -w $CATKIN_WORKSPACE --no-install'
-    - ROSDEP_SKIP_KEYS='fanuc_m20ia_support fanuc_m20ia_moveit_config]'
   matrix:
     - ROS_REPOSITORY_PATH=http://packages.ros.org/ros/ubuntu
 
