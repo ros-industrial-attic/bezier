@@ -53,7 +53,7 @@
     <arg name="publish_monitored_planning_scene" value="true" />
   </include>
 
-  <node name="surfacing_application" pkg="bezier_application" type="surfacing_application" output="screen" required="true" />
+  <node name="bezier_application_surfacing" pkg="bezier_application" type="bezier_application_surfacing" output="screen" required="true" />
 
   <include file="$(find fanuc_m20ia_support)/launch/load_m20ia.launch" />
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find bezier_application)/config/robot_state_visualize.rviz" required="true" />
