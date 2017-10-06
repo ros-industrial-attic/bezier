@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>bezier_application</name>
-  <version>0.0.1</version>
-  <description>Application example of bezier_library on a Fanuc robot</description>
+  <version>0.0.2</version>
+  <description>Application example of bezier_library with a Fanuc robot</description>
   <author>Francois Lasson, Kévin Bolloré, Papa Libasse Sow - Institut Maupertuis</author>
-  <maintainer email="victor.lamoine@institutmaupertuis.fr">Victor Lamoine</maintainer>
+  <maintainer email="victor.lamoine@gmail.com">Victor Lamoine</maintainer>
   <license>BSD</license>
 
   <buildtool_depend>catkin</buildtool_depend>
