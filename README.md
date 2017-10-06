@@ -1,15 +1,13 @@
  [![Institut Maupertuis logo](https://avatars1.githubusercontent.com/u/12760694?v=3&s=80)](http://www.institutmaupertuis.fr) Bezier
 ===
 
-ROS-Industrial Special Project: 6D tool path planner
-
 # Overview
 This repository is part of the [ROS-Industrial](http://wiki.ros.org/Industrial) program.
 
 This project has been developed by the [Institut Maupertuis](http://www.institutmaupertuis.fr), a French research institute that is working on robotic industrial processes.
 This project goal is to create an automatic grinding path generator for 6-axis robots working on diverse/random meshes.
 
-Bezier planner generates robot poses (3D trajectories) in harmony with a grinding process.
+Bezier planner generates robot poses (3D trajectories) in harmony with a grinding process, it is as 6D tool path planner.
 It is able to create rectilinear trajectories on complex surfaces (3D surfaces) and to dilate them in all directions in order to grind defects with a pass principle.
 
 ![bezier_application](bezier_library/doc/bezier_application.png)
@@ -54,7 +52,7 @@ Create a catkin workspace and clone the project:
 ```bash
 mkdir -p catkin_workspace
 cd catkin_workspace
-git clone https://github.com/ros-industrial/bezier.git
+git clone https://github.com/ros-industrial-consortium/bezier.git
 wstool init src bezier/bezier.rosinstall
 mv bezier src
 ```
@@ -73,7 +71,7 @@ catkin build
 ```
 
 # Launch
-Source the `devel/setup.bash` file and launch the surfacing application:
+Source the catkin workspace in which you compiled the package, then launch:
 ```bash
 roslaunch bezier_application fanuc_m20ia_surfacing.launch surfacing_mode:=true mesh_cad:=plane/plane_defect.ply
 ```
