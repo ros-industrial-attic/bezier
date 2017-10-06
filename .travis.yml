@@ -4,6 +4,7 @@ language: generic
 
 compiler:
   - gcc
+
 notifications:
   email:
     on_success: never
