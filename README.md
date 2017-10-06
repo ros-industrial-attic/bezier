@@ -33,9 +33,9 @@ Dependencies
 - [`industrial-core`](http://wiki.ros.org/industrial_core)
 - [`fanuc`](http://wiki.ros.org/fanuc)
 - [`rviz_visual_tools`](https://github.com/davetcoleman/rviz_visual_tools)
-- [`Visualization Toolkit`](https://gitlab.kitware.com/vtk/vtk/) version `7.0` or later
+- [`Visualization Toolkit`](https://www.vtk.org/download/) version `7.1` or later
 - [`Point Cloud Library`](https://github.com/PointCloudLibrary/pcl) version `1.8.0` or later. :warning: PCL has to be compiled against the same VTK version that is used for this package
-- `C++11` is required 
+- `C++11` is required
 
 This package has been tested with Ubuntu 16.04 and ROS Kinetic.
 
@@ -75,9 +75,9 @@ Source the `devel/setup.bash` file and launch the surfacing application:
 ```bash
 roslaunch bezier_application fanuc_m20ia_surfacing.launch surfacing_mode:=true mesh_cad:=plane/plane_defect.ply
 ```
-Use the following command for the painting application: 
+Use the following command for the painting application:
 ```bash
-roslaunch bezier_application fanuc_m20ia_painting.launch mesh_cad:=ocean/ocean.ply 
+roslaunch bezier_application fanuc_m20ia_painting.launch mesh_cad:=ocean/ocean.ply
 ```
 
 In this example, `bezier_application` will be launched with `plane_defect.ply` as the CAD mesh and the grinding will be done in surface mode, meaning that we only pass on the surface of the mesh to smooth it.
