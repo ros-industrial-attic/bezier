@@ -3,11 +3,11 @@
 
 ROS-Industrial Special Project: 6D tool path planner
 
-[Pierre Étienne Bézier](https://en.wikipedia.org/wiki/Pierre_B%C3%A9zier) September 1, 1910 – November 25, 1999; *was a French engineer and one of the founders of the fields of solid, geometric and physical modeling as well as in the field of representing curves, especially in CAD/CAM systems. As an engineer at Renault, he became a leader in the transformation of design and manufacturing, through mathematics and computing tools, into computer-aided design and three-dimensional modeling. Bézier patented and popularized, but did not invent the Bézier curves and Bézier surfaces that are now used in most computer-aided design and computer graphics systems.*
+# Overview
+This repository is part of the [ROS-Industrial](http://wiki.ros.org/Industrial) program.
 
-# General information
 This project has been developed by the [Institut Maupertuis](http://www.institutmaupertuis.fr), a French research institute that is working on robotic industrial processes.
-This project goal is to create an automatic grinding path generator for 6-axis robots working on diverse/random meshes, it heavily relies on the [Robot Operating System](www.ros.org).
+This project goal is to create an automatic grinding path generator for 6-axis robots working on diverse/random meshes.
 
 Bezier planner generates robot poses (3D trajectories) in harmony with a grinding process.
 It is able to create rectilinear trajectories on complex surfaces (3D surfaces) and to dilate them in all directions in order to grind defects with a pass principle.
@@ -96,5 +96,9 @@ $(catkin_workspace)/src/bezier/bezier_application/meshes
 ```
 
 # Documentation
-
 Please read [bezier_library/doc/README.md](bezier_library/doc/README.md).
+
+# How to contribute
+- [Report issues](https://github.com/ros-industrial-consortium/bezier/issues)
+- Write documentation
+- Open [merge request](https://github.com/ros-industrial-consortium/bezier/pulls/) to fix bugs, improve/add functionalities
