@@ -154,7 +154,7 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
         ROS_ERROR_STREAM(
             "BezierGrindingSurfacing::generateTrajectory: Grinding stripper has " << stripper->GetOutput()->GetNumberOfLines() << " lines");
         // FIXME Handle this case!
-        //return "Grinding stripper has more than 1 line (mesh has a hole). Not implemented yet!";
+        return "Grinding stripper has more than 1 line (mesh has a hole). Not implemented yet!";
       }
     }
 
