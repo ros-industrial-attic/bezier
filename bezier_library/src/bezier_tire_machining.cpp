@@ -40,7 +40,7 @@ void BezierTireMachining::setMeshesPublishers(std::shared_ptr<ros::Publisher> &i
     displayMesh(input_mesh_pub_, std::string("file://" + input_mesh_absolute_path_), 0.3, 0.2, 0.2);
 }
 
-std::string BezierTireMachining::generateTrajectory(EigenSTL::vector_Affine3d &trajectory,
+std::string BezierTireMachining::generateTrajectory(EigenSTL::vector_Isometry3d &trajectory,
                                                     std::vector<bool> &is_machining_pose,
                                                     const bool display_markers)
 {
@@ -117,7 +117,7 @@ std::string BezierTireMachining::generateTrajectory(EigenSTL::vector_Affine3d &t
   if (direction_reference.x() > 0)
     direction_reference = -direction_reference;
 
-  Eigen::Affine3d pose_dir_reference(Eigen::Affine3d::Identity());
+  Eigen::Isometry3d pose_dir_reference(Eigen::Isometry3d::Identity());
   double centroid[3];
   centroid[0] = dilated_mesh->GetCenter()[0];
   centroid[1] = dilated_mesh->GetCenter()[1];
@@ -133,7 +133,7 @@ std::string BezierTireMachining::generateTrajectory(EigenSTL::vector_Affine3d &t
                              rviz_visual_tools::SMALL,
                              false);
 
-  std::vector<EigenSTL::vector_Affine3d> machining_trajectories;
+  std::vector<EigenSTL::vector_Isometry3d> machining_trajectories;
   for (std::vector<vtkSmartPointer<vtkStripper> >::iterator it(machining_strippers.begin());
       it != machining_strippers.end(); ++it)
   {
@@ -146,7 +146,7 @@ std::string BezierTireMachining::generateTrajectory(EigenSTL::vector_Affine3d &t
         continue;
       }
 
-    EigenSTL::vector_Affine3d traj;
+    EigenSTL::vector_Isometry3d traj;
     if (!generateRobotPosesAlongStripper(*it, traj))
     {
       ROS_WARN_STREAM(
@@ -186,7 +186,7 @@ std::string BezierTireMachining::generateTrajectory(EigenSTL::vector_Affine3d &t
   is_machining_pose.push_back(false);
 
   unsigned reverse_index(0);
-  for (EigenSTL::vector_Affine3d & machining_traj : machining_trajectories)
+  for (EigenSTL::vector_Isometry3d & machining_traj : machining_trajectories)
   {
     // Zig Zag trajectory
     if (reverse_index % 2 != 0)
@@ -195,7 +195,7 @@ std::string BezierTireMachining::generateTrajectory(EigenSTL::vector_Affine3d &t
       // Do NOT modify orientation!
     }
     reverse_index++;
-    for (Eigen::Affine3d machining_pose : machining_traj)
+    for (Eigen::Isometry3d machining_pose : machining_traj)
     {
       trajectory.push_back(machining_pose);
       is_machining_pose.push_back(true);
@@ -205,7 +205,7 @@ std::string BezierTireMachining::generateTrajectory(EigenSTL::vector_Affine3d &t
   unsigned index(0);
   if (display_markers)
   {
-    for (EigenSTL::vector_Affine3d traj : machining_trajectories)
+    for (EigenSTL::vector_Isometry3d traj : machining_trajectories)
     {
       if (index > 11)
         index = 0;

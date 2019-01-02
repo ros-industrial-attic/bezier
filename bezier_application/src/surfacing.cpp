@@ -99,7 +99,7 @@ int main(int argc,
   bezier_planner->setMeshesPublishers(cad_mesh_pub, dilated_mesh_pub);
   bezier_planner->waitForRvizVisualToolsSubscriber();
 
-  EigenSTL::vector_Affine3d way_points_vector;
+  EigenSTL::vector_Isometry3d way_points_vector;
   std::string error_message;
   std::vector<bool> is_grinding_pose;
   error_message = bezier_planner->generateTrajectory(way_points_vector, is_grinding_pose);
@@ -120,7 +120,7 @@ int main(int argc,
 
   // Copy the vector of Eigen poses into a vector of ROS poses
   std::vector<geometry_msgs::Pose> way_points_msg;
-  for (Eigen::Affine3d eigen_pose : way_points_vector)
+  for (Eigen::Isometry3d eigen_pose : way_points_vector)
   {
     //ROS_INFO_STREAM("Pose : " << std::endl << eigen_pose.matrix());
     geometry_msgs::Pose tmp;

@@ -139,13 +139,13 @@ void Bezier::displayMesh(const std::shared_ptr<ros::Publisher> &mesh_publisher,
   mesh_publisher->publish(mesh_marker);
 }
 
-void Bezier::displayTrajectory(const EigenSTL::vector_Affine3d &trajectory,
+void Bezier::displayTrajectory(const EigenSTL::vector_Isometry3d &trajectory,
                                rviz_visual_tools::colors color,
                                const bool display_normals,
                                const bool display_labels)
 {
   EigenSTL::vector_Vector3d points;
-  for(Eigen::Affine3d tmp : trajectory)
+  for(Eigen::Isometry3d tmp : trajectory)
     points.push_back(tmp.translation());
 
   visual_tools_->publishPath(points, color, 0.0005);
@@ -153,7 +153,7 @@ void Bezier::displayTrajectory(const EigenSTL::vector_Affine3d &trajectory,
   unsigned index(0);
   if (display_normals)
   {
-    for (Eigen::Affine3d tmp : trajectory)
+    for (Eigen::Isometry3d tmp : trajectory)
     {
       visual_tools_->publishAxis(tmp, 0.003, 0.0005);
       if (display_labels)
@@ -239,7 +239,7 @@ bool Bezier::estimateGlobalMeshNormal(vtkSmartPointer<vtkPolyData> &polydata,
   mesh_normal.normalize();
 
   // RViz visual tools
-  Eigen::Affine3d pose(Eigen::Affine3d::Identity());
+  Eigen::Isometry3d pose(Eigen::Isometry3d::Identity());
   double centroid[3];
   centroid[0] = polydata->GetCenter()[0];
   centroid[1] = polydata->GetCenter()[1];
@@ -279,7 +279,7 @@ bool Bezier::estimateSlicingOrientation(vtkSmartPointer<vtkPolyData> &polydata,
   }
 
   // RViz visual tools
-  Eigen::Affine3d pose(Eigen::Affine3d::Identity());
+  Eigen::Isometry3d pose(Eigen::Isometry3d::Identity());
   double centroid[3];
   centroid[0] = polydata->GetCenter()[0];
   centroid[1] = polydata->GetCenter()[1];
@@ -499,7 +499,7 @@ bool Bezier::sliceMeshWithPlanes(const vtkSmartPointer<vtkPolyData> &polydata,
   return true;
 }
 
-void Bezier::applyLeanAngle(Eigen::Affine3d &pose,
+void Bezier::applyLeanAngle(Eigen::Isometry3d &pose,
                             const AXIS_OF_ROTATION lean_angle_axis,
                             const double angle_value)
 {
@@ -512,7 +512,7 @@ void Bezier::applyLeanAngle(Eigen::Affine3d &pose,
 }
 
 bool Bezier::generateRobotPosesAlongStripper(const vtkSmartPointer<vtkStripper> &line,
-                                                              EigenSTL::vector_Affine3d &trajectory)
+                                                              EigenSTL::vector_Isometry3d &trajectory)
 {
   if (line->GetOutput()->GetNumberOfLines() == 0)
     return false;
@@ -609,7 +609,7 @@ bool Bezier::generateRobotPosesAlongStripper(const vtkSmartPointer<vtkStripper> 
   // At this stage all the points of the line and the normal matching for each point
   // are stored into the container point_normal_map.
   // We now iterate through this map and generate robot pose for each point
-  Eigen::Affine3d last_pose(Eigen::Affine3d::Identity());
+  Eigen::Isometry3d last_pose(Eigen::Isometry3d::Identity());
   // Iteration Loop through the table
 
   for (BezierPointNormalTable::iterator it(point_normal_table.begin()); it != point_normal_table.end(); ++it)
@@ -619,7 +619,7 @@ bool Bezier::generateRobotPosesAlongStripper(const vtkSmartPointer<vtkStripper> 
       // The current pose is the last one of the line
       // We keep the same orientation than the previous pose,
       // and we make a translation to the last point
-      Eigen::Affine3d pose(Eigen::Affine3d::Identity());
+      Eigen::Isometry3d pose(Eigen::Isometry3d::Identity());
       pose.translation() << (*it).first;
       pose.linear() = last_pose.linear();
       trajectory.push_back(pose);
@@ -640,7 +640,7 @@ bool Bezier::generateRobotPosesAlongStripper(const vtkSmartPointer<vtkStripper> 
     Eigen::Vector3d next_point((*it_next).first); // Next point
 
     // Robot Pose
-    Eigen::Affine3d pose(Eigen::Affine3d::Identity());
+    Eigen::Isometry3d pose(Eigen::Isometry3d::Identity());
 
     // Compute the normal X. It matches the next point direction
     normal_x = next_point - point;
@@ -678,11 +678,11 @@ bool Bezier::generateRobotPosesAlongStripper(const vtkSmartPointer<vtkStripper> 
   return true;
 }
 
-void Bezier::invertXAxisOfPoses(EigenSTL::vector_Affine3d &line)
+void Bezier::invertXAxisOfPoses(EigenSTL::vector_Isometry3d &line)
 {
   // Reverse X and Y vectors for each pose of the line
   // Z stays untouched, this is a PI rotation on the Z axis
-  for (Eigen::Affine3d &pose : line)
+  for (Eigen::Isometry3d &pose : line)
   {
     pose.linear().col(0) *= -1;
     pose.linear().col(1) *= -1;
@@ -783,7 +783,7 @@ bool Bezier::filterExtricationTrajectory(const Eigen::Vector3d &first_point,
                                                           const Eigen::Vector3d &last_point,
                                                           const Eigen::Vector3d &last_point_normal,
                                                           const Eigen::Vector4d &plane_equation,
-                                                          EigenSTL::vector_Affine3d &trajectory)
+                                                          EigenSTL::vector_Isometry3d &trajectory)
 {
   // The extrication filter use a 2D angle comparison method to reject inaccessible points from the extrication trajectory.
   // The filter apply the comparison algorithm on both side of the extrication trajectory :
@@ -829,9 +829,9 @@ bool Bezier::filterExtricationTrajectory(const Eigen::Vector3d &first_point,
           - (line_last_point_normal.dot(plane_equation.head<3>().normalized())) * plane_equation.head<3>().normalized()).normalized();
 
   // Iterator containing the index of the first point of the filtered trajectory
-  EigenSTL::vector_Affine3d::iterator start_of_filtered_line(trajectory.begin());
+  EigenSTL::vector_Isometry3d::iterator start_of_filtered_line(trajectory.begin());
   // Iterator containing the index of the last point of the filtered trajectory
-  EigenSTL::vector_Affine3d::iterator end_of_filtered_line(trajectory.end() - 1);
+  EigenSTL::vector_Isometry3d::iterator end_of_filtered_line(trajectory.end() - 1);
 
   // Boolean allowing to compare the sign of the angles computed
   bool sign = false;
@@ -846,7 +846,7 @@ bool Bezier::filterExtricationTrajectory(const Eigen::Vector3d &first_point,
   double angle = atan2(det, dot);
   sign = std::signbit(angle);
 
-  for (EigenSTL::vector_Affine3d::iterator it(trajectory.begin() + middle_index); it != trajectory.begin(); it--)
+  for (EigenSTL::vector_Isometry3d::iterator it(trajectory.begin() + middle_index); it != trajectory.begin(); it--)
   {
     Eigen::Vector3d vect(((*it).translation() - line_first_point).normalized());
     double dot = line_first_point_normal_projected[0] * line_first_point_normal_projected[1] + vect[0] * vect[1];
@@ -867,7 +867,7 @@ bool Bezier::filterExtricationTrajectory(const Eigen::Vector3d &first_point,
   angle = atan2(det, dot);
   sign = std::signbit(angle);
 
-  for (EigenSTL::vector_Affine3d::iterator it(trajectory.begin() + middle_index); it != trajectory.end(); it++)
+  for (EigenSTL::vector_Isometry3d::iterator it(trajectory.begin() + middle_index); it != trajectory.end(); it++)
   {
     Eigen::Vector3d vect(((*it).translation() - line_last_point).normalized());
     double dot = line_last_point_normal_projected[0] * line_last_point_normal_projected[1] + vect[0] * vect[1];
@@ -887,10 +887,10 @@ bool Bezier::filterExtricationTrajectory(const Eigen::Vector3d &first_point,
     return false;
   }
 
-  EigenSTL::vector_Affine3d filtered_trajectory;
+  EigenSTL::vector_Isometry3d filtered_trajectory;
   while (start_of_filtered_line <= end_of_filtered_line)
   {
-    Eigen::Affine3d filtered_pose = *start_of_filtered_line;
+    Eigen::Isometry3d filtered_pose = *start_of_filtered_line;
     filtered_trajectory.push_back(filtered_pose);
     start_of_filtered_line++;
   }
@@ -901,7 +901,7 @@ bool Bezier::filterExtricationTrajectory(const Eigen::Vector3d &first_point,
   return true;
 }
 
-bool Bezier::harmonizeLineOrientation(EigenSTL::vector_Affine3d &poses_on_line,
+bool Bezier::harmonizeLineOrientation(EigenSTL::vector_Isometry3d &poses_on_line,
                                                        const Eigen::Vector3d &direction_ref)
 {
   if (poses_on_line.size() <= 1)
@@ -1112,7 +1112,7 @@ bool Bezier::keepUpperPartofDilatedMesh(vtkSmartPointer<vtkPolyData> &base_polyd
       // Get normal of closest_point i
       point_normal_array->GetTuple(id_closest_points->GetId(i), normal);
       direction_vector.normalize();
-      
+
       Eigen::Vector3d normal_3d(normal);
       scalar_products_vector.push_back(normal_3d.dot(direction_vector));
     }

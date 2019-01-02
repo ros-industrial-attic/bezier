@@ -109,7 +109,7 @@ public:
    * @return An empty string on success, an error string otherwise
    * @note trajectory and is_grinding_pose are always the same size
    */
-  std::string virtual generateTrajectory(EigenSTL::vector_Affine3d &trajectory,
+  std::string virtual generateTrajectory(EigenSTL::vector_Isometry3d &trajectory,
                                          std::vector<bool> &is_grinding_pose,
                                          bool display_markers) = 0;
 
@@ -218,7 +218,7 @@ protected:
    * @param display_normals display Z normal
    * @param display_labels display pose ID
    */
-  void displayTrajectory(const EigenSTL::vector_Affine3d &trajectory,
+  void displayTrajectory(const EigenSTL::vector_Isometry3d &trajectory,
                          rviz_visual_tools::colors color,
                          const bool display_normals = false,
                          const bool display_labels = false);
@@ -284,7 +284,7 @@ protected:
    * @param lean_angle_axis
    * @param angle_value in radians
    */
-  void applyLeanAngle(Eigen::Affine3d &pose,
+  void applyLeanAngle(Eigen::Isometry3d &pose,
                       const AXIS_OF_ROTATION lean_angle_axis,
                       const double angle_value);
 
@@ -296,13 +296,13 @@ protected:
    * @return True if successful, false otherwise
    */
   bool generateRobotPosesAlongStripper(const vtkSmartPointer<vtkStripper> &line,
-                                       EigenSTL::vector_Affine3d &trajectory);
+                                       EigenSTL::vector_Isometry3d &trajectory);
 
   /**
    * Invert the X axis orientation by inverting the X and Y vectors of the pose
    * @param[in] line to be modified
    */
-  void invertXAxisOfPoses(EigenSTL::vector_Affine3d &line);
+  void invertXAxisOfPoses(EigenSTL::vector_Isometry3d &line);
 
   /**
    * Filters points that are too close from each others
@@ -327,7 +327,7 @@ protected:
                                    const Eigen::Vector3d &last_point,
                                    const Eigen::Vector3d &last_point_normal,
                                    const Eigen::Vector4d &plane_equation,
-                                   EigenSTL::vector_Affine3d &trajectory);
+                                   EigenSTL::vector_Isometry3d &trajectory);
 
   /**
    * Harmonize grinding/extrication lines orientation.
@@ -335,7 +335,7 @@ protected:
    * @param[in] direction_ref is direction vector reference
    * @return True if line was reversed, false otherwise
    */
-  bool harmonizeLineOrientation(EigenSTL::vector_Affine3d &poses,
+  bool harmonizeLineOrientation(EigenSTL::vector_Isometry3d &poses,
                                 const Eigen::Vector3d &direction_ref);
 
   /**

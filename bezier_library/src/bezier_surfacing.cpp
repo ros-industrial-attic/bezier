@@ -42,7 +42,7 @@ void BezierGrindingSurfacing::setMeshesPublishers(std::shared_ptr<ros::Publisher
     displayMesh(input_mesh_pub_, std::string("file://"+input_mesh_absolute_path_), 0.3, 0.2, 0.2);
 }
 
-std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3d &trajectory,
+std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Isometry3d &trajectory,
                                                         std::vector<bool> &is_grinding_pose,
                                                         const bool display_markers)
 {
@@ -121,7 +121,7 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
 
   // Compute the vector used to harmonize all the trajectories directions and display it
   Eigen::Vector3d direction_reference(slicing_orientation_.cross(global_mesh_normal));
-  Eigen::Affine3d pose_dir_reference(Eigen::Affine3d::Identity());
+  Eigen::Isometry3d pose_dir_reference(Eigen::Isometry3d::Identity());
   double centroid[3];
   centroid[0] = input_meshes_[SURFACE_MESH]->GetCenter()[0];
   centroid[1] = input_meshes_[SURFACE_MESH]->GetCenter()[1];
@@ -162,7 +162,7 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
     for (std::vector<vtkSmartPointer<vtkStripper> >::iterator it(grinding_strippers.begin());
         it != grinding_strippers.end(); ++it)
     {
-      EigenSTL::vector_Affine3d traj;
+      EigenSTL::vector_Isometry3d traj;
       if (!generateRobotPosesAlongStripper(*it, traj))
       {
         ROS_WARN_STREAM(
@@ -190,7 +190,7 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
     // Compute extrication direction vector orientation
     EigenSTL::vector_Vector3d extrication_direction_vector;
 
-    for (std::vector<EigenSTL::vector_Affine3d>::iterator it(grinding_trajectories.begin());
+    for (std::vector<EigenSTL::vector_Isometry3d>::iterator it(grinding_trajectories.begin());
         it != grinding_trajectories.end() - 1; ++it)
     {
       // Last point of grinding N line
@@ -203,7 +203,7 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
       Eigen::Vector4d plane_equation;
       Eigen::Vector3d plane_origin;
 
-      EigenSTL::vector_Affine3d traj;
+      EigenSTL::vector_Isometry3d traj;
       estimateExtricationSlicingPlane(line_n_last_point, line_n1_first_point, global_mesh_normal, plane_equation,
                                       plane_origin);
 
@@ -236,7 +236,7 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
     for (std::vector<vtkSmartPointer<vtkStripper> >::iterator it(extrication_strippers.begin());
         it != extrication_strippers.end(); ++it)
     {
-      EigenSTL::vector_Affine3d traj;
+      EigenSTL::vector_Isometry3d traj;
       if (!generateRobotPosesAlongStripper(*it, traj))
         return "Could not generate robot poses for extrication trajectory";
 
@@ -249,7 +249,7 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
     }
 
     // Iterator allowing to move through the grinding trajectories
-    std::vector<EigenSTL::vector_Affine3d>::iterator grinding_iterator(grinding_trajectories.begin());
+    std::vector<EigenSTL::vector_Isometry3d>::iterator grinding_iterator(grinding_trajectories.begin());
 
     for (unsigned i = 0; i < extrication_trajectories.size(); ++i)
     {
@@ -304,7 +304,7 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
       //return "Extrication stripper has more than 1 line (mesh has a hole). Not implemented yet!";
     }
 
-    EigenSTL::vector_Affine3d last_extrication_traj;
+    EigenSTL::vector_Isometry3d last_extrication_traj;
     if (!generateRobotPosesAlongStripper(last_extrication_stripper, last_extrication_traj))
       return "Could not generate robot poses for last extrication trajectory";
 
@@ -342,9 +342,9 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
   if (params_observer_->mustGenerateGrindingTrajectories())
   {
     // Application of the grinding lean angle
-    for (EigenSTL::vector_Affine3d &poses : grinding_trajectories)
+    for (EigenSTL::vector_Isometry3d &poses : grinding_trajectories)
     {
-      for (Eigen::Affine3d &pose : poses)
+      for (Eigen::Isometry3d &pose : poses)
         applyLeanAngle(pose, axis_of_rotation_, lean_angle_);
     }
   }
@@ -352,15 +352,15 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
   // The first pose of the trajectory is a point located above the first grinding pose.
   // We use the last pose of the last extrication trajectory which is located above the
   // first pose of the first grinding line. This point is stored as the first pose of the trajectory.
-  Eigen::Affine3d start_pose(extrication_trajectories.back().back());
+  Eigen::Isometry3d start_pose(extrication_trajectories.back().back());
   // We keep the same orientation than the one of the first grinding pose of the first grinding line
   start_pose.linear() << grinding_trajectories.front().front().linear();
 
   // Generate Intermediate poses between the start pose of the trajectory and the first grinding line
-  EigenSTL::vector_Affine3d first_grinding_line_intermediate_poses;
+  EigenSTL::vector_Isometry3d first_grinding_line_intermediate_poses;
   Eigen::Vector3d end_pose(grinding_trajectories.front().front().translation());
   generateIntermediatePoseOnLine(first_grinding_line_intermediate_poses, start_pose.translation(), end_pose, 2);
-  for (Eigen::Affine3d &pose : first_grinding_line_intermediate_poses)
+  for (Eigen::Isometry3d &pose : first_grinding_line_intermediate_poses)
   {
     // The intermediate poses have the same orientation than the first pose of the first grinding line
     pose.linear() << grinding_trajectories.front().front().linear();
@@ -371,15 +371,15 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
     // Generate intermediate poses between last extrication pose and first grinding pose
     // of each trajectories
     end_intermediate_poses_trajectories.clear();
-    std::vector<EigenSTL::vector_Affine3d>::iterator grinding_it(grinding_trajectories.begin() + 1);
-    for (std::vector<EigenSTL::vector_Affine3d>::iterator extrication_traj(extrication_trajectories.begin());
+    std::vector<EigenSTL::vector_Isometry3d>::iterator grinding_it(grinding_trajectories.begin() + 1);
+    for (std::vector<EigenSTL::vector_Isometry3d>::iterator extrication_traj(extrication_trajectories.begin());
         extrication_traj != extrication_trajectories.end() - 1; extrication_traj++)
     {
-      EigenSTL::vector_Affine3d intermediate_poses;
+      EigenSTL::vector_Isometry3d intermediate_poses;
       Eigen::Vector3d start_pose((*extrication_traj).back().translation());
       Eigen::Vector3d end_pose((*grinding_it).front().translation());
       generateIntermediatePoseOnLine(intermediate_poses, start_pose, end_pose, 2);
-      for (Eigen::Affine3d &pose : intermediate_poses)
+      for (Eigen::Isometry3d &pose : intermediate_poses)
       {
         //The intermediate pose has the same orientation than the first grinding line
         pose.linear() << (*grinding_it).front().linear();
@@ -391,15 +391,15 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
     // Generate intermediate poses between last grinding pose and first extrication pose
     // of each trajectories
     start_intermediate_poses_trajectories.clear();
-    std::vector<EigenSTL::vector_Affine3d>::iterator extrication_it(extrication_trajectories.begin());
-    for (std::vector<EigenSTL::vector_Affine3d>::iterator grinding_traj(grinding_trajectories.begin());
+    std::vector<EigenSTL::vector_Isometry3d>::iterator extrication_it(extrication_trajectories.begin());
+    for (std::vector<EigenSTL::vector_Isometry3d>::iterator grinding_traj(grinding_trajectories.begin());
         grinding_traj != grinding_trajectories.end(); grinding_traj++)
     {
-      EigenSTL::vector_Affine3d intermediate_poses;
+      EigenSTL::vector_Isometry3d intermediate_poses;
       Eigen::Vector3d start_pose((*grinding_traj).back().translation());
       Eigen::Vector3d end_pose((*extrication_it).front().translation());
       generateIntermediatePoseOnLine(intermediate_poses, start_pose, end_pose, 2);
-      for (Eigen::Affine3d &pose : intermediate_poses)
+      for (Eigen::Isometry3d &pose : intermediate_poses)
       {
         // The intermediate pose has the same orientation than the first pose of the extrication line
         pose.linear() << (*extrication_it).front().linear();
@@ -409,9 +409,9 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
     }
 
     // Add intermediates poses to extrication trajectories
-    std::vector<EigenSTL::vector_Affine3d>::iterator end_intermediate_poses_it(
+    std::vector<EigenSTL::vector_Isometry3d>::iterator end_intermediate_poses_it(
         end_intermediate_poses_trajectories.begin());
-    for (std::vector<EigenSTL::vector_Affine3d>::iterator extrication_traj(extrication_trajectories.begin());
+    for (std::vector<EigenSTL::vector_Isometry3d>::iterator extrication_traj(extrication_trajectories.begin());
         extrication_traj != extrication_trajectories.end() - 1; extrication_traj++)
     {
       (*extrication_traj).insert((*extrication_traj).end(), (*end_intermediate_poses_it).begin(),
@@ -420,9 +420,9 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
     }
 
     // Add intermediates poses to extrication trajectories
-    std::vector<EigenSTL::vector_Affine3d>::iterator start_intermediate_poses_it(
+    std::vector<EigenSTL::vector_Isometry3d>::iterator start_intermediate_poses_it(
         start_intermediate_poses_trajectories.begin());
-    for (std::vector<EigenSTL::vector_Affine3d>::iterator extrication_traj(extrication_trajectories.begin());
+    for (std::vector<EigenSTL::vector_Isometry3d>::iterator extrication_traj(extrication_trajectories.begin());
         extrication_traj != extrication_trajectories.end(); extrication_traj++)
     {
       (*extrication_traj).insert((*extrication_traj).begin(), (*start_intermediate_poses_it).begin(),
@@ -434,7 +434,7 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
   unsigned index(0);
   if (display_markers)
   {
-    for (EigenSTL::vector_Affine3d traj : grinding_trajectories)
+    for (EigenSTL::vector_Isometry3d traj : grinding_trajectories)
     {
       if (index > 11)
         index = 0;
@@ -442,21 +442,21 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
     }
 
     index = 0;
-    for (EigenSTL::vector_Affine3d traj : extrication_trajectories)
+    for (EigenSTL::vector_Isometry3d traj : extrication_trajectories)
     {
       if (index > 11)
         index = 0;
       displayTrajectory(traj, visualToolsColorFromIndex(index++), true);
     }
 
-    for (EigenSTL::vector_Affine3d traj : end_intermediate_poses_trajectories)
+    for (EigenSTL::vector_Isometry3d traj : end_intermediate_poses_trajectories)
     {
       if (index > 11)
         index = 0;
       displayTrajectory(traj, visualToolsColorFromIndex(index++), true);
     }
 
-    for (EigenSTL::vector_Affine3d traj : start_intermediate_poses_trajectories)
+    for (EigenSTL::vector_Isometry3d traj : start_intermediate_poses_trajectories)
     {
       if (index > 11)
         index = 0;
@@ -464,7 +464,7 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
     }
 
     // Display the start pose of the trajectory
-    Eigen::Affine3d display_start_pose(start_pose);
+    Eigen::Isometry3d display_start_pose(start_pose);
     visual_tools_->publishXArrow(display_start_pose, rviz_visual_tools::GREEN, rviz_visual_tools::XXXXSMALL, 0.008);
     visual_tools_->publishZArrow(display_start_pose, rviz_visual_tools::GREEN, rviz_visual_tools::XXXXSMALL, 0.008);
     start_pose.translation() -= 0.01 * display_start_pose.affine().col(2).head<3>();
@@ -477,27 +477,27 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Affine3
   // Add one grinding traj, one extrication traj...
   trajectory.clear();
   is_grinding_pose.clear();
-  std::vector<EigenSTL::vector_Affine3d>::iterator extrication_iterator(extrication_trajectories.begin());
+  std::vector<EigenSTL::vector_Isometry3d>::iterator extrication_iterator(extrication_trajectories.begin());
 
   trajectory.push_back(start_pose);
   is_grinding_pose.push_back(false);
-  for (Eigen::Affine3d &pose : first_grinding_line_intermediate_poses)
+  for (Eigen::Isometry3d &pose : first_grinding_line_intermediate_poses)
   {
     // Add intermediate poses between the start pose of the trajectory and the first grinding pose
     trajectory.push_back(pose);
     is_grinding_pose.push_back(false);
   }
 
-  for (EigenSTL::vector_Affine3d grinding_traj : grinding_trajectories)
+  for (EigenSTL::vector_Isometry3d grinding_traj : grinding_trajectories)
   {
-    for (Eigen::Affine3d grinding_pose : grinding_traj)
+    for (Eigen::Isometry3d grinding_pose : grinding_traj)
     {
       trajectory.push_back(grinding_pose);
       is_grinding_pose.push_back(true);
     }
     if (extrication_iterator != extrication_trajectories.end())
     {
-      for (Eigen::Affine3d extrication_pose : *extrication_iterator)
+      for (Eigen::Isometry3d extrication_pose : *extrication_iterator)
       {
         trajectory.push_back(extrication_pose);
         is_grinding_pose.push_back(false);
@@ -517,7 +517,7 @@ void BezierGrindingSurfacing::setSlicingOrientation(const Eigen::Vector3d &cutti
     slicing_orientation_.normalize();
 }
 
-void BezierGrindingSurfacing::generateIntermediatePoseOnLine(EigenSTL::vector_Affine3d &poses,
+void BezierGrindingSurfacing::generateIntermediatePoseOnLine(EigenSTL::vector_Isometry3d &poses,
                                       const Eigen::Vector3d &start_point,
                                       const Eigen::Vector3d &end_point,
                                       const unsigned number_of_poses)
@@ -538,7 +538,7 @@ void BezierGrindingSurfacing::generateIntermediatePoseOnLine(EigenSTL::vector_Af
   {
     double d = distance * (index);
     Eigen::Vector3d point(start_point + d * direction);
-    Eigen::Affine3d pose(Eigen::Affine3d::Identity());
+    Eigen::Isometry3d pose(Eigen::Isometry3d::Identity());
     pose.translation() << point;
     poses.push_back(pose);
   }

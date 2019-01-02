@@ -38,7 +38,7 @@ void BezierPainting::setMeshesPublishers(std::shared_ptr<ros::Publisher> &input_
     displayMesh(input_mesh_pub_, std::string("file://" + input_mesh_absolute_path_), 0.3, 0.2, 0.2);
 }
 
-std::string BezierPainting::generateTrajectory(EigenSTL::vector_Affine3d &trajectory,
+std::string BezierPainting::generateTrajectory(EigenSTL::vector_Isometry3d &trajectory,
                                                std::vector<bool> &is_grinding_pose,
                                                const bool display_markers)
 {
@@ -89,7 +89,7 @@ std::string BezierPainting::generateTrajectory(EigenSTL::vector_Affine3d &trajec
 
   // Compute the vector used to harmonize all the trajectories directions and display it
   Eigen::Vector3d direction_reference(slicing_orientation_.cross(global_mesh_normal));
-  Eigen::Affine3d pose_dir_reference(Eigen::Affine3d::Identity());
+  Eigen::Isometry3d pose_dir_reference(Eigen::Isometry3d::Identity());
   double centroid[3];
   centroid[0] = input_meshes_[PAINTING_MESH]->GetCenter()[0];
   centroid[1] = input_meshes_[PAINTING_MESH]->GetCenter()[1];
@@ -104,11 +104,11 @@ std::string BezierPainting::generateTrajectory(EigenSTL::vector_Affine3d &trajec
   visual_tools_->publishText(pose_dir_reference, "Direction reference", rviz_visual_tools::GREEN,
                              rviz_visual_tools::SMALL, false);
 
-  std::vector<EigenSTL::vector_Affine3d> grinding_trajectories;
+  std::vector<EigenSTL::vector_Isometry3d> grinding_trajectories;
   for (std::vector<vtkSmartPointer<vtkStripper> >::iterator it(grinding_strippers.begin());
       it != grinding_strippers.end(); ++it)
   {
-    EigenSTL::vector_Affine3d traj;
+    EigenSTL::vector_Isometry3d traj;
     if (!generateRobotPosesAlongStripper(*it, traj))
     {
       ROS_WARN_STREAM("BezierPainting::generateTrajectory: Could not generate robot poses for grinding trajectory");
@@ -126,7 +126,7 @@ std::string BezierPainting::generateTrajectory(EigenSTL::vector_Affine3d &trajec
   is_grinding_pose.push_back(false);
 
   unsigned reverse_index(0);
-  for (EigenSTL::vector_Affine3d & grinding_traj : grinding_trajectories)
+  for (EigenSTL::vector_Isometry3d & grinding_traj : grinding_trajectories)
   {
     // Zig Zag trajectory
     if (reverse_index % 2 != 0)
@@ -135,7 +135,7 @@ std::string BezierPainting::generateTrajectory(EigenSTL::vector_Affine3d &trajec
       invertXAxisOfPoses(grinding_traj);
     }
     reverse_index++;
-    for (Eigen::Affine3d grinding_pose : grinding_traj)
+    for (Eigen::Isometry3d grinding_pose : grinding_traj)
     {
       trajectory.push_back(grinding_pose);
       is_grinding_pose.push_back(true);
@@ -145,7 +145,7 @@ std::string BezierPainting::generateTrajectory(EigenSTL::vector_Affine3d &trajec
   unsigned index(0);
   if (display_markers)
   {
-    for (EigenSTL::vector_Affine3d traj : grinding_trajectories)
+    for (EigenSTL::vector_Isometry3d traj : grinding_trajectories)
     {
       if (index > 11)
         index = 0;
