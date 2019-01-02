@@ -47,11 +47,11 @@ public:
   void setMeshesPublishers(std::shared_ptr<ros::Publisher> &input_mesh_publisher,
                            std::shared_ptr<ros::Publisher> &dilated_mesh_publisher);
 
-  std::string generateTrajectory(EigenSTL::vector_Affine3d &trajectory,
+  std::string generateTrajectory(EigenSTL::vector_Isometry3d &trajectory,
                                  std::vector<bool> &is_grinding_pose,
                                  const bool display_markers = true);
 
-  std::string generateTrajectory(EigenSTL::vector_Affine3d &trajectory,
+  std::string generateTrajectory(EigenSTL::vector_Isometry3d &trajectory,
                                  std::vector<bool> &is_grinding_pose,
                                  const double grinding_disk_machining_width,
                                  const unsigned covering_percentage,
@@ -85,7 +85,7 @@ public:
    * @param[in] end_point is the end point of the line
    * @param[in] number_of_poses is the number of poses to be generated
    */
-  void generateIntermediatePoseOnLine(EigenSTL::vector_Affine3d &poses,
+  void generateIntermediatePoseOnLine(EigenSTL::vector_Isometry3d &poses,
                                       const Eigen::Vector3d &start_point,
                                       const Eigen::Vector3d &end_point,
                                       const unsigned number_of_poses);
@@ -114,10 +114,10 @@ private:
   vtkSmartPointer<vtkPolyData> extrication_mesh;
 
   // Vector of generated poses (trajectories)
-  std::vector<EigenSTL::vector_Affine3d> grinding_trajectories;
-  std::vector<EigenSTL::vector_Affine3d> extrication_trajectories;
-  std::vector<EigenSTL::vector_Affine3d> start_intermediate_poses_trajectories;
-  std::vector<EigenSTL::vector_Affine3d> end_intermediate_poses_trajectories;
+  std::vector<EigenSTL::vector_Isometry3d> grinding_trajectories;
+  std::vector<EigenSTL::vector_Isometry3d> extrication_trajectories;
+  std::vector<EigenSTL::vector_Isometry3d> start_intermediate_poses_trajectories;
+  std::vector<EigenSTL::vector_Isometry3d> end_intermediate_poses_trajectories;
 
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW

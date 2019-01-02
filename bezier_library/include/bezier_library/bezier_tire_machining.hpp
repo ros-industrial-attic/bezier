@@ -40,11 +40,11 @@ public:
   void setMeshesPublishers(std::shared_ptr<ros::Publisher> &input_mesh_publisher,
                            std::shared_ptr<ros::Publisher> &dilated_mesh_publisher);
 
-  std::string generateTrajectory(EigenSTL::vector_Affine3d &trajectory,
+  std::string generateTrajectory(EigenSTL::vector_Isometry3d &trajectory,
                                  std::vector<bool> &is_grinding_pose,
                                  const bool display_markers = true);
 
-  std::string generateTrajectory(EigenSTL::vector_Affine3d &trajectory,
+  std::string generateTrajectory(EigenSTL::vector_Isometry3d &trajectory,
                                  std::vector<bool> &is_grinding_pose,
                                  const double tool_length,
                                  const double tool_radius,
