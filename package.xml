@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>bezier_library</name>
-  <version>0.0.2</version>
+  <name>bezier</name>
+  <version>0.0.3</version>
   <description>Robot path planner for complex 6 DOF surfacing trajectories</description>
   <author>Francois Lasson, Kévin Bolloré, Papa Libasse Sow - Institut Maupertuis</author>
   <maintainer email="victor.lamoine@gmail.com">Victor Lamoine</maintainer>

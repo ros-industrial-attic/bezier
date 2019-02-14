@@ -12,10 +12,10 @@ This project goal is to create an automatic grinding path generator for 6-axis r
 Bezier planner generates robot poses (3D trajectories) in harmony with a grinding process, it is as 6D tool path planner.
 It is able to create rectilinear trajectories on complex surfaces (3D surfaces) and to dilate them in all directions in order to grind defects with a pass principle.
 
-![bezier_application](bezier_library/doc/bezier_application.png)
+![bezier_application](doc/bezier_application.png)
 
-[![Fanuc grinding Youtube video](https://github.com/InstitutMaupertuis/fanuc_grinding/raw/indigo-devel/documentation/fanuc_grinding.jpg)](https://www.youtube.com/watch?v=aLp8zxx1PnU)
-Click the image to see a video of a Fanuc robot grinding thanks to the Bezier library, the project is [fanuc_grinding](https://github.com/InstitutMaupertuis/fanuc_grinding).
+[![Fanuc grinding Youtube video](https://gitlab.com/InstitutMaupertuis/fanuc_grinding/raw/kinetic-devel/documentation/fanuc_grinding.jpg)](https://www.youtube.com/watch?v=aLp8zxx1PnU)
+Click the image to see a video of a Fanuc robot grinding thanks to the Bezier library.
 
 # Dependencies
 This package has been tested with Ubuntu 16.04 and ROS Kinetic.
@@ -72,31 +72,12 @@ catkin_make
 catkin build
 ```
 
-# Launch
-Source the catkin workspace in which you compiled the package, then launch:
-```bash
-roslaunch bezier_application fanuc_m20ia_surfacing.launch surfacing_mode:=true mesh_cad:=plane/plane_defect.ply
-```
-Use the following command for the painting application:
-```bash
-roslaunch bezier_application fanuc_m20ia_painting.launch mesh_cad:=ocean/ocean.ply
-```
-
-In this example, `bezier_application` will be launched with `plane_defect.ply` as the CAD mesh and the grinding will be done in surface mode, meaning that we only pass on the surface of the mesh to smooth it.
-
-```bash
-roslaunch bezier_application fanuc_m20ia_surfacing.launch mesh_cad:=plane/plane.ply mesh_defect:=plane/plane_defect.ply
-```
-
-In this example, `bezier_application` will be launched with `plane.ply` as the CAD mesh and `plane_defect.ply` as defect mesh.
-
-Others examples of meshes are available in:
-```bash
-$(catkin_workspace)/src/bezier/bezier_application/meshes
-```
-
 # Documentation
-Please read [bezier_library/doc/README.md](bezier_library/doc/README.md).
+Please read [doc/README.md](doc/README.md).
+
+# Example packages using `bezier`
+- [bezier_examples](https://github.com/ros-industrial-consortium/bezier_examples)
+- [fanuc_grinding](https://gitlab.com/InstitutMaupertuis/fanuc_grinding)
 
 # How to contribute
 - [Report issues](https://github.com/ros-industrial-consortium/bezier/issues)

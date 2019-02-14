@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(bezier_library)
+project(bezier)
 add_definitions(-std=c++11 -Wall -Wextra)
 
 ## Find catkin macros and libraries
