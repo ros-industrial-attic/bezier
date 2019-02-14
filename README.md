@@ -77,13 +77,21 @@ catkin build
 ```
 
 # Documentation
-Please read [doc/README.md](doc/README.md).
+## API documentation
+
+Install rosdoc_lite:
+```
+sudo apt install ros-$ROS_DISTRO-rosdoc-lite
+```
+
+Generate the API documentation:
+```bash
+catkin_make bezier_doc
+```
+
+## Documented classes of Bezier
+- [bezier_grinding_surfacing](README_bezier_grinding_surfacing.md)
 
 # Example packages using `bezier`
 - [bezier_examples](https://github.com/ros-industrial-consortium/bezier_examples)
 - [fanuc_grinding](https://gitlab.com/InstitutMaupertuis/fanuc_grinding)
-
-# How to contribute
-- [Report issues](https://github.com/ros-industrial-consortium/bezier/issues)
-- Write documentation
-- Open [merge request](https://github.com/ros-industrial-consortium/bezier/pulls/) to fix bugs, improve/add functionalities
