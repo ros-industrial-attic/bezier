@@ -3,7 +3,7 @@
   <name>bezier</name>
   <version>0.0.3</version>
   <description>Robot path planner for complex 6 DOF surfacing trajectories</description>
-  <author>Francois Lasson, Kévin Bolloré, Papa Libasse Sow - Institut Maupertuis</author>
+  <author>Francois Lasson, Kévin Bolloré, Papa Libasse Sow, Victor Lamoine - Institut Maupertuis</author>
   <maintainer email="victor.lamoine@gmail.com">Victor Lamoine</maintainer>
   <license>BSD</license>
 

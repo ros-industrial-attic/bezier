@@ -1,8 +1,8 @@
 #ifndef BEZIER_GRINDING_SURFACING_HPP
 #define BEZIER_GRINDING_SURFACING_HPP
 
-#include <bezier_library/bezier_library.hpp>
-#include <bezier_library/bezier_params_observer.hpp>
+#include <bezier/bezier_library.hpp>
+#include <bezier/params_observer.hpp>
 #include <ros/package.h>
 #include <memory>
 

@@ -1,11 +1,14 @@
-How to build the API documentation
-===
-```bash
-cd $(catkin_workspace)/build
-make bezier_library_doc
+# How to build the API documentation
+
+Install rosdoc_lite:
 ```
-List of classes inside Bezier
-===
+sudo apt install ros-$ROS_DISTRO-rosdoc-lite
+```
 
+Generate the API documentation:
+```bash
+catkin_make bezier_doc
+```
+
+# Documented classes of Bezier
 - [bezier_grinding_surfacing](README_bezier_grinding_surfacing.md)
-

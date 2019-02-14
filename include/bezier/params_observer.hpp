@@ -1,7 +1,7 @@
 #ifndef BEZIER_PARAMS_OBSERVER_HPP
 #define BEZIER_PARAMS_OBSERVER_HPP
 
-#include <bezier_library/bezier_library.hpp>
+#include <bezier/bezier_library.hpp>
 
 /**
  * Bezier parameters observer class

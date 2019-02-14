@@ -1,4 +1,4 @@
-#include <bezier_library/bezier_library.hpp>
+#include <bezier/bezier_library.hpp>
 
 Bezier::Bezier()
 {

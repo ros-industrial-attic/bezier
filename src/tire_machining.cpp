@@ -1,4 +1,4 @@
-#include "bezier_library/bezier_tire_machining.hpp"
+#include "bezier/tire_machining.hpp"
 #include <vtkCleanPolyData.h>
 #include <vtkWarpVector.h>
 

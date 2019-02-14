@@ -1,5 +1,5 @@
-#ifndef ErrorObserver_h
-#define ErrorObserver_h
+#ifndef ERROR_OBSERVER_HPP
+#define ERROR_OBSERVER_HPP
 
 #include <string>
 #include <vtkCommand.h>

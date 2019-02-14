@@ -1,5 +1,5 @@
-#include "bezier_library/bezier_grinding_surfacing.hpp"
-#include "bezier_library/bezier_params_observer.hpp"
+#include "bezier/grinding_surfacing.hpp"
+#include "bezier/params_observer.hpp"
 
 BezierGrindingSurfacing::BezierGrindingSurfacing(const std::string input_mesh,
                                                  const double grinding_disk_machining_width,
@@ -93,7 +93,7 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Isometr
 
   if (display_markers)
   {
-    std::string mesh_path(ros::package::getPath("bezier_library") + "/meshes/dilated_mesh.stl");
+    std::string mesh_path(ros::package::getPath("bezier") + "/meshes/dilated_mesh.stl");
 
     if (saveMesh(mesh_path, dilated_mesh))
     {
@@ -107,7 +107,7 @@ std::string BezierGrindingSurfacing::generateTrajectory(EigenSTL::vector_Isometr
 
   if (display_markers)
   {
-    std::string mesh_path(ros::package::getPath("bezier_library") + "/meshes/extrication_mesh.stl");
+    std::string mesh_path(ros::package::getPath("bezier") + "/meshes/extrication_mesh.stl");
 
     if (saveMesh(mesh_path, extrication_mesh))
     {

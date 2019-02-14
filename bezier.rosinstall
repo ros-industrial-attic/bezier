@@ -1,4 +1,0 @@
-- git: {local-name: rviz_visual_tools, uri: 'https://github.com/davetcoleman/rviz_visual_tools.git',
-    version: kinetic-devel}
-- git: {local-name: fanuc, uri: 'https://github.com/ros-industrial/fanuc.git',
-    version: indigo-devel}

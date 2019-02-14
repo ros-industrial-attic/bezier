@@ -1,4 +1,4 @@
-#include "bezier_library/bezier_painting.hpp"
+#include "bezier/painting.hpp"
 
 BezierPainting::BezierPainting(const std::string input_mesh,
                                const double painting_cone_width,

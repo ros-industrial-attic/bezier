@@ -1,6 +1,8 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.2)
 project(bezier)
-add_definitions(-std=c++11 -Wall -Wextra)
+add_compile_options(-Wall -Wextra)
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 ## Find catkin macros and libraries
 find_package(catkin REQUIRED COMPONENTS
@@ -26,7 +28,6 @@ endif()
 catkin_package(
   INCLUDE_DIRS
   include
-  ${PCL_INCLUDE_DIRS}
   LIBRARIES
   ${PROJECT_NAME}
   ${PROJECT_NAME}_painting
@@ -54,7 +55,7 @@ add_definitions(${PCL_DEFINITIONS})
 # Bezier library
 add_library(
   ${PROJECT_NAME}
-  src/${PROJECT_NAME}.cpp
+  src/${PROJECT_NAME}_library.cpp
 )
 target_link_libraries(
   ${PROJECT_NAME}
@@ -70,7 +71,7 @@ add_dependencies(
 # Bezier surfacing
 add_library(
   ${PROJECT_NAME}_surfacing
-  src/bezier_surfacing.cpp
+  src/surfacing.cpp
 )
 target_link_libraries(
   ${PROJECT_NAME}_surfacing
@@ -88,7 +89,7 @@ add_dependencies(
 # Bezier painting
 add_library(
   ${PROJECT_NAME}_painting
-  src/bezier_painting.cpp
+  src/painting.cpp
 )
 target_link_libraries(
   ${PROJECT_NAME}_painting
@@ -106,7 +107,7 @@ add_dependencies(
 # Tire machining
 add_library(
   ${PROJECT_NAME}_tire_machining
-  src/bezier_tire_machining.cpp
+  src/tire_machining.cpp
 )
 target_link_libraries(
   ${PROJECT_NAME}_tire_machining
@@ -137,14 +138,22 @@ install(TARGETS
 )
 
 ## Mark cpp header files for installation
-install(DIRECTORY include/${PROJECT_NAME}/
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+install(
+  DIRECTORY
+  include/${PROJECT_NAME}/
+  DESTINATION
+  ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
 )
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
-install(DIRECTORY meshes DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+install(
+  DIRECTORY
+  meshes
+  DESTINATION
+  ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
 
 add_custom_target(
   ${PROJECT_NAME}_doc
-  rosdoc_lite -o ${CATKIN_DEVEL_PREFIX}/doc/${PROJECT_NAME} ${CATKIN_DEVEL_PREFIX}/../src/bezier/${PROJECT_NAME}
+  rosdoc_lite -o ${CATKIN_DEVEL_PREFIX}/doc/${PROJECT_NAME} ${CATKIN_DEVEL_PREFIX}/../src/${PROJECT_NAME}
 )

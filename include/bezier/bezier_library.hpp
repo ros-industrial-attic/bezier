@@ -37,7 +37,7 @@
 #include <vtkPointData.h>
 #include <vtkPolyDataConnectivityFilter.h>
 #include <vtkAppendPolyData.h>
-#include "error_observer.h"
+#include <bezier/error_observer.hpp>
 
 // PCL
 #pragma GCC diagnostic push

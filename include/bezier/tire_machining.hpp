@@ -1,48 +1,42 @@
-#ifndef BEZIER_PAINTING_HPP
-#define BEZIER_PAINTING_HPP
+#ifndef BEZIER_TIRE_MACHINING_HPP
+#define BEZIER_TIRE_MACHINING_HPP
 
-#include <bezier_library/bezier_library.hpp>
+#include <bezier/bezier_library.hpp>
 #include <ros/package.h>
 #include <memory>
 
-
 /**
- * Bezier painting class
+ * Bezier tire machining class
  */
-class BezierPainting : public Bezier {
+class BezierTireMachining : public Bezier
+{
 
 public:
 
   enum INPUT_MESHES
   {
-    PAINTING_MESH
+    TIRE_PATCH_MESH
   };
 
-  BezierPainting(const std::string input_mesh,
-                 const double painting_cone_width,
-                 const unsigned covering_percentage,
-                 const double extrication_radius,
-                 const double lean_angle = 0.0,
-                 const Bezier::AXIS_OF_ROTATION axis_of_rotation = Bezier::AXIS_OF_ROTATION::Y,
-                 const Eigen::Vector3d &slicing_orientation = Eigen::Vector3d::Zero());
+  BezierTireMachining(const std::string input_mesh,
+                      const double tool_length,
+                      const double tool_radius,
+                      const unsigned covering_percentage,
+                      const double lean_angle,
+                      const AXIS_OF_ROTATION axis_of_rotation = Bezier::AXIS_OF_ROTATION::Y,
+                      const Eigen::Vector3d &slicing_orientation = Eigen::Vector3d::Zero());
 
-  BezierPainting(const std::string input_mesh);
+  BezierTireMachining(const std::string input_mesh);
 
-  virtual ~BezierPainting()
+  virtual ~BezierTireMachining()
   {
   }
 
   std::string name()
   {
-    return "BezierPainting";
+    return "BezierTireMachining";
   }
 
-  /**
-   * Allows to publish the input mesh and the dilated mesh
-   * @param input_mesh_publisher
-   * @param dilated_mesh_publisher
-   * @note If not called, no mesh will be displayed
-   */
   void setMeshesPublishers(std::shared_ptr<ros::Publisher> &input_mesh_publisher,
                            std::shared_ptr<ros::Publisher> &dilated_mesh_publisher);
 
@@ -52,17 +46,17 @@ public:
 
   std::string generateTrajectory(EigenSTL::vector_Isometry3d &trajectory,
                                  std::vector<bool> &is_grinding_pose,
-                                 const double painting_cone_width,
+                                 const double tool_length,
+                                 const double tool_radius,
                                  const unsigned covering_percentage,
-                                 const double extrication_radius,
                                  const double lean_angle = 0.0,
                                  const Bezier::AXIS_OF_ROTATION axis_of_rotation = Bezier::AXIS_OF_ROTATION::Y,
                                  const Eigen::Vector3d &slicing_orientation = Eigen::Vector3d::Zero(),
                                  const bool display_markers = true)
   {
-    painting_cone_width_ = painting_cone_width;
+    tool_length_ = tool_length;
+    tool_radius_ = tool_radius;
     covering_percentage_ = covering_percentage;
-    extrication_radius_ = extrication_radius;
     axis_of_rotation_ = axis_of_rotation;
     lean_angle_ = lean_angle;
     setSlicingOrientation(slicing_orientation);
@@ -82,9 +76,9 @@ private:
   validateParameters();
 
   // Parameters
-  double painting_cone_width_;
+  double tool_length_;
+  double tool_radius_;
   unsigned covering_percentage_;
-  double extrication_radius_;
   double lean_angle_;
   Bezier::AXIS_OF_ROTATION axis_of_rotation_;
 
@@ -94,8 +88,10 @@ private:
   std::shared_ptr<ros::Publisher> input_mesh_pub_;
   std::shared_ptr<ros::Publisher> dilated_mesh_pub_;
 
+  vtkSmartPointer<vtkPolyData> dilated_mesh;
+
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-};
+  };
 
 #endif

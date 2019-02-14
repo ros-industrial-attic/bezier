@@ -18,21 +18,28 @@ It is able to create rectilinear trajectories on complex surfaces (3D surfaces) 
 Click the image to see a video of a Fanuc robot grinding thanks to the Bezier library.
 
 # Dependencies
-This package has been tested with Ubuntu 16.04 and ROS Kinetic.
+This package has been tested with Ubuntu 18.04 and ROS Melodic.
 
-## VTK 7.1
+## VTK
 VTK 7.1 or higher is required in order to compile this project.
 
-Here are quick steps to download, compile and install VTK 7.1:
+Here are quick steps to download, compile and install VTK latest release:
 
 ```bash
-mkdir -p $HOME/libraries/VTK-7.1/build_release
-cd $HOME/libraries/VTK-7.1/
-wget http://www.vtk.org/files/release/7.1/VTK-7.1.1.zip
-unzip VTK-7.1.1.zip
-mv VTK-7.1.1 src
+sudo apt install -y cmake libglew-dev libxt-dev libqt5x11extras5-dev qttools5-dev
+mkdir -p $HOME/libraries/VTK-8.2.0/build_release
+cd $HOME/libraries/VTK-8.2.0
+wget http://www.vtk.org/files/release/8.2/VTK-8.2.0.zip
+unzip VTK-8.2.0.zip
+mv VTK-8.2.0 src
 cd build_release
-cmake ../src -DCMAKE_BUILD_TYPE=Release
+cmake ../src \
+-DCMAKE_BUILD_TYPE=Release \
+-DVTK_Group_Imaging=ON \
+-DVTK_Group_Qt=ON \
+-DVTK_QT_VERSION=5 \
+-DVTK_Group_Rendering=ON \
+-DVTK_Group_Views=ON
 make -j4
 ```
 
@@ -42,9 +49,6 @@ sudo make -j4 install
 sudo ldconfig
 ```
 
-## wstool
-Install [wstool](wiki.ros.org/wstool).
-
 ## rosdep
 Install, initialize and update [rosdep](http://wiki.ros.org/rosdep).
 
@@ -52,16 +56,16 @@ Install, initialize and update [rosdep](http://wiki.ros.org/rosdep).
 Create a catkin workspace and clone the project:
 
 ```bash
-mkdir -p catkin_workspace
-cd catkin_workspace
+mkdir -p catkin_workspace/src
+cd catkin_workspace/src
 git clone https://github.com/ros-industrial-consortium/bezier.git
-wstool init src bezier/bezier.rosinstall
-mv bezier src
+cd ..
+
 ```
 
 ## Resolve ROS dependencies
 ```bash
-rosdep install --from-paths src --ignore-src --rosdistro kinetic -y
+rosdep install --from-paths src --ignore-src --rosdistro melodic -y
 ```
 
 ## Compile

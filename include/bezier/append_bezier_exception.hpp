@@ -1,5 +1,5 @@
-#ifndef APPEND_BEZIER_EXCEPTION
-#define APPEND_BEZIER_EXCEPTION
+#ifndef APPEND_BEZIER_EXCEPTION_HPP
+#define APPEND_BEZIER_EXCEPTION_HPP
 
 #include <iostream>
 #include <exception>
