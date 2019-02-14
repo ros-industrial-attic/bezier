@@ -54,7 +54,7 @@ public:
     extrication_radius_.second = current_extrication_radius;
   }
 
-  void inline setCurrentSlicingDirection(const Eigen::Vector3d current_slicing_orientation)
+  void inline setCurrentSlicingDirection(const Eigen::Vector3d &current_slicing_orientation)
   {
     slicing_orientation_.first = slicing_orientation_.second;
     slicing_orientation_.second = current_slicing_orientation;
@@ -73,7 +73,7 @@ public:
   }
 
   void setCurrentParams(const double grinding_disk_machining_width, const unsigned covering_percentage,
-                        const double extrication_radius, const Eigen::Vector3d slicing_orientation,
+                        const double extrication_radius, const Eigen::Vector3d &slicing_orientation,
                         const double lean_angle, const int axis_of_rotation)
   {
     setCurrentGrindingDiskWidth(grinding_disk_machining_width);
