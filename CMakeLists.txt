@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 ## Find catkin macros and libraries
 find_package(catkin REQUIRED COMPONENTS
+  eigen_stl_containers
   roscpp
   rviz_visual_tools
 )
@@ -34,6 +35,7 @@ catkin_package(
   ${PROJECT_NAME}_surfacing
   ${PROJECT_NAME}_tire_machining
   CATKIN_DEPENDS
+  eigen_stl_containers
   roscpp
   rviz_visual_tools
   DEPENDS

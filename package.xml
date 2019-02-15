@@ -9,6 +9,7 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
+  <depend>eigen_stl_containers</depend>
   <depend>roscpp</depend>
   <depend>rviz_visual_tools</depend>
 

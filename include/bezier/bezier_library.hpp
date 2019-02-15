@@ -14,6 +14,9 @@
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
+// ROS
+#include <eigen_stl_containers/eigen_stl_vector_container.h>
+
 // VTK
 #include <vtkSmartPointer.h>
 #include <vtkPolyData.h>
@@ -46,20 +49,8 @@
 #pragma GCC diagnostic pop
 #include <pcl/surface/vtk_smoothing/vtk_utils.h>
 #include <pcl/PolygonMesh.h>
-
-// ROS
 #include <rviz_visual_tools/rviz_visual_tools.h>
-
-// Exceptions
 #include "append_bezier_exception.hpp"
-
-/**
- * Because it's missing in Eigen
- */
-namespace EigenSTL
-{
-typedef std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d> > vector_Vector4d;
-}
 
 /**
  * Bezier abstract class
