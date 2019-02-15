@@ -12,8 +12,8 @@ notifications:
 
 env:
   global:
-    - ROS_DISTRO=kinetic
-    - DOCKER_IMAGE=rosindustrial/noether:kinetic
+    - ROS_DISTRO=melodic
+    - DOCKER_IMAGE=victorlamoine/ros_vtk8:melodic
     - NOT_TEST_BUILD=true
     - BEFORE_SCRIPT='catkin config -w $CATKIN_WORKSPACE --no-install'
   matrix:
@@ -24,3 +24,4 @@ install:
 
 script:
 - source .ci_config/travis.sh
+
