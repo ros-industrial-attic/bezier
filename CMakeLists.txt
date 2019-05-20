@@ -39,6 +39,7 @@ catkin_package(
   roscpp
   rviz_visual_tools
   DEPENDS
+  PCL
   VTK
 )
 
