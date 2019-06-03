@@ -47,9 +47,12 @@ catkin_package(
 ## Build ##
 ###########
 
+include(
+  ${VTK_USE_FILE}
+)
+
 include_directories(
   include
-  ${VTK_USE_FILE}
   ${PCL_INCLUDE_DIRS}
   ${catkin_INCLUDE_DIRS}
 )
